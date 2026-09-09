@@ -34,6 +34,7 @@ test("static build fingerprints every cacheable resource and rewrites dependenci
   assert.match(index, /src="assets\/app\.[0-9a-f]{12}\.js"/);
   assert.match(index, /id="rage-target-level"[^>]+value="101"/);
   assert.match(index, /id="level-input"[^>]+max="301"/);
+  assert.match(index, /id="arc-input"[^>]+max="100"/);
   assert.match(index, /id="rage-target-level"[^>]+max="301"/);
   assert.match(index, /Dashboard v1\.1\.0/);
   assert.doesNotMatch(index, /FoE Helper 4\.8\.1\.0 · exact FP \+ medal data/);

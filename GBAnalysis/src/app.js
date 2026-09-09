@@ -197,7 +197,7 @@ function applyInputState(state) {
   const targetLevel = Math.round(clampNumber(state.targetLevel, 1, dataset.maxLevel, 80));
   elements["level-input"].value = targetLevel;
   updateLevelRange(targetLevel);
-  elements["arc-input"].value = clampNumber(state.arcBonus, 0, 500, 90);
+  elements["arc-input"].value = clampNumber(state.arcBonus, 0, 100, 90);
 
   let rageBeginningLevel = Math.round(
     clampNumber(state.rageBeginningLevel, 1, dataset.maxLevel, 1),
@@ -329,7 +329,7 @@ function selectedLevel() {
 }
 
 function selectedArcBonus() {
-  return clampNumber(elements["arc-input"].value, 0, 500, 90);
+  return clampNumber(elements["arc-input"].value, 0, 100, 90);
 }
 
 function populateBuildingSelect() {
