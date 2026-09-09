@@ -16,7 +16,7 @@ import {
   buildLevelRows,
   buildRageAnalysis,
   buildUpgradeCostSeries,
-  ownerPrimingCost,
+  ownerCost,
   rewardsForLevel,
   unlockCostsForLevel,
   upgradeCost,
@@ -187,10 +187,11 @@ test("reward curves can switch to Arc-adjusted values", () => {
   assert.throws(() => buildRewardSeries(rows, "forgePoints", "projected"), RangeError);
 });
 
-test("owner priming cost secures the displayed first-place contribution", () => {
-  assert.equal(ownerPrimingCost(1000, 380), 240);
-  assert.equal(ownerPrimingCost(500, 300), 0);
-  assert.throws(() => ownerPrimingCost(1000, -1), TypeError);
+test("owner cost subtracts all displayed position contributions", () => {
+  assert.equal(ownerCost(1000, [380, 190, 95, 38, 19]), 278);
+  assert.equal(ownerCost(500, [300, 150, 75, 30, 15]), 0);
+  assert.equal(ownerCost(1000, []), 1000);
+  assert.throws(() => ownerCost(1000, [380, -1]), TypeError);
 });
 
 test("every dashboard Great Building has a concise benefit summary", () => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,20 +10,13 @@ const PROJECT_ROOT = fileURLToPath(new URL("../", import.meta.url));
 
 function dashboardVersion(projectRoot) {
   try {
-    const commitCount = Number.parseInt(
-      execFileSync("git", ["rev-list", "--count", "HEAD", "--", "."], {
-        cwd: projectRoot,
-        encoding: "utf8",
-      }).trim(),
-      10,
+    const packageManifest = JSON.parse(
+      readFileSync(path.join(projectRoot, "package.json"), "utf8"),
     );
-    const hasPendingDashboardCommit = Boolean(
-      execFileSync("git", ["status", "--porcelain", "--", ".", ":(exclude)dist"], {
-        cwd: projectRoot,
-        encoding: "utf8",
-      }).trim(),
-    );
-    return `1.0.${commitCount + (hasPendingDashboardCommit ? 1 : 0)}`;
+    if (!/^\d+\.\d+\.\d+$/.test(packageManifest.version)) {
+      throw new Error("Dashboard version must use semantic versioning");
+    }
+    return packageManifest.version;
   } catch {
     return "1.0.0";
   }
@@ -52,19 +45,23 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
   const destination = outputRoot ?? path.join(projectRoot, "dist");
   const assetsDestination = path.join(destination, "assets");
 
-  const [indexSource, stylesSource, appSource, coreSource, datasetSource, benefitSource] = await Promise.all([
+  const [indexSource, stylesSource, appSource, coreSource, datasetSource, benefitSource, iconSource, faviconSource] = await Promise.all([
     readFile(path.join(projectRoot, "index.html"), "utf8"),
     readFile(path.join(projectRoot, "assets/styles.css")),
     readFile(path.join(projectRoot, "src/app.js"), "utf8"),
     readFile(path.join(projectRoot, "src/core.js")),
     readFile(path.join(projectRoot, "data/gb-analysis.json")),
     readFile(path.join(projectRoot, "data/gb-benefits-source.json")),
+    readFile(path.join(projectRoot, "assets/gb-icon.png")),
+    readFile(path.join(projectRoot, "assets/favicon.png")),
   ]);
 
   const stylesName = fingerprintedName("styles.css", stylesSource);
   const coreName = fingerprintedName("core.js", coreSource);
   const datasetName = fingerprintedName("gb-analysis.json", datasetSource);
   const benefitName = fingerprintedName("gb-benefits-source.json", benefitSource);
+  const iconName = fingerprintedName("gb-icon.png", iconSource);
+  const faviconName = fingerprintedName("favicon.png", faviconSource);
 
   let builtApp = replaceExactlyOnce(
     appSource,
@@ -99,6 +96,8 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
     "index.html",
   );
   const version = dashboardVersion(projectRoot);
+  builtIndex = replaceExactlyOnce(builtIndex, 'src="assets/gb-icon.png"', `src="assets/${iconName}"`, "index.html");
+  builtIndex = replaceExactlyOnce(builtIndex, 'href="assets/favicon.png"', `href="assets/${faviconName}"`, "index.html");
   builtIndex = replaceExactlyOnce(
     builtIndex,
     "Dashboard v0.0.0-dev",
@@ -117,6 +116,8 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
       "src/core.js": `assets/${coreName}`,
       "data/gb-analysis.json": `assets/${datasetName}`,
       "data/gb-benefits-source.json": `assets/${benefitName}`,
+      "assets/gb-icon.png": `assets/${iconName}`,
+      "assets/favicon.png": `assets/${faviconName}`,
     },
   };
 
@@ -130,6 +131,8 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
     writeFile(path.join(assetsDestination, coreName), coreSource),
     writeFile(path.join(assetsDestination, datasetName), datasetSource),
     writeFile(path.join(assetsDestination, benefitName), benefitSource),
+    writeFile(path.join(assetsDestination, iconName), iconSource),
+    writeFile(path.join(assetsDestination, faviconName), faviconSource),
   ]);
 
   return manifest;

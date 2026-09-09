@@ -5,10 +5,11 @@ import {
   buildingBenefit,
   buildLevelRows,
   buildRageAnalysis,
+  buildRageCsv,
   buildRewardSeries,
   buildUpgradeCostSeries,
-  ownerPrimingCost,
-} from "./core.9854b40865d5.js";
+  ownerCost,
+} from "./core.ab4a14a85263.js";
 
 const formatter = new Intl.NumberFormat("en-US");
 const INPUT_STATE_ENDPOINT = "api/user-input";
@@ -29,7 +30,7 @@ const elements = Object.fromEntries(
     "building-benefit",
     "building-size",
     "reward-multiplier",
-    "owner-priming-cost",
+    "owner-cost",
     "selected-total-fp-cost",
     "selected-level-benefits",
     "reward-body",
@@ -39,6 +40,8 @@ const elements = Object.fromEntries(
     "unlock-total",
     "unlock-list",
     "unlock-note",
+    "unlock-cumulative",
+    "unlock-cumulative-label",
     "goods-total",
     "goods-list",
     "cost-chart-controls",
@@ -54,7 +57,6 @@ const elements = Object.fromEntries(
     "reward-chart-legend",
     "reward-chart-note",
     "chart-cost-max",
-    "chart-reward-max",
     "rage-start-level",
     "rage-target-level",
     "rage-arc-p1",
@@ -95,7 +97,7 @@ let rageUnlockCostsExpanded = true;
 let rageBenefitsExpanded = true;
 
 const CHART_WIDTH = 900;
-const CHART_HEIGHT = 130;
+const CHART_HEIGHT = 240;
 const CHART_PADDING = 8;
 const chartInteraction = {
   cost: { index: null, pinned: false },
@@ -104,7 +106,7 @@ const chartInteraction = {
 
 const CHART_RESOURCES = {
   forgePoints: { shortLabel: "FP", label: "Forge Points", unit: "FP" },
-  goods: { shortLabel: "Goods total", label: "Total goods", unit: "goods" },
+  goods: { shortLabel: "Goods", label: "Total goods", unit: "goods" },
   money: { shortLabel: "Coins", label: "Coins", unit: "coins" },
   supplies: { shortLabel: "Supplies", label: "Supplies", unit: "supplies" },
   medals: { shortLabel: "Medals", label: "Medals", unit: "medals" },
@@ -153,6 +155,15 @@ function clampNumber(value, minimum, maximum, fallback) {
   return Math.min(maximum, Math.max(minimum, numeric));
 }
 
+function updateLevelRange(value) {
+  const range = elements["level-range"];
+  range.value = value;
+  const minimum = Number(range.min);
+  const maximum = Number(range.max);
+  const progress = ((Number(value) - minimum) / (maximum - minimum)) * 100;
+  range.style.setProperty("--range-progress", `${progress}%`);
+}
+
 function readLocalInputState() {
   try {
     const value = JSON.parse(localStorage.getItem(INPUT_STATE_STORAGE_KEY) ?? "{}");
@@ -185,7 +196,7 @@ function applyInputState(state) {
 
   const targetLevel = Math.round(clampNumber(state.targetLevel, 1, dataset.maxLevel, 80));
   elements["level-input"].value = targetLevel;
-  elements["level-range"].value = targetLevel;
+  updateLevelRange(targetLevel);
   elements["arc-input"].value = clampNumber(state.arcBonus, 0, 500, 90);
 
   let rageBeginningLevel = Math.round(
@@ -299,7 +310,7 @@ function goodsTotal(costs) {
 function unlockSummary(costs) {
   const parts = [];
   if (costs.blueprintSets) {
-    parts.push(`${formatNumber(costs.blueprintSets)} BP ${costs.blueprintSets === 1 ? "set" : "sets"}`);
+    parts.push(`${formatNumber(costs.blueprintSets)} blueprint ${costs.blueprintSets === 1 ? "set" : "sets"}`);
   }
   const totalGoods = goodsTotal(costs);
   if (totalGoods) parts.push(`${formatNumber(totalGoods)} goods`);
@@ -379,7 +390,7 @@ function renderSelectedLevelBenefits(selectedRow) {
   if (!selectedRow.benefits.length) {
     const empty = document.createElement("span");
     empty.className = "selected-benefit-empty";
-    empty.textContent = "Benefit data unavailable";
+    empty.textContent = "We don’t have benefit data for this level yet.";
     list.append(empty);
   }
   elements["selected-level-benefits"].replaceChildren(list);
@@ -388,9 +399,9 @@ function renderSelectedLevelBenefits(selectedRow) {
 function renderRewards(building, selectedRow, arcBonus) {
   const multiplier = 1 + arcBonus / 100;
   elements["reward-multiplier"].textContent = `${multiplier.toFixed(2)}× (${arcBonus}% Arc)`;
-  const firstPlaceContribution = selectedRow.rewards.forgePoints?.adjusted[0];
-  elements["owner-priming-cost"].textContent = Number.isFinite(firstPlaceContribution)
-    ? formatNumber(ownerPrimingCost(selectedRow.cost, firstPlaceContribution))
+  const contributions = selectedRow.rewards.forgePoints?.adjusted;
+  elements["owner-cost"].textContent = Array.isArray(contributions)
+    ? formatNumber(ownerCost(selectedRow.cost, contributions))
     : "—";
   elements["selected-total-fp-cost"].textContent = formatNumber(selectedRow.cost);
   renderSelectedLevelBenefits(selectedRow);
@@ -404,16 +415,16 @@ function renderRewards(building, selectedRow, arcBonus) {
     const cells = [
       [`P${index + 1}`, "position-cell"],
       [fp ? formatNumber(fp.base[index]) : "—", fp ? "" : "missing-value"],
-      [fp ? formatNumber(fp.adjusted[index]) : "—", fp ? "bonus-cell" : "missing-value"],
+      [fp ? formatNumber(fp.adjusted[index]) : "—", fp ? "bonus-cell" : "bonus-cell missing-value"],
       [medals ? formatNumber(medals.base[index]) : "—", medals ? "" : "missing-value"],
       [
         medals ? formatNumber(medals.adjusted[index]) : "—",
-        medals ? "bonus-cell" : "missing-value",
+        medals ? "bonus-cell" : "bonus-cell missing-value",
       ],
       [blueprints ? formatNumber(blueprints.base[index]) : "—", blueprints ? "" : "missing-value"],
       [
         blueprints ? formatNumber(blueprints.adjusted[index]) : "—",
-        blueprints ? "bonus-cell" : "missing-value",
+        blueprints ? "bonus-cell" : "bonus-cell missing-value",
       ],
     ];
     for (const [value, className] of cells) {
@@ -444,66 +455,82 @@ function renderRewards(building, selectedRow, arcBonus) {
     "blueprint rewards",
   ].filter(Boolean);
   const provenance = isDirectCapture
-    ? `Level ${selectedRow.targetLevel} base rewards are from a direct game capture. `
+    ? `Level ${selectedRow.targetLevel} rewards were recorded in-game. `
     : selectedRow.targetLevel > exactCoverage
       ? exactApiRewards.length
-        ? `Level ${selectedRow.targetLevel} ${exactApiRewards.join(" and ")} are exact API observations; ${modeledRewards.join(" and ")} are modeled. `
-        : `Level ${selectedRow.targetLevel} FP, medals, and blueprints are modeled from sourced curves. `
+        ? `Level ${selectedRow.targetLevel}: ${exactApiRewards.join(" and ")} are confirmed; ${modeledRewards.join(" and ")} are estimates. `
+        : `Level ${selectedRow.targetLevel}: FP, medal, and blueprint rewards are estimates based on known reward patterns. `
       : "";
   elements["reward-note"].textContent =
-    `${provenance}The Arc multiplier applies to FP, medals, and blueprints. FP positions use FoE Helper’s recursive nearest-5 rule; medal positions use the game’s P1 fractions; every adjusted value is rounded to a whole unit.`;
+    `${provenance}Base = without Arc. BP = blueprints. Arc boosts all three rewards; results round to whole numbers.`;
+}
+
+function unlockResourceGroup(title, entries, totalLabel) {
+  const group = document.createElement("section");
+  group.className = "unlock-group";
+  const heading = document.createElement("div");
+  heading.className = "unlock-group-heading";
+  const name = document.createElement("h4");
+  name.textContent = title;
+  heading.append(name);
+  if (totalLabel) {
+    const total = document.createElement("span");
+    total.className = "unlock-group-total";
+    total.textContent = totalLabel;
+    heading.append(total);
+  }
+  const list = document.createElement("dl");
+  list.className = "unlock-resource-list";
+  for (const [resource, amount] of entries) {
+    const row = document.createElement("div");
+    const label = document.createElement("dt");
+    label.textContent = humanizeResource(resource);
+    const value = document.createElement("dd");
+    value.textContent = formatNumber(amount);
+    row.append(label, value);
+    list.append(row);
+  }
+  group.append(heading, list);
+  return group;
 }
 
 function renderUnlockCosts(selectedRow) {
   const costs = selectedRow.unlockCosts;
-  const totalGoods = goodsTotal(costs);
-  const entries = [];
-  if (costs.blueprintSets) entries.push(["Full blueprint set", costs.blueprintSets]);
-  if (totalGoods) entries.push(["Combined goods (5 types)", totalGoods, "goods-total-item"]);
-  entries.push(
-    ...Object.entries(costs.goods).map(([resource, amount]) => [
-      humanizeResource(resource),
-      amount,
-      "goods-per-type-item",
-    ]),
-  );
-  entries.push(...Object.entries(costs.resources).map(([resource, amount]) => [humanizeResource(resource), amount]));
+  const goods = Object.entries(costs.goods).filter(([, amount]) => amount > 0);
+  const resources = Object.entries(costs.resources).filter(([, amount]) => amount > 0);
+  const hasCosts = Boolean(costs.blueprintSets || goods.length || resources.length);
+  const list = elements["unlock-list"];
+  list.replaceChildren();
+  elements["unlock-total"].textContent = `Level ${selectedRow.targetLevel}`;
+  elements["unlock-cumulative"].hidden = !hasCosts;
 
-  elements["unlock-list"].replaceChildren();
-  elements["unlock-total"].textContent = entries.length
-    ? totalGoods
-      ? `${formatNumber(totalGoods)} goods total`
-      : costs.blueprintSets && entries.length === 1
-        ? "Blueprint set"
-        : "Blueprints + resources"
-    : "No unlock cost";
-
-  if (!entries.length) {
+  if (!hasCosts) {
     const empty = document.createElement("div");
     empty.className = "good-empty";
-    empty.textContent = "No separate unlock payment through level 10";
-    elements["unlock-list"].append(empty);
-    elements["unlock-note"].textContent =
-      "Level 1–10 are available from the original blueprint set. Forge Points fund the selected level.";
+    empty.textContent = "No extra unlock cost for levels 1–10. Your original blueprint set has you covered.";
+    list.append(empty);
     return;
   }
 
-  for (const [label, amount, className = ""] of entries) {
-    const item = document.createElement("div");
-    item.className = `good-item ${className}`.trim();
-    const name = document.createElement("span");
-    name.textContent = label;
+  if (costs.blueprintSets) {
+    const requirement = document.createElement("div");
+    requirement.className = "unlock-blueprints";
+    const label = document.createElement("span");
+    label.textContent = "Blueprints needed";
     const value = document.createElement("strong");
-    value.textContent = className === "goods-per-type-item"
-      ? `${formatNumber(amount)} each`
-      : formatNumber(amount);
-    item.append(name, value);
-    elements["unlock-list"].append(item);
+    value.textContent = `${formatNumber(costs.blueprintSets)} full ${costs.blueprintSets === 1 ? "set" : "sets"}`;
+    requirement.append(label, value);
+    list.append(requirement);
   }
-
-  elements["unlock-note"].textContent =
-    `Cumulative unlock payments through level ${selectedRow.targetLevel}: ${unlockSummary(selectedRow.cumulativeUnlockCosts)}. ` +
-    "Unlock resources are paid before Forge Points can be added to that level.";
+  if (goods.length || resources.length) {
+    const groups = document.createElement("div");
+    groups.className = "unlock-groups";
+    if (goods.length) groups.append(unlockResourceGroup("Goods", goods, `${formatNumber(goodsTotal(costs))} total`));
+    if (resources.length) groups.append(unlockResourceGroup("Other resources", resources));
+    list.append(groups);
+  }
+  elements["unlock-cumulative-label"].textContent = `Total unlock costs, levels 1–${selectedRow.targetLevel}`;
+  elements["unlock-note"].textContent = unlockSummary(selectedRow.cumulativeUnlockCosts);
 }
 
 function renderGoods(building) {
@@ -515,7 +542,7 @@ function renderGoods(building) {
   if (!goods.length) {
     const empty = document.createElement("div");
     empty.className = "good-empty";
-    empty.textContent = "No foundation goods in CityEntities";
+    empty.textContent = "No goods needed to place this building.";
     elements["goods-list"].append(empty);
     return;
   }
@@ -580,10 +607,9 @@ function costChartMarkup(values, selectedIndex) {
   `;
 }
 
-function rewardChartMarkup(series, selectedIndex) {
+function rewardChartMarkup(series, selectedIndex, maximum) {
   const availableValues = series.flatMap(({ values }) => values.filter(Number.isFinite));
   if (!availableValues.length) return "";
-  const maximum = Math.max(...availableValues);
   const lines = series
     .map(({ position, values }) => {
       const { line, point } = chartCoordinates(values, maximum);
@@ -716,7 +742,7 @@ function showChartInspection(kind, index, pointer) {
   } else {
     const availableValues = data.series.flatMap(({ values }) => values.filter(Number.isFinite));
     if (!availableValues.length) return;
-    const maximum = Math.max(...availableValues);
+    const maximum = data.maximum;
     const coordinates = [];
     const entries = [];
     for (const { position, values } of data.series) {
@@ -844,33 +870,34 @@ function renderCharts(rows, selectedIndex) {
   );
   const selectedCost = selectedCostSeries.values[selectedIndex];
   elements["chart-cost-max"].textContent =
-    `L${selectedIndex + 1} ${formatNumber(selectedCost)} · max ${formatNumber(Math.max(...selectedCostSeries.values))} ${costResource.unit}`;
+    `Level ${selectedIndex + 1}: ${formatNumber(selectedCost)} ${costResource.unit}`;
   elements["cost-chart-note"].textContent = costSeries.length > 1
-    ? `Per-level non-blueprint costs available: ${costSeries.map(({ id }) => CHART_RESOURCES[id]?.shortLabel ?? humanizeResource(id)).join(", ")}.`
-    : "This building has no additional non-blueprint resource cost beyond Forge Points.";
+    ? "Choose a resource to compare its cost across levels. Blueprints are listed in Unlock costs."
+    : "Only FP costs are plotted here. Blueprint requirements are listed in Unlock costs.";
 
   const rewardOptions = ["forgePoints", "medals", "blueprints"].map((id) => ({ id }));
   renderChartControls(elements["reward-chart-controls"], rewardOptions, selectedRewardResource);
   renderRewardViewToggle();
   const rewardResource = CHART_RESOURCES[selectedRewardResource];
-  const rewardValueKey = selectedRewardView === "boosted" ? "adjusted" : "base";
   const rewardViewLabel = selectedRewardView === "boosted" ? "Arc-boosted" : "Base";
-  const rewardSeries = buildRewardSeries(rows, selectedRewardResource, rewardValueKey);
+  const baseSeries = buildRewardSeries(rows, selectedRewardResource, "base");
+  const boostedSeries = buildRewardSeries(rows, selectedRewardResource, "adjusted");
+  const rewardSeries = selectedRewardView === "boosted" ? boostedSeries : baseSeries;
+  // Both views use the same zero-based range, including selected and hover markers.
+  const rewardMaximum = Math.max(1, ...[...baseSeries, ...boostedSeries]
+    .flatMap(({ values }) => values.filter(Number.isFinite)));
   chartData.reward = {
     series: rewardSeries,
+    maximum: rewardMaximum,
     resource: rewardResource,
     viewLabel: rewardViewLabel,
   };
   elements["reward-chart-label"].textContent = `${rewardViewLabel} rewards · ${rewardResource.label}`;
-  elements["reward-chart"].innerHTML = rewardChartMarkup(rewardSeries, selectedIndex);
+  elements["reward-chart"].innerHTML = rewardChartMarkup(rewardSeries, selectedIndex, rewardMaximum);
   elements["reward-chart"].setAttribute(
     "aria-label",
     `${rewardViewLabel} ${rewardResource.label} rewards for positions one through five by target level`,
   );
-  const availableRewards = rewardSeries.flatMap(({ values }) => values.filter(Number.isFinite));
-  elements["chart-reward-max"].textContent = availableRewards.length
-    ? `max ${formatNumber(Math.max(...availableRewards))} ${rewardResource.unit}`
-    : "unavailable";
   const legend = document.createDocumentFragment();
   for (const { position, values } of rewardSeries) {
     const item = document.createElement("span");
@@ -886,19 +913,14 @@ function renderCharts(rows, selectedIndex) {
   elements["reward-chart-note"].textContent =
     `${rewardViewLabel} rewards at level ${selectedIndex + 1}${
       selectedRewardView === "boosted"
-        ? `, including the selected ${selectedArcBonus()}% Arc bonus.`
+        ? `, with your ${selectedArcBonus()}% Arc bonus.`
         : ", before the Arc bonus."
     }${
       isDirectCapturedRewardLevel(selectedBuilding().eraId, selectedIndex + 1)
-        ? " This level uses a direct game capture."
+        ? " Recorded in-game."
         : selectedRewardResource === "forgePoints" &&
             isExactFpRewardLevel(selectedBuilding().eraId, selectedIndex + 1)
-          ? " This FP value is an exact source observation."
-        : selectedRewardResource === "medals" &&
-            isExactMedalRewardLevel(selectedBuilding().eraId, selectedIndex + 1)
-          ? " This medal value is an exact source observation."
-        : selectedIndex + 1 > (dataset.coverage.exactContributorRewardsThroughLevel ?? dataset.maxLevel)
-        ? " This level is on the modeled portion of the curve."
+          ? " FP reward confirmed."
         : ""
     }`;
 }
@@ -994,10 +1016,10 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
     },
     {
       key: "unlockingCosts",
-      label: "Unlocking cost",
+      label: "Unlock costs",
       columns: [
-        { key: "goodsPerType", label: "Goods/type", value: (row) => row.goodsPerType },
-        { key: "goods", label: "Goods total", value: (row) => row.goods },
+        { key: "goodsPerType", label: "Goods per type", value: (row) => row.goodsPerType },
+        { key: "goods", label: "All goods", value: (row) => row.goods },
         { key: "money", label: "Coins", value: (row) => row.money },
         { key: "supplies", label: "Supplies", value: (row) => row.supplies },
         { key: "medals", label: "Medals", value: (row) => row.medals },
@@ -1011,7 +1033,7 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
     },
     {
       key: "benefits",
-      label: "GB benefits",
+      label: "Building benefits",
       columns: buildingBenefits.map((benefit) => {
         const definition = benefitDefinition(benefit.key);
         return {
@@ -1027,7 +1049,7 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
       columns: [
         {
           key: "ownerForgePoints",
-          label: "Owner FP",
+          label: "Owner's FP cost",
           className: "owner-cell",
           value: (row) => row.ownerForgePoints,
         },
@@ -1069,28 +1091,28 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
   const hasUnlockingCosts = Boolean(unlockingGroup?.columns.length);
   elements["rage-unlock-toggle"].disabled = !hasUnlockingCosts;
   elements["rage-unlock-toggle"].setAttribute(
-    "aria-expanded",
+    "aria-checked",
     String(hasUnlockingCosts && rageUnlockCostsExpanded),
   );
   elements["rage-unlock-toggle-label"].textContent = hasUnlockingCosts
-    ? `${rageUnlockCostsExpanded ? "Hide" : "Show"} unlocking costs`
-    : "No unlocking costs";
+    ? "Unlock costs"
+    : "No unlock costs";
   elements["rage-unlock-toggle"].title = hasUnlockingCosts
-    ? `${rageUnlockCostsExpanded ? "Hide" : "Show"} unlocking cost columns`
-    : "No unlocking costs in this level range";
+    ? `${rageUnlockCostsExpanded ? "Hide" : "Show"} unlock cost columns`
+    : "No unlock costs in this level range";
   const benefitGroup = availableGroups.find((group) => group.key === "benefits");
   const hasBenefits = Boolean(benefitGroup?.columns.length);
   elements["rage-benefit-toggle"].disabled = !hasBenefits;
   elements["rage-benefit-toggle"].setAttribute(
-    "aria-expanded",
+    "aria-checked",
     String(hasBenefits && rageBenefitsExpanded),
   );
   elements["rage-benefit-toggle-label"].textContent = hasBenefits
-    ? `${rageBenefitsExpanded ? "Hide" : "Show"} GB benefits`
-    : "No GB benefits";
+    ? "Benefits"
+    : "No benefit data";
   elements["rage-benefit-toggle"].title = hasBenefits
-    ? `${rageBenefitsExpanded ? "Hide" : "Show"} per-level GB benefit columns`
-    : "No per-level GB benefits are available";
+    ? `${rageBenefitsExpanded ? "Hide" : "Show"} building benefit columns`
+    : "No benefit data for this level range";
   const visibleGroups = availableGroups.filter(
     (group) =>
       (group.key !== "unlockingCosts" || rageUnlockCostsExpanded) &&
@@ -1156,7 +1178,7 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
       const totalLabel = document.createElement("th");
       totalLabel.scope = "row";
       totalLabel.className = "rage-sticky-column";
-      totalLabel.textContent = "Rage total";
+      totalLabel.textContent = "Plan total";
       totalRow.append(totalLabel);
       continue;
     }
@@ -1184,18 +1206,18 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
       if (isExactMedalRewardLevel(selectedBuilding().eraId, level)) exactMedalCount += 1;
     }
     const fpNote = exactFpCount === laterLevelCount
-      ? " FP rewards are exact API observations throughout this range."
+      ? " FP rewards are confirmed for every level in this range."
       : exactFpCount > 0
-        ? ` FP rewards are exact at ${exactFpCount} of those ${laterLevelCount} levels; the rest are modeled.`
-        : " FP rewards in this range are modeled.";
+        ? ` FP rewards are confirmed at ${exactFpCount} of those ${laterLevelCount} levels; the rest are estimates.`
+        : " FP rewards in this range are estimates.";
     const medalNote = exactMedalCount === laterLevelCount
-      ? " Medal rewards are exact source observations throughout this range."
+      ? " Medal rewards are confirmed for every level in this range."
       : exactMedalCount > 0
-        ? ` Medal rewards are exact at ${exactMedalCount} of those ${laterLevelCount} levels; the rest are modeled.`
-        : " Medal rewards in this range are modeled.";
-    warning.textContent = `Blueprint rewards from level ${firstLaterLevel} onward are modeled from a sourced curve.${fpNote}${medalNote}`;
+        ? ` Medal rewards are confirmed at ${exactMedalCount} of those ${laterLevelCount} levels; the rest are estimates.`
+        : " Medal rewards in this range are estimates.";
+    warning.textContent = `Blueprint rewards from level ${firstLaterLevel} onward are estimates based on known reward patterns.${fpNote}${medalNote}`;
   } else {
-    warning.textContent = `Contributor FP rewards are unavailable after level ${rewardCoverage}. Owner FP uses the full upgrade cost for unavailable levels.`;
+    warning.textContent = `FP reward data ends at level ${rewardCoverage}. For later levels, the owner's FP cost includes the entire level cost because contributions are unknown.`;
   }
   requestAnimationFrame(updateTableScrollHints);
 }
@@ -1213,7 +1235,7 @@ function render() {
   const targetLevel = selectedLevel();
   const arcBonus = selectedArcBonus();
   elements["level-input"].value = targetLevel;
-  elements["level-range"].value = targetLevel;
+  updateLevelRange(targetLevel);
   elements["arc-input"].value = arcBonus;
 
   const p1ByLevel = dataset.rewardP1ByEra[String(building.eraId)];
@@ -1234,106 +1256,21 @@ function render() {
   requestAnimationFrame(updateTableScrollHints);
 }
 
-function csvEscape(value) {
-  const string = String(value ?? "");
-  return /[",\n]/.test(string) ? `"${string.replaceAll('"', '""')}"` : string;
-}
-
 function downloadRageCsv() {
   const building = selectedBuilding();
   const beginningLevel = selectedRageBeginningLevel();
   const targetLevel = selectedRageTargetLevel();
   const arcLevels = selectedRageArcLevels();
   const arcBonuses = selectedRageArcBonuses();
-  const specialResourceKeys = [
-    ...new Set(
-      currentRageAnalysis.rows.flatMap((row) => Object.keys(row.specialResources)),
-    ),
-  ].sort((left, right) => humanizeResource(left).localeCompare(humanizeResource(right)));
-  const buildingBenefits = building.benefits ?? [];
-  const header = [
-    "building",
-    "era",
-    "rage_beginning_level",
-    "rage_target_level",
-    "level",
-    "unlock_goods_per_type",
-    "unlock_goods_total",
-    "unlock_coins",
-    "unlock_supplies",
-    "unlock_medals",
-  ];
-  header.push(...specialResourceKeys.map((resource) => `unlock_${resource}`));
-  header.push(...buildingBenefits.map((benefit) => `benefit_${benefit.key}`));
-  header.push("owner_fp");
-  for (let position = 1; position <= 5; position += 1) {
-    header.push(
-      `p${position}_arc_level`,
-      `p${position}_arc_bonus_percent`,
-      `p${position}_contribution_fp`,
-    );
-  }
-  header.push("total_fp_cost");
-  const lines = [header.join(",")];
-  for (const row of currentRageAnalysis.rows) {
-    const positions = row.contributions.flatMap((amount, position) => [
-      arcLevels[position] === 180 ? "180+" : arcLevels[position],
-      arcBonuses[position],
-      Number.isFinite(amount) ? amount : "",
-    ]);
-    lines.push(
-      [
-        building.name,
-        dataset.eraNames[String(building.eraId)],
-        beginningLevel,
-        targetLevel,
-        row.targetLevel,
-        row.goodsPerType,
-        row.goods,
-        row.money,
-        row.supplies,
-        row.medals,
-        ...specialResourceKeys.map((resource) => row.specialResources[resource] ?? 0),
-        ...buildingBenefits.map(
-          (benefit) => row.benefits.find(({ key }) => key === benefit.key)?.value ?? "",
-        ),
-        row.ownerForgePoints,
-        ...positions,
-        row.upgradeForgePoints,
-      ]
-        .map(csvEscape)
-        .join(","),
-    );
-  }
-  const totalPositions = currentRageAnalysis.totals.contributions.flatMap((amount, position) => [
-    arcLevels[position] === 180 ? "180+" : arcLevels[position],
-    arcBonuses[position],
-    amount,
-  ]);
-  lines.push(
-    [
-      building.name,
-      dataset.eraNames[String(building.eraId)],
-      beginningLevel,
-      targetLevel,
-      "TOTAL",
-      currentRageAnalysis.totals.goodsPerType,
-      currentRageAnalysis.totals.goods,
-      currentRageAnalysis.totals.money,
-      currentRageAnalysis.totals.supplies,
-      currentRageAnalysis.totals.medals,
-      ...specialResourceKeys.map(
-        (resource) => currentRageAnalysis.totals.specialResources[resource] ?? 0,
-      ),
-      ...buildingBenefits.map(() => ""),
-      currentRageAnalysis.totals.ownerForgePoints,
-      ...totalPositions,
-      currentRageAnalysis.totals.upgradeForgePoints,
-    ]
-      .map(csvEscape)
-      .join(","),
-  );
-  const blob = new Blob([`${lines.join("\n")}\n`], { type: "text/csv;charset=utf-8" });
+  const csv = buildRageCsv({
+    building,
+    era: dataset.eraNames[String(building.eraId)],
+    analysis: currentRageAnalysis,
+    arcLevels,
+    arcBonuses,
+    coverageNote: elements["rage-coverage-warning"].textContent,
+  });
+  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = `${building.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}-rage-${beginningLevel}-${targetLevel}.csv`;
@@ -1357,7 +1294,7 @@ function updateRageLevels(changedField) {
 function setTargetLevel(value) {
   const level = Math.round(clampNumber(value, 1, dataset.maxLevel, 80));
   elements["level-input"].value = level;
-  elements["level-range"].value = level;
+  updateLevelRange(level);
   render();
   scheduleInputStateSave();
 }
@@ -1488,6 +1425,6 @@ async function initialize() {
 
 initialize().catch((error) => {
   console.error(error);
-  elements["building-name"].textContent = "Could not load the analysis dataset";
-  elements["building-era"].textContent = "Start a local web server and try again";
+  elements["building-name"].textContent = "We couldn’t load the building data";
+  elements["building-era"].textContent = "Refresh to try again. For a local copy, check that the server is running.";
 });

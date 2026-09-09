@@ -7,7 +7,8 @@
       name="description"
       content="Explore Forge of Empires Great Building costs and contributor rewards through level 301."
     />
-    <title>GB Analysis</title>
+    <title>FoE GB Planner</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png" />
     <script>
       (() => {
         try {
@@ -24,11 +25,18 @@
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#analysis-controls">Skip to analysis</a>
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="GB Analysis home">
-        <span class="brand-mark" aria-hidden="true">GB</span>
-        <span>Analysis</span>
+      <a class="brand" href="#top" aria-label="FoE GB Planner home">
+        <img class="brand-mark" src="assets/gb-icon.png" width="40" height="40" alt="" />
+        <span>FoE GB Planner</span>
       </a>
+      <nav class="section-nav" aria-label="Dashboard sections">
+        <a href="#curve-preview">Preview chart</a>
+        <a href="#unlock-costs">Unlock costs</a>
+        <a href="#contributor-rewards">FP &amp; rewards</a>
+        <a href="#pre-rage-analysis">Rage planner</a>
+      </nav>
       <div class="header-actions">
         <div class="source-mark">
           <span class="source-dot" aria-hidden="true"></span>
@@ -43,18 +51,24 @@
 
     <main id="top">
       <section class="hero">
-        <p class="eyebrow">Great Building intelligence</p>
-        <h1>Plan every level,<br /><em>from cost to reward.</em></h1>
-        <p class="hero-copy">
-          Upgrade costs, unlocking requirements, and contributor rewards through level 301,
-          with exact FP and medal observations wherever available and clearly labeled estimates for the remaining gaps.
-        </p>
+        <div>
+          <p class="eyebrow">Great Building planner</p>
+          <h1><span>Plan Smarter.</span> <em>Level Further.</em></h1>
+        </div>
+        <div class="hero-description">
+          <p class="hero-copy">
+            Your GB Has Ambitions. Your Inventory Has Concerns.
+          </p>
+          <p class="hero-tagline">Let’s see which one wins. 😇</p>
+        </div>
       </section>
 
-      <section class="control-panel" aria-label="Analysis controls">
+      <section id="analysis-controls" class="control-panel" aria-label="Analysis controls" tabindex="-1">
         <label class="field field-building">
-          <span>Great Building</span>
-          <select id="building-select"></select>
+          <span>Choose a Great Building</span>
+          <span class="building-select-wrap">
+            <select id="building-select"></select>
+          </span>
         </label>
         <label class="field field-level">
           <span>Target level</span>
@@ -67,7 +81,8 @@
             <span>%</span>
           </span>
         </label>
-        <div class="range-field">
+        <label class="range-field">
+          <span class="range-caption">Slide to a level</span>
           <input
             id="level-range"
             type="range"
@@ -76,8 +91,8 @@
             value="80"
             aria-label="Target level"
           />
-          <div class="range-labels" aria-hidden="true"><span>1</span><span>301</span></div>
-        </div>
+          <span class="range-labels" aria-hidden="true"><span>1</span><span>301</span></span>
+        </label>
       </section>
 
       <section class="building-heading" aria-live="polite">
@@ -91,71 +106,99 @@
         <div id="building-size" class="size-chip"></div>
       </section>
 
-      <section id="curve-preview" class="panel curve-panel curve-panel-primary">
+      <section id="curve-preview" class="panel curve-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Levels 1–301</p>
-            <h3>Curve preview</h3>
+            <h3>Preview chart</h3>
           </div>
-          <span class="curve-key">Per-level costs · reward curves</span>
+          <span class="curve-key">Hover or tap a chart for details</span>
         </div>
         <div class="chart-grid">
           <article class="chart-view">
             <div class="chart-label"><span id="cost-chart-label">Upgrade cost</span><strong id="chart-cost-max"></strong></div>
             <div id="cost-chart-controls" class="chart-tabs" aria-label="Upgrade cost resource"></div>
             <div class="chart-plot">
-              <svg id="cost-chart" viewBox="0 0 900 130" role="img" tabindex="0" aria-label="Upgrade cost by level"></svg>
+              <svg id="cost-chart" viewBox="0 0 900 240" role="img" tabindex="0" aria-label="Upgrade cost by level"></svg>
               <div id="cost-chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div>
             </div>
+            <div class="chart-axis" aria-hidden="true"><span>Level 1</span><span>150</span><span>301</span></div>
             <p id="cost-chart-note" class="chart-note"></p>
           </article>
           <article class="chart-view">
-            <div class="chart-label"><span id="reward-chart-label">Base rewards</span><strong id="chart-reward-max"></strong></div>
+            <div class="chart-label"><span id="reward-chart-label">Base rewards</span></div>
             <div class="chart-control-bar">
               <div id="reward-chart-view-toggle" class="chart-view-toggle" role="group" aria-label="Reward curve view">
-                <button type="button" data-reward-view="base" aria-pressed="true">Base</button>
-                <button type="button" data-reward-view="boosted" aria-pressed="false">Arc boosted</button>
+                <button type="button" data-reward-view="base" aria-pressed="true">No Arc</button>
+                <button type="button" data-reward-view="boosted" aria-pressed="false">With Arc</button>
               </div>
               <div id="reward-chart-controls" class="chart-tabs" aria-label="Reward resource"></div>
             </div>
             <div class="chart-plot">
-              <svg id="reward-chart" viewBox="0 0 900 130" role="img" tabindex="0" aria-label="P1 through P5 rewards by level"></svg>
+              <svg id="reward-chart" viewBox="0 0 900 240" role="img" tabindex="0" aria-label="P1 through P5 rewards by level"></svg>
               <div id="reward-chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div>
             </div>
+            <div class="chart-axis" aria-hidden="true"><span>Level 1</span><span>150</span><span>301</span></div>
             <div id="reward-chart-legend" class="chart-series-legend" aria-label="Selected-level position values"></div>
+            <p class="chart-note">Same vertical scale with or without Arc, so you can see the boost.</p>
             <p id="reward-chart-note" class="chart-note"></p>
           </article>
         </div>
       </section>
 
+      <details id="foundation-goods" class="foundation-details">
+        <summary>
+          <span class="foundation-label">Foundation cost</span>
+          <span id="goods-total" class="foundation-total">—</span>
+          <span class="foundation-action rage-column-toggle"><span>Details</span><span class="rage-toggle-switch" aria-hidden="true"></span></span>
+        </summary>
+        <div id="goods-list" class="goods-list"></div>
+        <p class="panel-note">Paid once to place the building. Level upgrades have their own costs below.</p>
+      </details>
+
       <section class="analysis-grid">
-        <article class="panel reward-panel">
+        <article id="unlock-costs" class="panel unlock-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Selected level</p>
-              <h3>Contributor rewards</h3>
+              <p class="eyebrow">Step 1 · Unlock the level</p>
+              <h3>Unlock costs</h3>
+            </div>
+            <span id="unlock-total" class="quiet-chip">—</span>
+          </div>
+          <div id="unlock-list" class="unlock-requirements"></div>
+          <details id="unlock-cumulative" class="unlock-cumulative">
+            <summary id="unlock-cumulative-label">Total unlock costs so far</summary>
+            <p id="unlock-note" class="panel-note"></p>
+          </details>
+        </article>
+
+        <article id="contributor-rewards" class="panel reward-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Step 2 · Fund the level</p>
+              <h3>Contributions &amp; rewards</h3>
             </div>
             <span id="reward-multiplier" class="quiet-chip">—</span>
           </div>
           <div class="reward-cost-card" aria-label="Selected level costs and benefits">
             <div class="reward-cost-metric">
-              <span>Owner priming cost</span>
-              <strong id="owner-priming-cost">—</strong>
-              <small>FP before posting P1</small>
+              <span>Owner's FP cost</span>
+              <strong id="owner-cost">—</strong>
+              <small>After the five contributions below</small>
             </div>
             <div class="reward-cost-metric">
-              <span>Total FP cost</span>
+              <span>Total FP needed</span>
               <strong id="selected-total-fp-cost">—</strong>
-              <small>FP to complete this level</small>
+              <small>To finish this level</small>
             </div>
             <div class="reward-cost-metric reward-benefit-metric">
-              <span>Level benefits</span>
+              <span>Building benefits</span>
               <div id="selected-level-benefits" class="selected-benefit-list"></div>
-              <small>Boost or production at this level</small>
+              <small>At the selected level</small>
             </div>
           </div>
           <p class="reward-cost-note">
-            Priming assumes an empty level and secures the displayed Arc-boosted P1 contribution.
+            The owner's FP cost assumes an empty level and all five contributions at the Arc bonus above.
           </p>
           <div
             id="reward-table-wrap"
@@ -170,74 +213,45 @@
                 <tr>
                   <th>Position</th>
                   <th>Base FP</th>
-                  <th>FP + Arc</th>
+                  <th class="bonus-heading">FP + Arc</th>
                   <th>Base medals</th>
-                  <th>Medals + Arc</th>
+                  <th class="bonus-heading">Medals + Arc</th>
                   <th>Base BP</th>
-                  <th>BP + Arc</th>
+                  <th class="bonus-heading">BP + Arc</th>
                 </tr>
               </thead>
               <tbody id="reward-body"></tbody>
             </table>
           </div>
           <p id="reward-table-scroll-hint" class="table-scroll-hint" hidden>
-            Scroll horizontally to compare all reward columns.
+            Scroll sideways to see all rewards.
           </p>
           <p id="reward-note" class="panel-note"></p>
         </article>
-
-        <div class="analysis-side">
-          <article class="panel goods-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Construction only</p>
-                <h3>Foundation goods</h3>
-              </div>
-              <span id="goods-total" class="quiet-chip">—</span>
-            </div>
-            <div id="goods-list" class="goods-list"></div>
-            <p class="panel-note">
-              These goods are paid once to place the building and are separate from later
-              level-unlock requirements.
-            </p>
-          </article>
-
-          <article id="unlock-costs" class="panel unlock-panel">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Selected level</p>
-                <h3>Unlock costs</h3>
-              </div>
-              <span id="unlock-total" class="quiet-chip">—</span>
-            </div>
-            <div id="unlock-list" class="goods-list"></div>
-            <p id="unlock-note" class="panel-note"></p>
-          </article>
-        </div>
       </section>
 
       <section id="pre-rage-analysis" class="panel level-panel rage-panel">
         <div class="panel-heading level-heading rage-heading">
           <div>
-            <p class="eyebrow">Rapid leveling planner</p>
-            <h3>Pre-rage analysis</h3>
-            <span class="ledger-key">One Rage session · zero-only columns hidden automatically</span>
+            <p class="eyebrow">Plan several levels</p>
+            <h3>Rage leveling planner</h3>
+            <span class="ledger-key">Check the full bill. Save the rage for the levels.</span>
           </div>
-          <button id="rage-download-button" type="button">Download Rage CSV</button>
+          <button id="rage-download-button" type="button">Download plan (CSV)</button>
         </div>
         <div class="rage-analysis-controls" aria-label="Rage session controls">
           <span class="rage-control-group-label rage-level-group-label">Level range</span>
           <label class="rage-control rage-start-control">
-            <span>Beginning level</span>
+            <span>First level to fund</span>
             <input id="rage-start-level" type="number" min="1" max="301" value="1" />
           </label>
           <label class="rage-control rage-target-control">
-            <span>Target level</span>
+            <span>Last level to fund</span>
             <input id="rage-target-level" type="number" min="1" max="301" value="101" />
           </label>
           <span class="rage-control-group-label rage-arc-group-label">
-            Arc levels by contribution position
-            <small>0–180+ · level 180 represents 180 and above</small>
+            Contributor Arc levels
+            <small>Enter each contributor’s Arc level. Use 180 for level 180 or higher.</small>
           </span>
           <label class="rage-control rage-arc-control rage-p1-control">
             <span>P1</span>
@@ -265,33 +279,40 @@
             <output id="rage-arc-p5-bonus" for="rage-arc-p5" class="rage-arc-bonus" aria-live="polite">90% bonus · 1.90×</output>
           </label>
         </div>
-        <p class="rage-assumption">
-          Rage owner FP assumes all five positions are funded at the entered Arc levels.
-          Resource totals include level-unlock payments only. Goods/type is the amount for
-          one goods type; Goods total combines all five types. Special resources, such as
-          Dark Matter, appear separately.
-        </p>
         <p id="rage-coverage-warning" class="coverage-warning" hidden></p>
         <div class="rage-table-toolbar">
+          <details class="planner-help">
+            <summary>How this plan works</summary>
+            <p class="rage-assumption">
+              The first and last levels are both included. The owner FP cost assumes that each level starts empty
+              and that all five contributor positions are filled using the Arc bonus rates shown.
+            </p>
+            <p class="rage-assumption">
+              For GBs that require extra resources to unlock level 11 and above, check the unlock cost section
+              for the required goods and other resources. Any column that contains only zero values is hidden.
+            </p>
+          </details>
           <button
             id="rage-benefit-toggle"
             class="rage-column-toggle"
             type="button"
+            role="switch"
             aria-controls="rage-table"
-            aria-expanded="true"
+            aria-checked="true"
           >
-            <span class="rage-toggle-chevron" aria-hidden="true">⌄</span>
-            <span id="rage-benefit-toggle-label">Hide GB benefits</span>
+            <span id="rage-benefit-toggle-label">Benefits</span>
+            <span class="rage-toggle-switch" aria-hidden="true"></span>
           </button>
           <button
             id="rage-unlock-toggle"
             class="rage-column-toggle"
             type="button"
+            role="switch"
             aria-controls="rage-table"
-            aria-expanded="true"
+            aria-checked="true"
           >
-            <span class="rage-toggle-chevron" aria-hidden="true">⌄</span>
-            <span id="rage-unlock-toggle-label">Hide unlocking costs</span>
+            <span id="rage-unlock-toggle-label">Unlock costs</span>
+            <span class="rage-toggle-switch" aria-hidden="true"></span>
           </button>
         </div>
         <div
@@ -309,15 +330,14 @@
           </table>
         </div>
         <p id="rage-table-scroll-hint" class="table-scroll-hint level-table-scroll-hint" hidden>
-          Scroll horizontally to compare contributions and owner requirements.
+          Scroll sideways to see all costs and contributions.
         </p>
       </section>
 
     </main>
 
     <footer>
-      <span>GB Analysis</span>
-      <span>Great Building planning and analysis</span>
+      <span>Another zpwd dashboard.</span>
     </footer>
 
     <script type="module" src="src/app.js"></script>

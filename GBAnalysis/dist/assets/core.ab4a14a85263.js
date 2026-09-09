@@ -338,14 +338,18 @@ export function buildBaseRewardSeries(rows, resource) {
   return buildRewardSeries(rows, resource, "base");
 }
 
-export function ownerPrimingCost(totalForgePoints, firstPlaceContribution) {
+export function ownerCost(totalForgePoints, contributions) {
   if (!Number.isFinite(totalForgePoints) || totalForgePoints < 0) {
     throw new TypeError("Total Forge Point cost must be a non-negative number");
   }
-  if (!Number.isFinite(firstPlaceContribution) || firstPlaceContribution < 0) {
-    throw new TypeError("First-place contribution must be a non-negative number");
+  if (
+    !Array.isArray(contributions) ||
+    contributions.some((contribution) => !Number.isFinite(contribution) || contribution < 0)
+  ) {
+    throw new TypeError("Contributions must be an array of non-negative numbers");
   }
-  return Math.max(0, totalForgePoints - firstPlaceContribution * 2);
+  const contributionTotal = contributions.reduce((sum, contribution) => sum + contribution, 0);
+  return Math.max(0, totalForgePoints - contributionTotal);
 }
 
 export function buildRageAnalysis(rows, beginningLevel, targetLevel, positionArcBonuses) {
@@ -384,10 +388,6 @@ export function buildRageAnalysis(rows, beginningLevel, targetLevel, positionArc
       const contributions = baseContributions
         ? applyArcBonus(baseContributions, positionArcBonuses)
         : Array(5).fill(null);
-      const contributionTotal = contributions.reduce(
-        (sum, amount) => sum + (Number.isFinite(amount) ? amount : 0),
-        0,
-      );
       const goodsAmounts = Object.values(row.unlockCosts.goods);
       const goods = goodsAmounts.reduce(
         (sum, amount) => sum + amount,
@@ -407,7 +407,10 @@ export function buildRageAnalysis(rows, beginningLevel, targetLevel, positionArc
         targetLevel: row.targetLevel,
         upgradeForgePoints: row.cost,
         contributions,
-        ownerForgePoints: Math.max(0, row.cost - contributionTotal),
+        ownerForgePoints: ownerCost(
+          row.cost,
+          contributions.filter((amount) => Number.isFinite(amount)),
+        ),
         goodsPerType,
         goods,
         money: row.unlockCosts.resources.money ?? 0,
@@ -434,4 +437,62 @@ export function buildRageAnalysis(rows, beginningLevel, targetLevel, positionArc
     });
 
   return { rows: analyzedRows, totals };
+}
+
+// Keep plan-wide settings separate from the level ledger in the human-readable export.
+export function buildRageCsv({ building, era, analysis, arcLevels, arcBonuses, coverageNote = "" }) {
+  const { rows, totals } = analysis;
+  const resourceKeys = [...new Set(rows.flatMap((row) => Object.keys(row.specialResources)))].sort();
+  const unlockColumns = [
+    ["Unlock goods per type", "goodsPerType"],
+    ["Unlock goods total", "goods"],
+    ["Unlock coins", "money"],
+    ["Unlock supplies", "supplies"],
+    ["Unlock medals", "medals"],
+  ].map(([label, key]) => ({ label, value: (row) => row[key], total: totals[key] }));
+  unlockColumns.push(...resourceKeys.map((key) => ({
+    label: `Unlock ${key.replaceAll("_", " ")}`,
+    value: (row) => row.specialResources[key] ?? 0,
+    total: totals.specialResources[key] ?? 0,
+  })));
+  const columns = [
+    { label: "Level", value: (row) => row.targetLevel, total: "Plan total" },
+    ...unlockColumns.filter((column) => rows.some((row) => column.value(row) !== 0)),
+    ...(building.benefits ?? []).map(({ key }) => {
+      const { label, unit } = benefitDefinition(key);
+      return {
+        label: `Benefit: ${label}${unit ? ` (${unit})` : ""}`,
+        value: (row) => row.benefits.find((benefit) => benefit.key === key)?.value,
+        total: "", // Benefits describe each level; adding them would be misleading.
+      };
+    }),
+    { label: "Owner's FP cost", value: (row) => row.ownerForgePoints, total: totals.ownerForgePoints },
+    ...arcBonuses.map((bonus, position) => ({
+      label: `P${position + 1} contribution (FP)`,
+      value: (row) => row.contributions[position],
+      total: totals.contributions[position],
+    })),
+    { label: "Total FP cost", value: (row) => row.upgradeForgePoints, total: totals.upgradeForgePoints },
+  ];
+  const records = [
+    ["Great Building", building.name],
+    ["Era", era],
+    ["Levels to fund (inclusive)", rows[0]?.targetLevel, rows.at(-1)?.targetLevel],
+    ["Contributor", "P1", "P2", "P3", "P4", "P5"],
+    ["Arc level", ...arcLevels.map((level) => level === 180 ? "180+" : level)],
+    ["Arc bonus (%)", ...arcBonuses],
+    ["Assumptions", "Empty levels; all five positions funded. Benefits are per-level values, not totals. Blank values mean unavailable."],
+    ...(coverageNote ? [["Reward data", coverageNote]] : []),
+    [],
+    columns.map(({ label }) => label),
+    ...rows.map((row) => columns.map((column) => column.value(row))),
+    columns.map(({ total }) => total),
+  ];
+  const escape = (value) => {
+    const text = String(value ?? "");
+    return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  };
+  return records.map((record) => Array.from(
+    { length: columns.length }, (_, index) => escape(record[index]),
+  ).join(",")).join("\r\n") + "\r\n";
 }
