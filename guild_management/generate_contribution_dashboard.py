@@ -163,14 +163,13 @@ def production_context(row: dict[str, object]) -> tuple[object, ...] | None:
 
 
 def malformed_production_indexes(rows: list[dict[str, object]]) -> set[int]:
-    """Find impossible five-good batches caused by unstable offset pagination.
+    """Find suspect five-good batches that may come from unstable pagination.
 
-    A guild building production posts one equal amount for each of an era's five
-    goods. When new log entries shift offset pagination during an export, the end
-    of one page can be spliced onto the start of another and create a mixed-amount
-    five-good batch. Runs may begin partway through a real batch, so choose the
-    alignment that preserves the most complete, uniform batches before rejecting
-    only complete five-good batches with mixed amounts.
+    Most building production posts an equal amount for each of an era's five
+    goods. Offset pagination can splice two batches into a mixed-amount batch,
+    but genuine mixed batches also occur. Runs may begin partway through a real
+    batch, so choose the alignment that preserves the most complete, uniform
+    batches. The inventory audit can later prove that suspect rows are genuine.
     """
     malformed: set[int] = set()
     index = 0
@@ -212,10 +211,18 @@ def malformed_production_indexes(rows: list[dict[str, object]]) -> set[int]:
     return malformed
 
 
-def normalized_export(path: Path) -> tuple[list[dict[str, object]], int]:
-    """Read one export, rejecting malformed batches and exact ID duplicates."""
+def normalized_export(
+    path: Path, *, keep_mixed_production_after: dt.datetime | None = None
+) -> tuple[list[dict[str, object]], int]:
+    """Read one export, rejecting unproven mixed batches and exact ID duplicates."""
     source_rows = read_export(path)
     malformed_indexes = malformed_production_indexes(source_rows)
+    if keep_mixed_production_after is not None:
+        malformed_indexes = {
+            index
+            for index in malformed_indexes
+            if source_rows[index]["timestamp"] <= keep_mixed_production_after
+        }
     rows: list[dict[str, object]] = []
     seen_transaction_keys: set[tuple[object, ...]] = set()
     for row_index, row in enumerate(source_rows):
@@ -288,29 +295,54 @@ def audit_inventory_delta(
             contribution_delta[str(row["good"])] += int(row["amount"])
 
     mapping = age_mapping(current_goods)
-    per_age: dict[str, dict[str, int]] = {}
-    mismatches: list[dict[str, object]] = []
-    for good in current_goods:
-        inventory_change = current_inventory.get(good, 0) - baseline_inventory.get(good, 0)
-        logged_change = contribution_delta[good]
-        age = mapping[good]
-        totals = per_age.setdefault(
-            age,
-            {"goodsChecked": 0, "inventoryDelta": 0, "contributionDelta": 0},
-        )
-        totals["goodsChecked"] += 1
-        totals["inventoryDelta"] += inventory_change
-        totals["contributionDelta"] += logged_change
-        if inventory_change != logged_change:
-            mismatches.append(
-                {
-                    "age": age,
-                    "good": good,
-                    "inventoryDelta": inventory_change,
-                    "contributionDelta": logged_change,
-                    "difference": inventory_change - logged_change,
-                }
+
+    def compare_delta(
+        logged: Counter[str],
+    ) -> tuple[dict[str, dict[str, int]], list[dict[str, object]]]:
+        per_age: dict[str, dict[str, int]] = {}
+        mismatches: list[dict[str, object]] = []
+        for good in current_goods:
+            inventory_change = current_inventory.get(good, 0) - baseline_inventory.get(good, 0)
+            logged_change = logged[good]
+            age = mapping[good]
+            totals = per_age.setdefault(
+                age,
+                {"goodsChecked": 0, "inventoryDelta": 0, "contributionDelta": 0},
             )
+            totals["goodsChecked"] += 1
+            totals["inventoryDelta"] += inventory_change
+            totals["contributionDelta"] += logged_change
+            if inventory_change != logged_change:
+                mismatches.append(
+                    {
+                        "age": age,
+                        "good": good,
+                        "inventoryDelta": inventory_change,
+                        "contributionDelta": logged_change,
+                        "difference": inventory_change - logged_change,
+                    }
+                )
+        return per_age, mismatches
+
+    per_age, mismatches = compare_delta(contribution_delta)
+    retained_mixed_rows = 0
+    if mismatches:
+        raw_rows = read_export(current_contribution)
+        mixed_rows = [
+            raw_rows[index]
+            for index in sorted(malformed_production_indexes(raw_rows))
+            if raw_rows[index]["timestamp"] > cutoff
+        ]
+        if mixed_rows:
+            candidate_delta = contribution_delta.copy()
+            for row in mixed_rows:
+                candidate_delta[str(row["good"])] += int(row["amount"])
+            candidate_per_age, candidate_mismatches = compare_delta(candidate_delta)
+            if not candidate_mismatches:
+                contribution_delta = candidate_delta
+                per_age = candidate_per_age
+                mismatches = candidate_mismatches
+                retained_mixed_rows = len(mixed_rows)
 
     unknown_logged_goods = sorted(set(contribution_delta) - set(current_goods))
     if unknown_logged_goods:
@@ -333,6 +365,7 @@ def audit_inventory_delta(
         "cutoffTimestamp": cutoff.isoformat(timespec="seconds"),
         "goodsChecked": len(current_goods),
         "agesChecked": len(per_age),
+        "retainedMixedProductionRows": retained_mixed_rows,
         "baselineContribution": baseline_contribution.name,
         "currentContribution": current_contribution.name,
         "baselineTreasury": baseline_treasury.name,
@@ -352,14 +385,15 @@ def merge_exports(
     paths: list[Path],
     *,
     closed_history_baseline: Path | None = None,
+    keep_latest_mixed_production_after: dt.datetime | None = None,
 ) -> tuple[list[dict[str, object]], int]:
     """Merge overlapping exports without collapsing repeated real transactions.
 
     Legacy Forge Hammer CSVs do not contain a transaction ID. For those files,
     identical rows are treated as a multiset: the merged occurrence count is the
-    largest count present in any source snapshot. Impossible mixed-amount legacy
-    production batches are rejected as offset-pagination splices. Rows with a
-    transaction ID are exact-deduplicated within and across exports.
+    largest count present in any source snapshot. Unproven mixed-amount legacy
+    production batches are rejected as possible offset-pagination splices. Rows
+    with a transaction ID are exact-deduplicated within and across exports.
     """
     merged_counts: Counter[tuple[object, ...]] = Counter()
     latest_rows: dict[tuple[object, ...], dict[str, object]] = {}
@@ -373,7 +407,14 @@ def merge_exports(
             player_id = str(row["playerId"])
             if player_id:
                 latest_names[player_id] = str(row["playerName"])
-        source_rows, _ = normalized_export(path)
+        source_rows, _ = normalized_export(
+            path,
+            keep_mixed_production_after=(
+                keep_latest_mixed_production_after
+                if path_index == len(paths) - 1
+                else None
+            ),
+        )
         if closed_history_baseline is not None and path_index == len(paths) - 1:
             baseline_rows, _ = normalized_export(closed_history_baseline)
             source_rows, _ = reconcile_closed_history(baseline_rows, source_rows)
@@ -560,6 +601,8 @@ def append_audited_rows(
     existing_payload: dict[str, object],
     current_contribution: Path,
     cutoff: dt.datetime,
+    *,
+    keep_mixed_production: bool = False,
 ) -> list[dict[str, object]]:
     """Extend a previously audited canonical payload without reopening history."""
     rows = payload_rows(existing_payload)
@@ -569,7 +612,10 @@ def append_audited_rows(
             "Existing audited contribution history does not end at the audit baseline "
             f"({latest.isoformat(sep=' ')} != {cutoff.isoformat(sep=' ')})"
         )
-    current_rows, _ = normalized_export(current_contribution)
+    current_rows, _ = normalized_export(
+        current_contribution,
+        keep_mixed_production_after=cutoff if keep_mixed_production else None,
+    )
     latest_names = {
         str(row["playerId"]): str(row["playerName"])
         for row in current_rows
@@ -641,6 +687,9 @@ def main() -> None:
                     existing_payload,
                     current_contribution,
                     cutoff,
+                    keep_mixed_production=bool(
+                        inventory_audit["retainedMixedProductionRows"]
+                    ),
                 )
                 old_meta = existing_payload["meta"]
                 raw_current_count = len(read_export(current_contribution))
@@ -655,6 +704,13 @@ def main() -> None:
                     sources,
                     closed_history_baseline=(
                         baseline_contribution if explicit_baseline else None
+                    ),
+                    keep_latest_mixed_production_after=(
+                        dt.datetime.fromisoformat(
+                            str(inventory_audit["cutoffTimestamp"])
+                        )
+                        if inventory_audit["retainedMixedProductionRows"]
+                        else None
                     ),
                 )
     payload = build_payload(

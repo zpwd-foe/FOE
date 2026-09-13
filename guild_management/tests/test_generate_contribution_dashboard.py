@@ -216,6 +216,51 @@ class ContributionMergeTests(unittest.TestCase):
                     current_treasury,
                 )
 
+    def test_retains_mixed_production_only_when_all_goods_reconcile(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            baseline_contribution = root / "baseline-contribution.csv"
+            current_contribution = root / "current-contribution.csv"
+            baseline_treasury = root / "baseline-treasury.csv"
+            current_treasury = root / "current-treasury.csv"
+            baseline_row = self.row()
+            mixed_batch = self.production_batch([180, 480, 180, 180, 180])
+            self.write_export(baseline_contribution, [baseline_row])
+            self.write_export(current_contribution, [baseline_row, *mixed_batch])
+            self.write_treasury(baseline_treasury, [100, 100, 100, 100, 100])
+            self.write_treasury(current_treasury, [280, 280, 580, 280, 280])
+
+            audit = audit_inventory_delta(
+                baseline_contribution,
+                current_contribution,
+                baseline_treasury,
+                current_treasury,
+            )
+            baseline_rows, _ = merge_exports([baseline_contribution])
+            rows = append_audited_rows(
+                build_payload(baseline_rows, "GoE"),
+                current_contribution,
+                dt.datetime(2026, 8, 26, 20, 0),
+                keep_mixed_production=bool(audit["retainedMixedProductionRows"]),
+            )
+            self.assertEqual(audit["retainedMixedProductionRows"], 5)
+            self.assertEqual(len(rows), 6)
+            self.assertEqual(sum(int(row["amount"]) for row in rows), 1205)
+            rebuilt_rows, _ = merge_exports(
+                [baseline_contribution, current_contribution],
+                keep_latest_mixed_production_after=dt.datetime(2026, 8, 26, 20, 0),
+            )
+            self.assertEqual(len(rebuilt_rows), 6)
+
+            self.write_treasury(current_treasury, [280, 280, 581, 280, 280])
+            with self.assertRaisesRegex(ValueError, "All-goods inventory audit failed"):
+                audit_inventory_delta(
+                    baseline_contribution,
+                    current_contribution,
+                    baseline_treasury,
+                    current_treasury,
+                )
+
     def test_extends_canonical_history_without_reopening_old_multiplicity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             current = Path(directory) / "current.csv"
