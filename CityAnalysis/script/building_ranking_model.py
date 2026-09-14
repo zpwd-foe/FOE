@@ -92,7 +92,7 @@ XLSX_MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 XLSX_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 # Increment this version before each pushed code change to this workbook generator.
-WORKBOOK_VERSION = "1.0.56"
+WORKBOOK_VERSION = "1.0.57"
 DEFAULT_ESTIMATED_FP_PRODUCTION = 30000.0
 DEFAULT_ESTIMATED_GOODS_PRODUCTION = 20000.0
 DEFAULT_ESTIMATED_SPECIAL_GOODS_PRODUCTION = 120.0
@@ -133,6 +133,7 @@ BUILDING_CATEGORY_CORRECTIONS = {
     "elysian whisperwood watermill": ("Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
     "everblossom fiore village": ("Everblossom Fiore Village", "FELL 2025 Event Rewards"),
     "flower trail": ("Flower Trail", CARE_2026_EVENT_REWARDS),
+    "golden crops feast": ("Golden Crops Feast", FALL_2026_EVENT_REWARDS),
     "harmonious animal crossing": ("Harmonious Animal Crossing", "WILD 2026 Event Rewards"),
     "harmonious world expo": ("Harmonious World Expo", "ANNI 2026 Event Rewards"),
     "mad scientist’s dominion": ("Mad Scientist’s Dominion", "HAL 2025 Event Rewards"),

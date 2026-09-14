@@ -22,6 +22,7 @@ class BuildingCategoryTests(unittest.TestCase):
             "Olive\u00a0Trail",
             "Rocky Trail",
             "Ascended Golden Crops Feast",
+            "Golden Crops Feast",
             "Radiant Flamingo Paradise",
             "Ascended Elysian Whisperwood Watermill",
             "Everblossom Fiore Village",
@@ -94,14 +95,16 @@ class BuildingCategoryTests(unittest.TestCase):
                     model.CARE_2026_EVENT_REWARDS,
                 )
 
-    def test_ascended_golden_crops_feast_overrides_legacy_fall_event_id(self) -> None:
-        self.assertEqual(
-            model.building_category_label(
-                "W_MultiAge_FALL21A12",
-                "Ascended Golden Crops Feast",
-            ),
-            model.FALL_2026_EVENT_REWARDS,
-        )
+    def test_golden_crops_feast_variants_override_legacy_fall_event_ids(self) -> None:
+        for entity_id, name in (
+            ("W_MultiAge_FALL21A11", "Golden Crops Feast"),
+            ("W_MultiAge_FALL21A12", "Ascended Golden Crops Feast"),
+        ):
+            with self.subTest(name=name):
+                self.assertEqual(
+                    model.building_category_label(entity_id, name),
+                    model.FALL_2026_EVENT_REWARDS,
+                )
 
     def test_recent_event_buildings_override_legacy_event_ids(self) -> None:
         corrections = {
