@@ -92,7 +92,7 @@ XLSX_MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 XLSX_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 # Increment this version before each pushed code change to this workbook generator.
-WORKBOOK_VERSION = "1.0.55"
+WORKBOOK_VERSION = "1.0.56"
 DEFAULT_ESTIMATED_FP_PRODUCTION = 30000.0
 DEFAULT_ESTIMATED_GOODS_PRODUCTION = 20000.0
 DEFAULT_ESTIMATED_SPECIAL_GOODS_PRODUCTION = 120.0
@@ -126,12 +126,28 @@ CULTURAL_SETTLEMENT_REWARDS = "Cultural Settlement Rewards"
 CARE_2026_EVENT_REWARDS = "CARE 2026 Event Rewards"
 FALL_2026_EVENT_REWARDS = "FALL 2026 Event Rewards"
 BUILDING_CATEGORY_CORRECTIONS = {
+    "ascended elysian whisperwood watermill": ("Ascended Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
     "ascended golden crops feast": ("Ascended Golden Crops Feast", FALL_2026_EVENT_REWARDS),
     "azalea windmill": ("Azalea Windmill", CARE_2026_EVENT_REWARDS),
     "bougainvillea windmill": ("Bougainvillea Windmill", CARE_2026_EVENT_REWARDS),
+    "elysian whisperwood watermill": ("Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
+    "everblossom fiore village": ("Everblossom Fiore Village", "FELL 2025 Event Rewards"),
     "flower trail": ("Flower Trail", CARE_2026_EVENT_REWARDS),
+    "harmonious animal crossing": ("Harmonious Animal Crossing", "WILD 2026 Event Rewards"),
+    "harmonious world expo": ("Harmonious World Expo", "ANNI 2026 Event Rewards"),
+    "mad scientist’s dominion": ("Mad Scientist’s Dominion", "HAL 2025 Event Rewards"),
+    "majestic animal crossing": ("Majestic Animal Crossing", "WILD 2026 Event Rewards"),
     "olive trail": ("Olive Trail", CARE_2026_EVENT_REWARDS),
+    "pirate king's conquest villa": ("Pirate King's Conquest Villa", "SUM 2025 Event Rewards"),
+    "radiant flamingo paradise": ("Radiant Flamingo Paradise", "WILD 2026 Event Rewards"),
     "rocky trail": ("Rocky Trail", CARE_2026_EVENT_REWARDS),
+    "serene bear mountain": ("Serene Bear Mountain", "WILD 2025 Event Rewards"),
+    "serene eagle mountain": ("Serene Eagle Mountain", "WILD 2025 Event Rewards"),
+    "serene moose mountain": ("Serene Moose Mountain", "WILD 2025 Event Rewards"),
+    "the charcoal limited express": ("The Charcoal Limited Express", "WIN 2025 Event Rewards"),
+    "the evergreen limited express": ("The Evergreen Limited Express", "WIN 2025 Event Rewards"),
+    "the sleighride limited express": ("The Sleighride Limited Express", "WIN 2025 Event Rewards"),
+    "united world expo": ("United World Expo", "ANNI 2026 Event Rewards"),
     "wheat trail": ("Wheat Trail", CARE_2026_EVENT_REWARDS),
 }
 QI_FIGHTER_ROLE_CELL = "$B$10"

@@ -22,6 +22,22 @@ class BuildingCategoryTests(unittest.TestCase):
             "Olive\u00a0Trail",
             "Rocky Trail",
             "Ascended Golden Crops Feast",
+            "Radiant Flamingo Paradise",
+            "Ascended Elysian Whisperwood Watermill",
+            "Everblossom Fiore Village",
+            "United World Expo",
+            "Harmonious World Expo",
+            "Majestic Animal Crossing",
+            "Elysian Whisperwood Watermill",
+            "Mad Scientist’s Dominion",
+            "Serene Eagle Mountain",
+            "Serene Bear Mountain",
+            "Serene Moose Mountain",
+            "Pirate King's Conquest Villa",
+            "Harmonious Animal Crossing",
+            "The Charcoal Limited Express",
+            "The Evergreen Limited Express",
+            "The Sleighride Limited Express",
         ]
         return {
             f"legacy-{index}": {"id": f"legacy-{index}", "name": name}
@@ -86,6 +102,31 @@ class BuildingCategoryTests(unittest.TestCase):
             ),
             model.FALL_2026_EVENT_REWARDS,
         )
+
+    def test_recent_event_buildings_override_legacy_event_ids(self) -> None:
+        corrections = {
+            "W_MultiAge_WILD24A15": ("Radiant Flamingo Paradise", "WILD 2026 Event Rewards"),
+            "W_MultiAge_FELL24A12": ("Ascended Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
+            "W_MultiAge_BOWL22A13": ("Everblossom Fiore Village", "FELL 2025 Event Rewards"),
+            "W_MultiAge_ARCH19A14": ("United World Expo", "ANNI 2026 Event Rewards"),
+            "W_MultiAge_ARCH19A13": ("Harmonious World Expo", "ANNI 2026 Event Rewards"),
+            "W_MultiAge_WILD22A12": ("Majestic Animal Crossing", "WILD 2026 Event Rewards"),
+            "W_MultiAge_FELL24A11": ("Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
+            "W_MultiAge_HAL15A4": ("Mad Scientist’s Dominion", "HAL 2025 Event Rewards"),
+            "W_MultiAge_WILD21A8b": ("Serene Eagle Mountain", "WILD 2025 Event Rewards"),
+            "W_MultiAge_WILD21A8a": ("Serene Bear Mountain", "WILD 2025 Event Rewards"),
+            "W_MultiAge_WILD21A8c": ("Serene Moose Mountain", "WILD 2025 Event Rewards"),
+            "W_MultiAge_SUM20A12": ("Pirate King's Conquest Villa", "SUM 2025 Event Rewards"),
+            "W_MultiAge_WILD22A11": ("Harmonious Animal Crossing", "WILD 2026 Event Rewards"),
+            "W_MultiAge_WIN19A10a": ("The Charcoal Limited Express", "WIN 2025 Event Rewards"),
+            "W_MultiAge_WIN19A10b": ("The Evergreen Limited Express", "WIN 2025 Event Rewards"),
+            "W_MultiAge_WIN19A10c": ("The Sleighride Limited Express", "WIN 2025 Event Rewards"),
+        }
+
+        for entity_id, (name, category) in corrections.items():
+            with self.subTest(entity_id=entity_id):
+                self.assertEqual(model.building_category_label(entity_id, name), category)
+                self.assertEqual(model.building_category_label("W_MultiAge_FUT99A1", name), category)
 
     def test_category_correction_validation_accepts_normalized_whitespace(self) -> None:
         model.validate_building_category_corrections(self.correction_entities())
