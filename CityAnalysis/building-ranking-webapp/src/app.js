@@ -11,6 +11,7 @@ const cityMapApi = window.FOE_BUILDING_RANKING_CITY_MAP;
 const rankingApi = window.FOE_BUILDING_RANKING_RANKING;
 const unitProductionApi = window.FOE_BUILDING_RANKING_UNIT_PRODUCTION;
 const productionSearchApi = window.FOE_BUILDING_RANKING_PRODUCTION_SEARCH;
+const { displayCategoryLabel, sortedCategoryOptions } = window.FOE_BUILDING_RANKING_CATEGORY_LABELS;
 
 const PROFILE_CONFIG = {
   overallEfficiency: {
@@ -1613,7 +1614,7 @@ function renderSummary(rows) {
     </div>
   `).join("");
   const benchmarkAge = DATA.ages.find((age) => age.key === c.age)?.label || c.age;
-  el.rankingSubtitle.textContent = `${benchmarkAge}${c.cityOnly ? " benchmark · Actual placed ages" : ""} · ${c.category}`;
+  el.rankingSubtitle.textContent = `${benchmarkAge}${c.cityOnly ? " benchmark · Actual placed ages" : ""} · ${displayCategoryLabel(c.category)}`;
 }
 
 function renderTable(rows) {
@@ -1671,7 +1672,7 @@ function renderTable(rows) {
         <td class="rank">${row.rank}</td>
         <td>
           <div class="building-name">${escapeHtml(row.record.name)}</div>
-          <div class="building-meta">${escapeHtml(row.record.category)}</div>
+          <div class="building-meta">${escapeHtml(displayCategoryLabel(row.record.category))}</div>
           ${fragmentMatch}
           ${productionMatch}
         </td>
@@ -1727,7 +1728,7 @@ function filterChips(c) {
       : el.searchInput.value.trim();
     chips.push(`${searchLabel}: ${searchValue}`);
   }
-  if (c.category !== ALL_CATEGORIES) chips.push(c.category);
+  if (c.category !== ALL_CATEGORIES) chips.push(displayCategoryLabel(c.category));
   c.strengths.forEach((strength) => chips.push(`Strength: ${strengthFilterLabel(strength)}`));
   if (areaValidation.message) {
     chips.push("Area filters paused");
@@ -2431,7 +2432,7 @@ function openDetail(rowKey, focusClose = true, returnFocus = null) {
     : "";
   el.detailContent.innerHTML = `
     <h2 class="detail-title" id="detailTitle">${escapeHtml(row.record.name)}</h2>
-    <p class="detail-subtitle">${escapeHtml(row.record.category)}</p>
+    <p class="detail-subtitle">${escapeHtml(displayCategoryLabel(row.record.category))}</p>
     <div class="detail-grid">
       <div class="detail-stat"><span>Rank</span><strong>${row.rank}</strong></div>
       <div class="detail-stat"><span>Score</span><strong>${fmt(row.score)}</strong></div>
@@ -2786,7 +2787,10 @@ async function changeAge() {
 function init() {
   el.versionLabel.textContent = `Model ${DATA.metadata.workbookModelVersion} · Last updated ${DATA.metadata.generatedAt}`;
   el.ageSelect.innerHTML = DATA.ages.map((age) => `<option value="${escapeHtml(age.key)}" title="${escapeHtml(age.label)}">${escapeHtml(age.label)}</option>`).join("");
-  el.categorySelect.innerHTML = DATA.categories.map((category) => `<option value="${escapeHtml(category)}" title="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join("");
+  el.categorySelect.innerHTML = sortedCategoryOptions(DATA.categories).map((category) => {
+    const label = escapeHtml(displayCategoryLabel(category));
+    return `<option value="${escapeHtml(category)}" title="${label}">${label}</option>`;
+  }).join("");
   el.productionSearchSelect.innerHTML = [
     '<option value="">Choose production…</option>',
     ...(productionSearchApi?.OPTIONS || []).map((option) => (

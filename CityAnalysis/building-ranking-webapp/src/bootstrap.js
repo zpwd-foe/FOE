@@ -144,6 +144,7 @@
   async function start() {
     await Promise.all([
       loadScript(`src/preferences.js?v=${encodeURIComponent(appVersion)}`),
+      loadScript(`src/category-labels.js?v=${encodeURIComponent(appVersion)}`),
       loadScript(`src/strengths.js?v=${encodeURIComponent(appVersion)}`),
       loadScript(`src/unit-production.js?v=${encodeURIComponent(appVersion)}`),
       loadScript(`src/production-search.js?v=${encodeURIComponent(appVersion)}`),
