@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "algorithm": "sha256",
   "hashLength": 12,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "assets": {
     "assets/styles.css": "assets/styles.fa80812c31ea.css",
-    "src/app.js": "assets/app.889b9696bf51.js",
-    "src/core.js": "assets/core.ab4a14a85263.js",
+    "src/app.js": "assets/app.10ef8b86d791.js",
+    "src/core.js": "assets/core.0cd6d1ebe8e5.js",
     "data/gb-analysis.json": "assets/gb-analysis.7f1a171f57e2.json",
-    "data/gb-benefits-source.json": "assets/gb-benefits-source.31445a125e5d.json",
+    "data/gb-benefits-source.json": "assets/gb-benefits-source.b405db1f324c.json",
     "assets/gb-icon.png": "assets/gb-icon.dc6249826920.png",
     "assets/favicon.png": "assets/favicon.5d09588ec69a.png"
   }

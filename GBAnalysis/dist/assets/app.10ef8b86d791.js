@@ -9,7 +9,7 @@ import {
   buildRewardSeries,
   buildUpgradeCostSeries,
   ownerCost,
-} from "./core.ab4a14a85263.js";
+} from "./core.0cd6d1ebe8e5.js";
 
 const formatter = new Intl.NumberFormat("en-US");
 const INPUT_STATE_ENDPOINT = "api/user-input";
@@ -118,12 +118,17 @@ function formatNumber(value) {
   return formatter.format(value);
 }
 
-function formatBenefitValue(key, value) {
+function formatBenefitValue(key, value, attempts) {
   if (!Number.isFinite(value)) return "—";
-  const { unit } = benefitDefinition(key);
+  const { unit, attemptLabel = "attempts" } = benefitDefinition(key);
   const formatted = formatNumber(value);
-  if (!unit) return formatted;
-  return unit === "%" ? `${formatted}%` : `${formatted} ${unit}`;
+  const displayUnit = unit === "goods" && value === 1 ? "good" : unit;
+  const valueWithUnit = !unit
+    ? formatted
+    : unit === "%" ? `${formatted}%` : `${formatted} ${displayUnit}`;
+  return Number.isFinite(attempts)
+    ? `${valueWithUnit} · ${formatNumber(attempts)} ${attemptLabel}`
+    : valueWithUnit;
 }
 
 function renderThemeToggle() {
@@ -383,7 +388,7 @@ function renderSelectedLevelBenefits(selectedRow) {
     const label = document.createElement("span");
     label.textContent = benefitDefinition(benefit.key).label;
     const value = document.createElement("strong");
-    value.textContent = formatBenefitValue(benefit.key, benefit.value);
+    value.textContent = formatBenefitValue(benefit.key, benefit.value, benefit.attempts);
     item.append(label, value);
     list.append(item);
   }
@@ -1040,7 +1045,10 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
           key: `benefit:${benefit.key}`,
           label: definition.label,
           value: (row) => row.benefits.find(({ key }) => key === benefit.key)?.value,
-          format: (value) => formatBenefitValue(benefit.key, value),
+          format: (value, row) => {
+            const rowBenefit = row.benefits.find(({ key }) => key === benefit.key);
+            return formatBenefitValue(benefit.key, value, rowBenefit?.attempts);
+          },
           summable: false,
         };
       }),
@@ -1160,7 +1168,7 @@ function renderRageTable(selectedTargetLevel, rewardCoverage) {
       appendCell(
         row,
         column.format
-          ? column.format(value)
+          ? column.format(value, rowData)
           : Number.isFinite(value)
             ? formatNumber(value)
             : "—",
@@ -1302,7 +1310,7 @@ function setTargetLevel(value) {
 async function initialize() {
   const [datasetResponse, benefitResponse] = await Promise.all([
     fetch("assets/gb-analysis.7f1a171f57e2.json"),
-    fetch("assets/gb-benefits-source.31445a125e5d.json"),
+    fetch("assets/gb-benefits-source.b405db1f324c.json"),
   ]);
   if (!datasetResponse.ok) {
     throw new Error(`Dataset request failed: ${datasetResponse.status}`);
@@ -1317,7 +1325,10 @@ async function initialize() {
     if (
       !Array.isArray(benefits) ||
       benefits.length === 0 ||
-      benefits.some((benefit) => benefit.values?.length < dataset.maxLevel)
+      benefits.some(
+        (benefit) => benefit.values?.length < dataset.maxLevel ||
+          (benefit.attempts && benefit.attempts.length < dataset.maxLevel),
+      )
     ) {
       throw new Error(`Benefit coverage is incomplete for ${building.name}`);
     }

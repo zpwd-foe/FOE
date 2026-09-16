@@ -97,6 +97,18 @@ test("CSV retains nonzero unlock costs and special resources without summing ben
   assert.ok(!header.includes("Unlock unused"));
 });
 
+test("CSV exports compound benefit attempt counts in a separate column", () => {
+  const options = fixture();
+  options.building.benefits[0].attempts = [4, 5];
+  options.analysis.rows[0].benefits[0].attempts = 4;
+  options.analysis.rows[1].benefits[0].attempts = 5;
+  const { header, rows, total } = ledger(options);
+  const attemptsIndex = header.indexOf("Benefit: GB contribution boost attempts");
+  assert.ok(attemptsIndex > 0);
+  assert.deepEqual(rows.map((row) => row[attemptsIndex]), ["4", "5"]);
+  assert.equal(total[attemptsIndex], "");
+});
+
 test("CSV preserves unavailable values and escapes names and coverage notes", () => {
   const options = fixture(1);
   options.building.name = 'Building, "special"\r\nname';

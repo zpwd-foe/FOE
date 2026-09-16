@@ -19,7 +19,7 @@ test("static build fingerprints every cacheable resource and rewrites dependenci
 
   assert.equal(manifest.algorithm, "sha256");
   assert.equal(manifest.hashLength, 12);
-  assert.equal(manifest.version, "1.1.1");
+  assert.equal(manifest.version, "1.1.2");
   assert.match(index, /<title>FoE GB Planner<\/title>/);
   assert.match(index, /<span>FoE GB Planner<\/span>/);
   assert.match(index, /<footer>\s*<span>Another zpwd dashboard\.<\/span>\s*<\/footer>/);
@@ -36,7 +36,7 @@ test("static build fingerprints every cacheable resource and rewrites dependenci
   assert.match(index, /id="level-input"[^>]+max="301"/);
   assert.match(index, /id="arc-input"[^>]+max="100"/);
   assert.match(index, /id="rage-target-level"[^>]+max="301"/);
-  assert.match(index, /Dashboard v1\.1\.1/);
+  assert.match(index, /Dashboard v1\.1\.2/);
   assert.doesNotMatch(index, /FoE Helper 4\.8\.1\.0 · exact FP \+ medal data/);
   assert.match(index, /id="rage-arc-p1"[^>]+max="180"[^>]+value="180"/);
   assert.match(index, /id="rage-arc-p5"[^>]+max="180"[^>]+value="80"/);

@@ -206,17 +206,22 @@ test("every dashboard Great Building has a concise benefit summary", () => {
 test("per-level benefits retain their display label, unit, and selected value", () => {
   const building = {
     benefits: [
-      { key: "advanced_tactics", values: [5, 10] },
+      { key: "advanced_tactics", values: [5, 10], attempts: [4, 5] },
       { key: "supplies", values: [205_000, 217_800] },
     ],
   };
   assert.deepEqual(benefitsForLevel(building, 2), [
-    { key: "advanced_tactics", value: 10 },
+    { key: "advanced_tactics", value: 10, attempts: 5 },
     { key: "supplies", value: 217_800 },
   ]);
   assert.deepEqual(benefitDefinition("advanced_tactics"), {
     label: "All-army attack & defense",
     unit: "%",
+  });
+  assert.deepEqual(benefitDefinition("aid_goods"), {
+    label: "Goods per aid",
+    unit: "goods",
+    attemptLabel: "aids",
   });
 });
 

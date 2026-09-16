@@ -67,6 +67,9 @@ PRECISE_PERCENTAGE_SOURCES = {
     "X_OceanicFuture_Landmark1": (
         "Atlantis Museum", "plunder_and_pillage", None, 50, None
     ),
+    "X_OceanicFuture_Landmark3": (
+        "The Blue Galaxy", "double_collection", None, 75, None
+    ),
     "X_OceanicFuture_Landmark2": ("The Kraken", "first_strike", None, 100, None),
     "X_VirtualFuture_Landmark2": ("Himeji Castle", "spoils_of_war", None, 50, None),
     "X_VirtualFuture_Landmark1": (
@@ -83,6 +86,35 @@ PRECISE_PERCENTAGE_SOURCES = {
     "X_SpaceAgeSpaceHub_Landmark2": (
         "Cosmic Catalyst", "critical_hit_chance", None, 25, None
     ),
+}
+
+COMPOUND_BENEFIT_ATTEMPT_CAPS = {
+    "X_EarlyMiddleAge_Landmark3": 6,
+    "X_OceanicFuture_Landmark3": 15,
+    "X_OceanicFuture_Landmark2": 25,
+    "X_VirtualFuture_Landmark2": 10,
+    "X_SpaceAgeMars_Landmark2": 5,
+    "X_SpaceAgeAsteroidBelt_Landmark1": 10,
+    "X_SpaceAgeJupiterMoon_Landmark1": 10,
+}
+
+VARIABLE_ATTEMPT_SOURCES = {
+    # title, benefit key, post-level-10 increment
+    "X_TomorrowEra_Landmark2": ("Truce Tower", "aid_goods", 1),
+}
+
+FIXED_BENEFIT_ATTEMPTS = {
+    "X_IronAge_Landmark2": ("supplies_boost", 40),
+    "X_HighMiddleAge_Landmark1": ("money_boost", 90),
+    "X_IndustrialAge_Landmark1": ("supplies_boost", 75),
+    "X_TomorrowEra_Landmark1": ("plunder_goods", 3),
+}
+
+OFFICIAL_METADATA_SOURCES = {
+    "X_IronAge_Landmark2": "https://foezz.innogamescdn.com/start/metadata?id=building_entity_X_IronAge_Landmark2-7ca5b400db9aadbd09320b496f985df52d6483b2",
+    "X_HighMiddleAge_Landmark1": "https://foezz.innogamescdn.com/start/metadata?id=building_entity_X_HighMiddleAge_Landmark1-fc2020e31e26b4c92019c0f2c86c611c300fc2c0",
+    "X_IndustrialAge_Landmark1": "https://foezz.innogamescdn.com/start/metadata?id=building_entity_X_IndustrialAge_Landmark1-26ee89c1f89e81508ae22afef2be7cdd093b712a",
+    "X_TomorrowEra_Landmark1": "https://foezz.innogamescdn.com/start/metadata?id=building_entity_X_TomorrowEra_Landmark1-90823d65d5c3fb8a3bc8cab3685b14c8c1e0b1b7",
 }
 
 SOURCE_SLUGS = {
@@ -220,7 +252,9 @@ def fetch_fandom_wikitexts(titles: list[str]) -> dict[str, str]:
 def parse_wiki_table_rows(source: str) -> dict[int, list[str]]:
     rows = {}
     for table in re.findall(r"(?ms)^[ \t]*\{\|.*?^[ \t]*\|}\s*$", source):
-        if not re.search(r"(?m)^[ \t]*!.*\b(?:Lvl|Level)\b", table):
+        if not re.search(r"(?m)^[ \t]*!.*\b(?:Lvl|Level)\b", table) or not re.search(
+            r"(?m)^[ \t]*!.*\bReq\.", table
+        ):
             continue
         table_rows = {}
         for segment in re.split(r"(?m)^[ \t]*\|-[^\n]*$", table):
@@ -237,8 +271,7 @@ def parse_wiki_table_rows(source: str) -> dict[int, list[str]]:
             )
             if level_match:
                 table_rows[int(level_match.group(1))] = cells
-        if any("%" in cell for cells in table_rows.values() for cell in cells[2:]):
-            rows.update(table_rows)
+        rows.update(table_rows)
     return rows
 
 
@@ -311,8 +344,71 @@ def parse_wiki_percentage_values(
     return values
 
 
-def apply_precise_percentage_sources(source: dict[str, object]) -> dict[str, object]:
-    titles = list(dict.fromkeys(spec[0] for spec in PRECISE_PERCENTAGE_SOURCES.values()))
+def parse_wiki_attempt_values(
+    source: str, cap: int, through_level: int = MAX_LEVEL
+) -> list[int]:
+    exact_attempts = {}
+    for level, cells in parse_wiki_table_rows(source).items():
+        compound = next(
+            (
+                re.search(r"(\d+)\s*[x×]\s*\d+(?:[.,]\d+)?\s*%", cell, re.IGNORECASE)
+                for cell in cells[2:]
+                if re.search(
+                    r"(\d+)\s*[x×]\s*\d+(?:[.,]\d+)?\s*%",
+                    cell,
+                    re.IGNORECASE,
+                )
+            ),
+            None,
+        )
+        if compound:
+            exact_attempts[level] = int(compound.group(1))
+    if 1 not in exact_attempts:
+        raise ValueError("Compound benefit source is missing attempts at target level 1")
+
+    attempts = []
+    current = exact_attempts[1]
+    for level in range(1, through_level + 1):
+        current = exact_attempts.get(level, current)
+        attempts.append(current)
+    if attempts[-1] != cap:
+        raise ValueError(
+            f"Compound benefit attempts stop at {attempts[-1]}, expected documented cap {cap}"
+        )
+    return attempts
+
+
+def parse_wiki_integer_values(
+    source: str, increment: int, through_level: int = MAX_LEVEL
+) -> list[int]:
+    exact_values = {}
+    for level, cells in parse_wiki_table_rows(source).items():
+        if len(cells) < 3:
+            continue
+        normalized = cells[2].replace(",", "").strip()
+        if normalized.isdigit():
+            exact_values[level] = int(normalized)
+    if 1 not in exact_values:
+        raise ValueError("Integer benefit source is missing target level 1")
+
+    values = []
+    for level in range(1, through_level + 1):
+        value = exact_values.get(level)
+        if value is None and level > 10:
+            value = values[-1] + increment
+        if value is None:
+            raise ValueError(f"Integer benefit source is missing target level {level}")
+        values.append(value)
+    return values
+
+
+def apply_detailed_benefit_sources(source: dict[str, object]) -> dict[str, object]:
+    titles = list(
+        dict.fromkeys(
+            [spec[0] for spec in PRECISE_PERCENTAGE_SOURCES.values()]
+            + [spec[0] for spec in VARIABLE_ATTEMPT_SOURCES.values()]
+        )
+    )
     wikitext_by_title = fetch_fandom_wikitexts(titles)
     for building_id, spec in PRECISE_PERCENTAGE_SOURCES.items():
         title, key, obsolete_key, cap, increment = spec
@@ -320,12 +416,18 @@ def apply_precise_percentage_sources(source: dict[str, object]) -> dict[str, obj
         values = parse_wiki_percentage_values(
             wikitext_by_title[title], cap=cap, increment=increment
         )
+        benefit = {"key": key, "values": values}
+        attempt_cap = COMPOUND_BENEFIT_ATTEMPT_CAPS.get(building_id)
+        if attempt_cap is not None:
+            benefit["attempts"] = parse_wiki_attempt_values(
+                wikitext_by_title[title], cap=attempt_cap
+            )
         benefits = [
-            benefit
-            for benefit in building["benefits"]
-            if benefit["key"] not in {key, obsolete_key}
+            existing_benefit
+            for existing_benefit in building["benefits"]
+            if existing_benefit["key"] not in {key, obsolete_key}
         ]
-        benefits.append({"key": key, "values": values})
+        benefits.append(benefit)
         building["benefits"] = benefits
         building["precisePercentageSource"] = (
             f"https://forgeofempires.fandom.com/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
@@ -338,7 +440,21 @@ def apply_precise_percentage_sources(source: dict[str, object]) -> dict[str, obj
             if cap is not None
             else "interpolate isolated missing wiki rows"
         )
-    source["schemaVersion"] = 2
+    for building_id, (title, key, increment) in VARIABLE_ATTEMPT_SOURCES.items():
+        building = source["buildings"][building_id]
+        benefit = next(item for item in building["benefits"] if item["key"] == key)
+        benefit["attempts"] = parse_wiki_integer_values(
+            wikitext_by_title[title], increment=increment
+        )
+        building["compoundBenefitSource"] = (
+            f"https://forgeofempires.fandom.com/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
+        )
+    for building_id, (key, attempts) in FIXED_BENEFIT_ATTEMPTS.items():
+        building = source["buildings"][building_id]
+        benefit = next(item for item in building["benefits"] if item["key"] == key)
+        benefit["attempts"] = [attempts] * MAX_LEVEL
+        building["compoundBenefitSource"] = OFFICIAL_METADATA_SOURCES[building_id]
+    source["schemaVersion"] = 3
     source.setdefault("additionalSources", {})["precisePercentages"] = FANDOM_API_URL
     return source
 
@@ -598,7 +714,7 @@ def build_source() -> dict[str, object]:
             "supplies": "ceil(level-10 value * (target level / 10)^1.25)",
         },
     }
-    return apply_precise_percentage_sources({
+    return apply_detailed_benefit_sources({
         "schemaVersion": 1,
         "throughTargetLevel": MAX_LEVEL,
         "source": "https://foe.kwister.net/GB_list/",
@@ -662,7 +778,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     source = (
-        apply_precise_percentage_sources(
+        apply_detailed_benefit_sources(
             refresh_extensions(json.loads(args.output.read_text(encoding="utf-8")))
         )
         if args.reuse_existing

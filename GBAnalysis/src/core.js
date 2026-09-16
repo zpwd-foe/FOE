@@ -55,37 +55,49 @@ const BUILDING_BENEFITS = Object.freeze({
 const BENEFIT_DETAILS = Object.freeze({
   advanced_tactics: { label: "All-army attack & defense", unit: "%" },
   aid_boost: { label: "Blueprint chance when aiding", unit: "%" },
-  aid_goods: { label: "Goods from aiding (total)", unit: "goods" },
-  algorithmic_core: { label: "Special-goods production boost", unit: "%" },
+  aid_goods: { label: "Goods per aid", unit: "goods", attemptLabel: "aids" },
+  algorithmic_core: {
+    label: "Special-goods production boost",
+    unit: "%",
+    attemptLabel: "productions",
+  },
   clan_goods: { label: "Guild treasury goods (total)", unit: "goods" },
   contribution_boost: { label: "GB contribution boost", unit: "%" },
   critical_hit_chance: { label: "Critical-hit chance", unit: "%" },
-  diplomatic_gifts: { label: "Diplomatic Gifts chance", unit: "%" },
-  double_collection: { label: "Double-collection chance", unit: "%" },
+  diplomatic_gifts: {
+    label: "Diplomatic Gifts chance",
+    unit: "%",
+    attemptLabel: "negotiations",
+  },
+  double_collection: {
+    label: "Double-collection chance",
+    unit: "%",
+    attemptLabel: "collections",
+  },
   fierce_resistance: { label: "City-defense attack & defense", unit: "%" },
-  first_strike: { label: "First-strike chance", unit: "%" },
+  first_strike: { label: "First-strike chance", unit: "%", attemptLabel: "battles" },
   happiness: { label: "Happiness", unit: "" },
   helping_hands: { label: "Helping Hands chance", unit: "%" },
   medals: { label: "Medals", unit: "medals" },
   military_boost: { label: "Offensive army boost", unit: "%" },
-  missile_launch: { label: "Missile-launch chance", unit: "%" },
+  missile_launch: { label: "Missile-launch chance", unit: "%", attemptLabel: "battles" },
   money: { label: "Coins", unit: "coins" },
-  money_boost: { label: "Coin production boost", unit: "%" },
+  money_boost: { label: "Coin production boost", unit: "%", attemptLabel: "collections" },
   mysterious_shards: { label: "Mysterious Shard chance", unit: "%" },
   penal_unit: { label: "Unattached military units", unit: "units" },
   plunder_and_pillage: { label: "Plunder bonus", unit: "%" },
-  plunder_goods: { label: "Goods from plundering (total)", unit: "goods" },
-  plunder_repel: { label: "Plunder-repel chance", unit: "%" },
+  plunder_goods: { label: "Goods per plunder", unit: "goods", attemptLabel: "plunders" },
+  plunder_repel: { label: "Plunder-repel chance", unit: "%", attemptLabel: "plunder defenses" },
   population: { label: "Population", unit: "" },
   previous_era_goods: { label: "Previous-era goods (total)", unit: "goods" },
   quest_boost: { label: "Quest reward boost", unit: "%" },
   random_goods: { label: "Goods production (through Modern)", unit: "goods" },
   random_goods_after_modern: { label: "Goods production (Postmodern+)", unit: "goods" },
   special_goods: { label: "Special goods", unit: "goods" },
-  spoils_of_war: { label: "Spoils of War chance", unit: "%" },
+  spoils_of_war: { label: "Spoils of War chance", unit: "%", attemptLabel: "battles" },
   strategy_points: { label: "Forge Points", unit: "FP" },
   supplies: { label: "Supplies", unit: "supplies" },
-  supplies_boost: { label: "Supply production boost", unit: "%" },
+  supplies_boost: { label: "Supply production boost", unit: "%", attemptLabel: "collections" },
   support_boost: { label: "Guild support pool", unit: "%" },
   totem_drop: { label: "Relic hunt chance", unit: "%" },
 });
@@ -107,10 +119,14 @@ export function benefitDefinition(key) {
 export function benefitsForLevel(building, targetLevel) {
   assertTargetLevel(targetLevel);
   return (building.benefits ?? [])
-    .map((benefit) => ({
-      key: benefit.key,
-      value: benefit.values?.[targetLevel - 1],
-    }))
+    .map((benefit) => {
+      const attempts = benefit.attempts?.[targetLevel - 1];
+      return {
+        key: benefit.key,
+        value: benefit.values?.[targetLevel - 1],
+        ...(Number.isFinite(attempts) ? { attempts } : {}),
+      };
+    })
     .filter((benefit) => Number.isFinite(benefit.value));
 }
 
@@ -458,13 +474,20 @@ export function buildRageCsv({ building, era, analysis, arcLevels, arcBonuses, c
   const columns = [
     { label: "Level", value: (row) => row.targetLevel, total: "Plan total" },
     ...unlockColumns.filter((column) => rows.some((row) => column.value(row) !== 0)),
-    ...(building.benefits ?? []).map(({ key }) => {
-      const { label, unit } = benefitDefinition(key);
-      return {
-        label: `Benefit: ${label}${unit ? ` (${unit})` : ""}`,
-        value: (row) => row.benefits.find((benefit) => benefit.key === key)?.value,
-        total: "", // Benefits describe each level; adding them would be misleading.
-      };
+    ...(building.benefits ?? []).flatMap(({ key, attempts }) => {
+      const { label, unit, attemptLabel = "attempts" } = benefitDefinition(key);
+      return [
+        {
+          label: `Benefit: ${label}${unit ? ` (${unit})` : ""}`,
+          value: (row) => row.benefits.find((benefit) => benefit.key === key)?.value,
+          total: "", // Benefits describe each level; adding them would be misleading.
+        },
+        ...(Array.isArray(attempts) ? [{
+          label: `Benefit: ${label} ${attemptLabel}`,
+          value: (row) => row.benefits.find((benefit) => benefit.key === key)?.attempts,
+          total: "",
+        }] : []),
+      ];
     }),
     { label: "Owner's FP cost", value: (row) => row.ownerForgePoints, total: totals.ownerForgePoints },
     ...arcBonuses.map((bonus, position) => ({
