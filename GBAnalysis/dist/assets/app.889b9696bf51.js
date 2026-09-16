@@ -1302,7 +1302,7 @@ function setTargetLevel(value) {
 async function initialize() {
   const [datasetResponse, benefitResponse] = await Promise.all([
     fetch("assets/gb-analysis.7f1a171f57e2.json"),
-    fetch("assets/gb-benefits-source.385493ee4294.json"),
+    fetch("assets/gb-benefits-source.31445a125e5d.json"),
   ]);
   if (!datasetResponse.ok) {
     throw new Error(`Dataset request failed: ${datasetResponse.status}`);

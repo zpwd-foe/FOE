@@ -16,13 +16,31 @@ class GreatBuildingBenefitTests(unittest.TestCase):
     def test_parser_reads_image_and_text_benefit_rows_in_order(self):
         segment = """
         <tr id='1'><td>1</td><td>70</td><td><ul>
-          <li><img title='military_boost' />&nbsp;(3)</li>
+          <li><img title='military_boost' />&nbsp;(3.5)</li>
           <li>strategy_points&nbsp;(1)</li>
         </ul></td><!-- START GB REWARD TABLE -->
         """
         self.assertEqual(
             FETCH_GB_BENEFITS.parse_benefit_items(segment),
-            [("military_boost", 3), ("strategy_points", 1)],
+            [("military_boost", 3.5), ("strategy_points", 1)],
+        )
+
+    def test_exact_percentage_parser_handles_both_wiki_row_formats(self):
+        source = """
+        {| class="wikitable"
+        ! Lvl || Cost || Benefit || Amount
+        |-
+        | 1 || 50 || 30,5% || 10
+        |-
+        |2
+        |70
+        |4x 48.39%
+        |12
+        |}
+        """
+        self.assertEqual(
+            FETCH_GB_BENEFITS.parse_wiki_percentage_values(source, through_level=2),
+            [30.5, 48.39],
         )
 
     def test_checked_in_source_covers_every_building_through_301(self):
@@ -55,6 +73,36 @@ class GreatBuildingBenefitTests(unittest.TestCase):
         self.assertEqual(values["advanced_tactics"][300], 1505)
         self.assertEqual(values["supplies"][79], 6_538_811)
         self.assertEqual(values["supplies"][300], 34_264_500)
+
+    def test_checked_in_percentage_benefits_retain_exact_values(self):
+        source = json.loads((ROOT / "data" / "gb-benefits-source.json").read_text())
+
+        def value(building_id, key, level):
+            benefit = next(
+                item
+                for item in source["buildings"][building_id]["benefits"]
+                if item["key"] == key
+            )
+            return benefit["values"][level - 1]
+
+        self.assertEqual(value("X_SpaceAgeJupiterMoon_Landmark1", "algorithmic_core", 110), 48.39)
+        self.assertEqual(value("X_ArcticFuture_Landmark2", "critical_hit_chance", 10), 6.98)
+        self.assertEqual(value("X_BronzeAge_Landmark2", "military_boost", 11), 30.5)
+        self.assertEqual(value("X_LateMiddleAge_Landmark3", "military_boost", 11), 30.5)
+        self.assertEqual(value("X_LateMiddleAge_Landmark1", "fierce_resistance", 11), 30.5)
+        self.assertEqual(value("X_ColonialAge_Landmark2", "fierce_resistance", 11), 30.5)
+        self.assertEqual(value("X_VirtualFuture_Landmark1", "advanced_tactics", 11), 20.5)
+        self.assertEqual(value("X_EarlyMiddleAge_Landmark3", "plunder_repel", 11), 28.73)
+        self.assertEqual(value("X_FutureEra_Landmark1", "contribution_boost", 59), 79.5)
+        self.assertEqual(value("X_AllAge_Expedition", "totem_drop", 10), 16.25)
+        self.assertEqual(value("X_AllAge_EasterBonus4", "fierce_resistance", 11), 30.5)
+        self.assertNotIn(
+            "support_boost",
+            {
+                item["key"]
+                for item in source["buildings"]["X_AllAge_EasterBonus4"]["benefits"]
+            },
+        )
 
 
 if __name__ == "__main__":

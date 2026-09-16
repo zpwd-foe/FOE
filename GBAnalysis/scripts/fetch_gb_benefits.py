@@ -16,6 +16,7 @@ import json
 import math
 import re
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -35,6 +36,54 @@ SIPHON_WIKI_URL = (
     "index.php?title=Shattered_Horizon_Siphon"
 )
 NOTRE_DAME_WIKI_URL = "https://en.wiki.forgeofempires.com/index.php?title=Notre_Dame"
+FANDOM_API_URL = "https://forgeofempires.fandom.com/api.php"
+
+# Kwister's compact level rows round percentage benefits to whole numbers. Use
+# the exact percentage displayed by the detailed wiki tables, while continuing
+# to use Kwister for resource amounts and other integer benefits.
+PRECISE_PERCENTAGE_SOURCES = {
+    # title, benefit key, obsolete key, documented cap, post-table increment
+    "X_AllAge_EasterBonus4": (
+        "Observatory", "fierce_resistance", "support_boost", None, 0.5
+    ),
+    "X_AllAge_Expedition": ("Temple of Relics", "totem_drop", None, 35, None),
+    "X_BronzeAge_Landmark2": ("Statue of Zeus", "military_boost", None, None, 0.5),
+    "X_EarlyMiddleAge_Landmark2": (
+        "Cathedral of Aachen", "military_boost", None, None, 0.5
+    ),
+    "X_EarlyMiddleAge_Landmark3": ("Galata Tower", "plunder_repel", None, 65, None),
+    "X_LateMiddleAge_Landmark3": (
+        "Castel del Monte", "military_boost", None, None, 0.5
+    ),
+    "X_LateMiddleAge_Landmark1": (
+        "Saint Basil's Cathedral", "fierce_resistance", None, None, 0.5
+    ),
+    "X_ColonialAge_Landmark2": ("Deal Castle", "fierce_resistance", None, None, 0.5),
+    "X_FutureEra_Landmark1": ("The Arc", "contribution_boost", None, 100, None),
+    "X_ArcticFuture_Landmark2": (
+        "Arctic Orangery", "critical_hit_chance", None, None, None
+    ),
+    "X_ArcticFuture_Landmark3": ("Seed Vault", "helping_hands", None, 25, None),
+    "X_OceanicFuture_Landmark1": (
+        "Atlantis Museum", "plunder_and_pillage", None, 50, None
+    ),
+    "X_OceanicFuture_Landmark2": ("The Kraken", "first_strike", None, 100, None),
+    "X_VirtualFuture_Landmark2": ("Himeji Castle", "spoils_of_war", None, 50, None),
+    "X_VirtualFuture_Landmark1": (
+        "Terracotta Army", "advanced_tactics", None, None, 0.5
+    ),
+    "X_SpaceAgeMars_Landmark2": ("The Virgo Project", "missile_launch", None, 70, None),
+    "X_SpaceAgeAsteroidBelt_Landmark1": (
+        "Space Carrier", "diplomatic_gifts", None, 50, None
+    ),
+    "X_SpaceAgeVenus_Landmark1": ("Flying Island", "mysterious_shards", None, 53, None),
+    "X_SpaceAgeJupiterMoon_Landmark1": (
+        "A.I. Core", "algorithmic_core", None, 50, None
+    ),
+    "X_SpaceAgeSpaceHub_Landmark2": (
+        "Cosmic Catalyst", "critical_hit_chance", None, 25, None
+    ),
+}
 
 SOURCE_SLUGS = {
     "X_AllAge_EasterBonus4": "Observatory",
@@ -127,6 +176,171 @@ def parse_benefit_items(segment: str) -> list[tuple[str, int | float]]:
             key = BENEFIT_KEY_ALIASES.get(key_match.group(1), key_match.group(1))
             values.append((key, parse_number(value_match.group(1))))
     return values
+
+
+def fetch_fandom_wikitexts(titles: list[str]) -> dict[str, str]:
+    query = urllib.parse.urlencode(
+        {
+            "action": "query",
+            "prop": "revisions",
+            "titles": "|".join(titles),
+            "rvslots": "main",
+            "rvprop": "content",
+            "format": "json",
+            "formatversion": 2,
+            "redirects": 1,
+        }
+    )
+    response = json.loads(fetch_text(f"{FANDOM_API_URL}?{query}"))
+    if "error" in response:
+        raise ValueError(f"Fandom API error: {response['error'].get('info', response['error'])}")
+
+    aliases = {
+        alias["from"]: alias["to"]
+        for kind in ("normalized", "redirects")
+        for alias in response.get("query", {}).get(kind, [])
+    }
+    content_by_title = {}
+    for page in response.get("query", {}).get("pages", []):
+        revisions = page.get("revisions", [])
+        if revisions:
+            content_by_title[page["title"]] = revisions[0]["slots"]["main"]["content"]
+
+    result = {}
+    for requested_title in titles:
+        resolved_title = requested_title
+        while resolved_title in aliases:
+            resolved_title = aliases[resolved_title]
+        if resolved_title not in content_by_title:
+            raise ValueError(f"Fandom has no wikitext for {requested_title}")
+        result[requested_title] = content_by_title[resolved_title]
+    return result
+
+
+def parse_wiki_table_rows(source: str) -> dict[int, list[str]]:
+    rows = {}
+    for table in re.findall(r"(?ms)^[ \t]*\{\|.*?^[ \t]*\|}\s*$", source):
+        if not re.search(r"(?m)^[ \t]*!.*\b(?:Lvl|Level)\b", table):
+            continue
+        table_rows = {}
+        for segment in re.split(r"(?m)^[ \t]*\|-[^\n]*$", table):
+            cells = []
+            for line in segment.splitlines():
+                line = line.lstrip()
+                if not line.startswith("|") or line.startswith(("|-", "|}")):
+                    continue
+                cells.extend(cell.strip() for cell in line[1:].split("||"))
+            level_match = (
+                re.fullmatch(r"(?:\d+\s*(?:→|&rarr;)\s*)?(\d+)", cells[0])
+                if cells
+                else None
+            )
+            if level_match:
+                table_rows[int(level_match.group(1))] = cells
+        if any("%" in cell for cells in table_rows.values() for cell in cells[2:]):
+            rows.update(table_rows)
+    return rows
+
+
+def parse_wiki_percentage_values(
+    source: str,
+    through_level: int = MAX_LEVEL,
+    cap: float | None = None,
+    increment: float | None = None,
+) -> list[int | float]:
+    rows = parse_wiki_table_rows(source)
+    exact_values = {}
+    for level, cells in rows.items():
+        percentage = next(
+            (
+                re.search(r"(\d+(?:[.,]\d+)?)\s*%", cell)
+                for cell in cells[2:]
+                if re.search(r"(\d+(?:[.,]\d+)?)\s*%", cell)
+            ),
+            None,
+        )
+        if percentage:
+            exact_values[level] = float(percentage.group(1).replace(",", "."))
+    if 1 not in exact_values:
+        raise ValueError("Exact percentage source is missing target level 1")
+
+    exact_levels = sorted(exact_values)
+    last_exact_level = exact_levels[-1]
+    ratio_to_cap = None
+    if cap is not None and exact_values[last_exact_level] < cap:
+        reference_levels = [
+            level
+            for level in exact_levels
+            if level <= last_exact_level - 20
+            and exact_values[level] < exact_values[last_exact_level]
+        ]
+        if reference_levels:
+            reference_level = reference_levels[-1]
+            ratio_to_cap = (
+                (cap - exact_values[last_exact_level])
+                / (cap - exact_values[reference_level])
+            ) ** (1 / (last_exact_level - reference_level))
+
+    values = []
+    for level in range(1, through_level + 1):
+        value = (
+            values[-1] + increment
+            if increment is not None and level > 10
+            else exact_values.get(level)
+        )
+        if value is None and level < last_exact_level:
+            previous_level = max(candidate for candidate in exact_levels if candidate < level)
+            next_level = min(candidate for candidate in exact_levels if candidate > level)
+            position = (level - previous_level) / (next_level - previous_level)
+            value = round(
+                exact_values[previous_level]
+                + (exact_values[next_level] - exact_values[previous_level]) * position,
+                2,
+            )
+        elif value is None and cap is not None:
+            if values[-1] >= cap or ratio_to_cap is None:
+                value = cap
+            else:
+                value = cap - (cap - values[-1]) * ratio_to_cap
+        elif value is None:
+            raise ValueError(f"Exact percentage source is missing target level {level}")
+        value = round(max(value, values[-1] if values else value), 2)
+        if cap is not None:
+            value = min(value, cap)
+        values.append(int(value) if float(value).is_integer() else value)
+    return values
+
+
+def apply_precise_percentage_sources(source: dict[str, object]) -> dict[str, object]:
+    titles = list(dict.fromkeys(spec[0] for spec in PRECISE_PERCENTAGE_SOURCES.values()))
+    wikitext_by_title = fetch_fandom_wikitexts(titles)
+    for building_id, spec in PRECISE_PERCENTAGE_SOURCES.items():
+        title, key, obsolete_key, cap, increment = spec
+        building = source["buildings"][building_id]
+        values = parse_wiki_percentage_values(
+            wikitext_by_title[title], cap=cap, increment=increment
+        )
+        benefits = [
+            benefit
+            for benefit in building["benefits"]
+            if benefit["key"] not in {key, obsolete_key}
+        ]
+        benefits.append({"key": key, "values": values})
+        building["benefits"] = benefits
+        building["precisePercentageSource"] = (
+            f"https://forgeofempires.fandom.com/wiki/{urllib.parse.quote(title.replace(' ', '_'))}"
+        )
+        building.setdefault("coverage", {})["precisePercentageBenefitKeys"] = [key]
+        building["coverage"]["precisePercentageExtension"] = (
+            f"+{increment:g} percentage points per level"
+            if increment is not None
+            else f"approach documented {cap:g}% cap"
+            if cap is not None
+            else "interpolate isolated missing wiki rows"
+        )
+    source["schemaVersion"] = 2
+    source.setdefault("additionalSources", {})["precisePercentages"] = FANDOM_API_URL
+    return source
 
 
 def extend_benefit_values(
@@ -384,7 +598,7 @@ def build_source() -> dict[str, object]:
             "supplies": "ceil(level-10 value * (target level / 10)^1.25)",
         },
     }
-    return {
+    return apply_precise_percentage_sources({
         "schemaVersion": 1,
         "throughTargetLevel": MAX_LEVEL,
         "source": "https://foe.kwister.net/GB_list/",
@@ -394,7 +608,7 @@ def build_source() -> dict[str, object]:
         },
         "missingBuildingIds": missing,
         "buildings": buildings,
-    }
+    })
 
 
 def refresh_extensions(source: dict[str, object]) -> dict[str, object]:
@@ -448,7 +662,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     source = (
-        refresh_extensions(json.loads(args.output.read_text(encoding="utf-8")))
+        apply_precise_percentage_sources(
+            refresh_extensions(json.loads(args.output.read_text(encoding="utf-8")))
+        )
         if args.reuse_existing
         else build_source()
     )

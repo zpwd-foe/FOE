@@ -5,10 +5,10 @@
   "version": "1.1.0",
   "assets": {
     "assets/styles.css": "assets/styles.fa80812c31ea.css",
-    "src/app.js": "assets/app.4596efc47b6c.js",
+    "src/app.js": "assets/app.889b9696bf51.js",
     "src/core.js": "assets/core.ab4a14a85263.js",
     "data/gb-analysis.json": "assets/gb-analysis.7f1a171f57e2.json",
-    "data/gb-benefits-source.json": "assets/gb-benefits-source.385493ee4294.json",
+    "data/gb-benefits-source.json": "assets/gb-benefits-source.31445a125e5d.json",
     "assets/gb-icon.png": "assets/gb-icon.dc6249826920.png",
     "assets/favicon.png": "assets/favicon.5d09588ec69a.png"
   }
