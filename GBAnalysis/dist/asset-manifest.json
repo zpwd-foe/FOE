@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "algorithm": "sha256",
   "hashLength": 12,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "assets": {
     "assets/styles.css": "assets/styles.fa80812c31ea.css",
     "src/app.js": "assets/app.889b9696bf51.js",
