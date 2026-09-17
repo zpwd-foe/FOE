@@ -6,8 +6,9 @@ This project provides `generate_treasury_report.py`, which creates:
 
 It also includes the no-runtime static GoE Guild Portal in `dashboard/`,
 ready for Cloudflare Pages. The portal provides a home page, a treasury module,
-an individual goods-contribution module, and a resource library. The first library
-entry is the Official GoE Guild Expedition Lottery Rules. Treasury tools include
+an individual goods-contribution module, and a resource library. The library
+includes the Official GoE Guild Expedition Lottery Rules and an eight-day GBG
+coin-trial field report. Treasury tools include
 7/30/90-day period controls, age drill-downs, and a short goods watch list.
 Contribution tools rank members using up to 30 days of positive goods records, including
 building production and direct treasury contributions, and provide public

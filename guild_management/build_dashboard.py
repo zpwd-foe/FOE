@@ -818,24 +818,30 @@ def publish_dashboard(
     resource_template = read_text(SITE_DIR / "pages" / "resource.html")
     for resource in resources:
         article = read_text(SITE_DIR / "content" / str(resource["contentFile"]))
-        resource_content = render(
-            resource_template,
-            {
-                "title": html.escape(str(resource["title"])),
-                "description": html.escape(str(resource["description"])),
-                "category": html.escape(str(resource["category"])),
-                "status": html.escape(str(resource["status"])),
-                "status_class": " status-chip--official" if str(resource["status"]).strip().lower() == "official" else "",
-                "owner": html.escape(str(resource["owner"])),
-                "effective_date": html.escape(str(resource["effectiveDate"])),
-                "last_reviewed": html.escape(str(resource["lastReviewed"])),
-                "version": html.escape(str(resource["version"])),
-                "audience": html.escape(str(resource["audience"])),
-                "table_of_contents": table_of_contents(article),
-                "review_notice": review_notice(resource),
-                "article": article,
-            },
-        )
+        layout = str(resource.get("layout", "policy"))
+        if layout == "dashboard":
+            resource_content = article
+            main_class = "shell shell--gbg-dashboard"
+        else:
+            resource_content = render(
+                resource_template,
+                {
+                    "title": html.escape(str(resource["title"])),
+                    "description": html.escape(str(resource["description"])),
+                    "category": html.escape(str(resource["category"])),
+                    "status": html.escape(str(resource["status"])),
+                    "status_class": " status-chip--official" if str(resource["status"]).strip().lower() == "official" else "",
+                    "owner": html.escape(str(resource["owner"])),
+                    "effective_date": html.escape(str(resource["effectiveDate"])),
+                    "last_reviewed": html.escape(str(resource["lastReviewed"])),
+                    "version": html.escape(str(resource["version"])),
+                    "audience": html.escape(str(resource["audience"])),
+                    "table_of_contents": table_of_contents(article),
+                    "review_notice": review_notice(resource),
+                    "article": article,
+                },
+            )
+            main_class = "shell shell--policy"
         slug = str(resource["slug"])
         write_text(
             output_dir / "resources" / slug / "index.html",
@@ -844,7 +850,7 @@ def publish_dashboard(
                 title=f'{resource["shortTitle"]} | GoE Guild Portal',
                 description=str(resource["description"]),
                 active_nav="resources",
-                main_class="shell shell--policy",
+                main_class=main_class,
                 content=resource_content,
                 styles_asset=styles_asset,
                 icon_asset=icon_asset,

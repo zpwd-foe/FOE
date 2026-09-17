@@ -13,6 +13,21 @@
       "version": "1.1",
       "audience": "All GoE guild members",
       "contentFile": "guild-expedition-lottery-rules.html"
+    },
+    {
+      "slug": "gbg-coin-trial-report",
+      "title": "The Great GBG Coin Trial",
+      "shortTitle": "GBG Coin Trial Report",
+      "description": "Eight days, 10,050 fights, and the numbers behind the Trial 2 versus Trial 50 trade-off.",
+      "category": "Guild Battlegrounds",
+      "status": "Field report",
+      "owner": "GoE Data Desk",
+      "effectiveDate": "September 17, 2026",
+      "lastReviewed": "September 17, 2026",
+      "version": "1.0",
+      "audience": "All GoE guild members",
+      "contentFile": "gbg-coin-trial-report.html",
+      "layout": "dashboard"
     }
   ]
 }
