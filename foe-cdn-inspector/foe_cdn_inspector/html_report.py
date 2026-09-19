@@ -41,7 +41,7 @@ def write_html(
     if string_results:
         publication_dates = len({record.get("last_added_date") for record in active_strings})
         stats = [
-            ("Dates with bonus updates", publication_dates),
+            ("Dates with GB bonus updates", publication_dates),
             ("Reports scanned", string_results.get("reports_scanned", 0)),
         ]
     elif history_results:
@@ -86,7 +86,7 @@ def write_html(
         newest_date = str(string_results.get("newest_report") or report.report_id)[:10]
         page_eyebrow = "FORGE OF EMPIRES · ZZ1 BETA"
         page_context = (
-            'Track the latest Great Building bonus icons and descriptions on zz1. '
+            'Track the recently updated Great Building bonus icons and descriptions on zz1. '
             'Descriptions removed by later updates are excluded. '
             f'Data through {html.escape(newest_date)}.'
         )

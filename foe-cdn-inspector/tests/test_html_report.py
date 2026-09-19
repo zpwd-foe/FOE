@@ -158,8 +158,9 @@ class HistoryOrganizationTests(unittest.TestCase):
             rendered.index('id="active-strings"'),
         )
         self.assertIn("Latest Great Building bonus descriptions", rendered)
+        self.assertIn("Track the recently updated Great Building bonus icons and descriptions on zz1.", rendered)
         self.assertIn('class="stats stats-2"', rendered)
-        self.assertIn("Dates with bonus updates", rendered)
+        self.assertIn("Dates with GB bonus updates", rendered)
         self.assertIn("Reports scanned", rendered)
         self.assertIn("Bonus icons", rendered)
         self.assertIn("60-day change history", rendered)
