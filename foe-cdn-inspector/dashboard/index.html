@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GB Update tracker</title>
+<style>
+:root { color-scheme:dark; --ink:#f2eee4; --muted:#aaa69c; --panel:#181a18; --panel-2:#111412; --panel-raised:#1e211e; --line:#34372f; --line-strong:#524b38; --gold:#e9bb54; --gold-deep:#98752f; --blue:#8dc6db; --green:#86c995; --red:#df8e82; --shadow:0 24px 70px #0008; }
+* { box-sizing:border-box }
+html { scroll-behavior:smooth; scrollbar-color:var(--gold-deep) #101210 }
+body { margin:0; min-height:100vh; background:radial-gradient(circle at 12% -8%,#332914 0,transparent 30rem),radial-gradient(circle at 95% 40%,#13262a 0,transparent 34rem),#0b0d0c; color:var(--ink); font:15px/1.55 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif }
+body::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.16; background-image:linear-gradient(#fff1 1px,transparent 1px),linear-gradient(90deg,#fff1 1px,transparent 1px); background-size:48px 48px; mask-image:linear-gradient(to bottom,#000,transparent 65%) }
+main { position:relative; max-width:1180px; margin:auto; padding:48px 32px 72px }
+h1 { max-width:780px; margin:.16em 0 .28em; font-family:Georgia,"Times New Roman",serif; font-size:clamp(42px,7vw,72px); font-weight:500; line-height:.98; letter-spacing:-.045em; text-wrap:balance }
+h2 { margin-top:48px; font-family:Georgia,"Times New Roman",serif; font-size:clamp(28px,4vw,40px); font-weight:500; line-height:1.05; letter-spacing:-.025em }
+a { color:var(--blue) }
+a,button,input,select,summary { outline-offset:3px }
+:focus-visible { outline:2px solid var(--gold) }
+.eyebrow { color:var(--gold); font-size:11px; font-weight:750; letter-spacing:.18em; text-transform:uppercase }
+.meta { color:var(--muted) }
+.hero { position:relative; overflow:hidden; padding:38px 40px 32px; border:1px solid var(--line-strong); border-radius:20px 20px 0 0; background:linear-gradient(135deg,#201f19f5,#121614ee 62%,#162023e8); box-shadow:var(--shadow) }
+.hero::before { content:""; position:absolute; width:420px; height:420px; right:-100px; top:-250px; border:1px solid #e9bb5433; border-radius:50%; box-shadow:0 0 0 38px #e9bb5409,0 0 0 76px #e9bb5407 }
+.hero::after { content:""; position:absolute; left:40px; bottom:0; width:88px; height:2px; background:var(--gold); box-shadow:96px 0 0 #68552e }
+.hero > * { position:relative }
+.intro { max-width:790px; margin:0; color:#c5c0b4; font-size:16px; line-height:1.7 }
+.nav { display:flex; flex-wrap:wrap; gap:9px; margin:28px 0 0 }
+.nav a { padding:8px 13px; border:1px solid #ffffff14; border-radius:999px; background:#ffffff08; color:#c5c0b4; font-size:13px; text-decoration:none; transition:border-color .18s,background .18s,color .18s,transform .18s }
+.nav a:hover { transform:translateY(-1px); border-color:var(--gold-deep); background:#e9bb540d; color:var(--ink) }
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; margin:0 0 72px; overflow:hidden; border:1px solid var(--line-strong); border-top:0; border-radius:0 0 16px 16px; background:var(--line); box-shadow:0 18px 60px #0005 }
+.stats-2 { grid-template-columns:repeat(2,1fr) }
+.stat { position:relative; min-width:0; padding:22px 24px 24px; background:linear-gradient(180deg,#171a17,#111311) }
+.stat::after { content:""; position:absolute; inset:auto 24px 0; height:1px; background:linear-gradient(90deg,var(--gold-deep),transparent); opacity:.6 }
+.stat strong { display:block; color:var(--ink); font:500 32px/1 Georgia,"Times New Roman",serif; font-variant-numeric:tabular-nums }
+.stat span { display:block; margin-top:7px; color:var(--muted); font-size:11px; font-weight:650; letter-spacing:.08em; text-transform:uppercase }
+.card { overflow:hidden; border:1px solid var(--line); border-radius:12px; background:var(--panel) }
+.toolbar,.bonus-gallery-tools { position:sticky; top:0; z-index:3; padding:13px 0; background:#0b0d0ce8; backdrop-filter:blur(14px) }
+input,select { padding:12px 14px; color:var(--ink); background:#151815; border:1px solid var(--line); border-radius:10px; box-shadow:inset 0 1px 0 #fff08; font:inherit; transition:border-color .18s,box-shadow .18s,background .18s }
+input:hover,select:hover { border-color:#55594f }
+input:focus,select:focus { border-color:var(--gold-deep); background:#191c18; box-shadow:0 0 0 3px #e9bb5410,inset 0 1px 0 #fff08 }
+input { width:min(620px,100%) }
+input::placeholder { color:#777a72 }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px }
+.card-body { padding:14px } .thumb { width:100%; height:190px; object-fit:contain; background:#090a0b }
+.tag { display:inline-block; margin:0 5px 5px 0; padding:2px 7px; border:1px solid var(--line); border-radius:999px; color:var(--muted); font-size:12px }
+.name { overflow-wrap:anywhere; font-weight:650 } .summary { color:var(--muted); overflow-wrap:anywhere }
+pre { max-height:260px; overflow:auto; padding:12px; background:#090a0b; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere }
+.strings li { margin:.7em 0 } .building { padding:16px } .hidden { display:none !important }
+#active-strings { margin-top:78px; scroll-margin-top:24px } .stats + #active-strings { margin-top:0 }
+.section-head { display:flex; gap:24px; align-items:end; justify-content:space-between; flex-wrap:wrap; margin-bottom:6px }
+.section-head h2 { margin:4px 0 0 } .section-head p { max-width:610px; margin:0 0 2px }
+.string-groups { display:grid; gap:40px; margin-top:18px }
+.string-date-group h3 { display:flex; gap:12px; align-items:center; margin:0 0 10px; color:var(--gold); font:600 16px/1.2 ui-sans-serif,system-ui,sans-serif; font-variant-numeric:tabular-nums }
+.string-date-group h3::after { content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--line-strong),transparent) }
+.string-rows { overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#111311aa }
+.string-row { display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-items:start; width:100%; padding:17px 18px; border-bottom:1px solid var(--line); transition:background .18s,border-color .18s,transform .18s }
+.string-row:last-child { border-bottom:0 } .string-row:hover { padding-left:22px; background:linear-gradient(90deg,#e9bb5410,transparent 50%) }
+.string-text { margin:0; overflow-wrap:anywhere; color:#dedad1; font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace }
+.audit { margin-top:20px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--panel) }
+.audit summary { color:var(--muted); cursor:pointer }
+.bonus-gallery-section { margin-top:78px; scroll-margin-top:18px } .stats + .bonus-gallery-section { margin-top:0 }
+.bonus-gallery-head { display:flex; justify-content:space-between; gap:30px; align-items:end; margin-bottom:14px }
+.bonus-gallery-head h2 { margin:4px 0 0 } .bonus-gallery-head p { max-width:610px; margin:0 }
+.bonus-gallery-tools input { width:100% }
+.bonus-result-status { min-height:22px; margin:0 0 10px; color:var(--muted); font-size:12px; letter-spacing:.04em }
+.bonus-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:13px }
+.bonus-card { min-width:0; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:linear-gradient(180deg,#1a1d19,#121412); box-shadow:0 8px 30px #0003; transition:transform .2s,border-color .2s,box-shadow .2s }
+.bonus-card:hover { transform:translateY(-3px); border-color:var(--gold-deep); box-shadow:0 14px 36px #0006 }
+.bonus-art { display:grid; place-items:center; height:146px; background:radial-gradient(circle,#252821 0,#0d0f0d 68%) } .bonus-art a { display:grid; place-items:center; width:100%; height:100% }
+.bonus-image { max-width:112px; max-height:112px; image-rendering:auto; filter:drop-shadow(0 8px 14px #000a); transition:transform .2s } .bonus-card:hover .bonus-image { transform:scale(1.04) }
+.bonus-image-placeholder { display:grid; place-items:center; width:88px; height:72px; border:1px dashed var(--line); border-radius:8px; color:var(--muted); font-size:11px } .bonus-image-placeholder[hidden] { display:none }
+.bonus-card-body { padding:14px 15px 16px; border-top:1px solid #ffffff0a } .bonus-card h3 { margin:0 0 5px; font-size:14px; line-height:1.35 } .bonus-filename { color:#85877f; font:10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:anywhere } .bonus-date { display:block; margin-top:10px; color:var(--gold); font-size:10px; letter-spacing:.03em }
+.archive-shell { display:block; margin-top:78px; overflow:hidden; border:1px solid var(--line-strong); border-radius:16px; background:linear-gradient(180deg,#151815,#0f110f); box-shadow:0 18px 60px #0004; scroll-margin-top:18px }
+.archive-summary { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:24px; align-items:center; padding:24px 26px; cursor:pointer; list-style:none; background:linear-gradient(90deg,#e9bb5409,transparent 38%) }
+.archive-summary::-webkit-details-marker { display:none }
+.archive-summary::after { content:'＋'; display:grid; place-items:center; width:32px; height:32px; border:1px solid var(--line); border-radius:50%; color:var(--gold); font-size:17px } .archive-shell[open] > .archive-summary::after { content:'−' }
+.archive-summary:hover::after { border-color:var(--gold-deep); background:#e9bb5409 }
+.archive-summary strong { display:block; font:500 22px/1.2 Georgia,"Times New Roman",serif } .archive-summary small { display:block; margin-top:5px; color:var(--muted) }
+.archive-content { padding:8px 26px 30px; border-top:1px solid var(--line) }
+.archive-tools { margin:22px 0 12px } .archive-tools p { max-width:790px; margin:5px 0 0 }
+.history-controls { position:sticky; top:0; z-index:3; padding:12px 0 14px; background:#111411f0; backdrop-filter:blur(14px) }
+.history-controls .toolbar { padding:0; background:transparent; backdrop-filter:none } .history-controls input { width:100% }
+.type-tabs { display:flex; flex-wrap:wrap; gap:8px; margin-top:11px }
+.type-filter { display:flex; gap:8px; align-items:center; padding:8px 12px; border:1px solid var(--line); border-radius:999px; color:var(--muted); background:#191c19; cursor:pointer; transition:color .18s,border-color .18s,background .18s,transform .18s }
+.type-filter:hover { transform:translateY(-1px); color:var(--ink); border-color:#5e6258 } .type-filter[aria-pressed="true"] { color:#17140d; border-color:var(--gold); background:linear-gradient(180deg,#f0c766,#d9a942); box-shadow:0 5px 16px #0004 }
+.type-filter small { color:inherit; opacity:.76; font-variant-numeric:tabular-nums }
+.history-result-status { min-height:22px; margin:0 0 8px; color:var(--muted); font-size:12px; letter-spacing:.03em }
+.history-type-list { display:grid; gap:12px }
+.history-type-section { overflow:hidden; border:1px solid var(--line); border-radius:11px; background:#101310; transition:border-color .18s }
+.history-type-section[open] { border-color:#494d43 }
+.history-type-section > summary { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px; align-items:center; padding:19px 20px; cursor:pointer; list-style:none }
+.history-type-section > summary:hover { background:#ffffff03 }
+.history-type-section > summary::-webkit-details-marker,.history-date-group > summary::-webkit-details-marker { display:none }
+.history-type-title { display:flex; gap:12px; align-items:baseline } .history-type-title::before { content:'＋'; width:16px; color:var(--gold) } .history-type-section[open] .history-type-title::before { content:'−' }
+.history-type-title strong { font-size:16px } .history-type-title small,.history-type-summary { color:var(--muted); font-size:12px }
+.history-date-list { border-top:1px solid var(--line) }
+.history-date-group { border-bottom:1px solid var(--line) } .history-date-group:last-child { border-bottom:0 }
+.history-date-group > summary { display:grid; grid-template-columns:16px 140px minmax(0,1fr); gap:12px; align-items:center; padding:14px 20px; cursor:pointer; list-style:none; transition:background .18s }
+.history-date-group > summary:hover { background:#ffffff03 }
+.history-date-group > summary::before { content:'＋'; color:var(--muted); width:10px } .history-date-group[open] > summary::before { content:'−'; color:var(--gold) }
+.history-date { color:var(--ink); font-weight:700; font-variant-numeric:tabular-nums } .history-date-count { color:var(--muted); font-size:12px; text-align:right }
+.history-date-content { padding:0 20px 18px 48px }
+.history-file-list { list-style:none; padding:0; margin:0; border-top:1px solid var(--line) }
+.history-file { display:grid; grid-template-columns:72px 72px minmax(0,1fr); gap:8px; align-items:start; padding:11px 2px; border-bottom:1px solid var(--line); overflow-wrap:anywhere }
+.history-file-image { grid-template-columns:96px 72px minmax(0,1fr); align-items:center; min-height:82px }
+.history-image { width:88px; height:64px; object-fit:contain; border:1px solid var(--line); border-radius:7px; background:#090a0b }
+.image-placeholder { display:grid; place-items:center; width:88px; height:64px; padding:6px; border:1px dashed var(--line); border-radius:7px; color:var(--muted); background:#101214; font-size:10px; line-height:1.25; text-align:center }
+.image-placeholder[hidden] { display:none }
+.history-file-name { color:var(--ink); overflow-wrap:anywhere } .history-file-meta { min-width:0 } .image-state,.image-variants { display:block; margin-top:3px; color:var(--muted); font-size:11px } .image-unavailable .history-file-name { color:var(--muted) }
+.history-string { display:grid; grid-template-columns:72px minmax(0,1fr); gap:10px; padding:11px 2px; border-bottom:1px solid var(--line); font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace }
+.change { color:var(--muted); font:11px/1.55 ui-sans-serif,system-ui,sans-serif; letter-spacing:.08em; text-transform:uppercase } .change-added { color:var(--green) } .change-removed { color:var(--red) }
+.history-empty { padding:28px 4px; color:var(--muted); text-align:center }
+.dashboard-footer { display:flex; justify-content:space-between; gap:28px; align-items:flex-end; margin-top:74px; padding-top:24px; border-top:1px solid var(--line) }
+.realm-note { color:#777a72; font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace }
+.dashboard-signature { margin-left:auto; text-align:right } .dashboard-signature strong { display:block; font:500 17px/1.3 Georgia,"Times New Roman",serif } .dashboard-signature span { display:block; margin-top:4px; color:var(--gold); font-size:9px; font-weight:750; letter-spacing:.18em; text-transform:uppercase }
+@media (max-width:820px) { .stats { grid-template-columns:repeat(2,1fr) } }
+@media (max-width:600px) { main { padding:22px 14px 48px } .hero { padding:28px 20px 24px; border-radius:16px 16px 0 0 } .hero::after { left:20px } h1 { font-size:42px } .intro { font-size:14px } .nav { margin-top:22px } .nav a { padding:7px 10px; font-size:12px } .stats { margin-bottom:52px; border-radius:0 0 12px 12px } .stat { padding:17px 16px 18px } .stat::after { inset-inline:16px } .stat strong { font-size:27px } .stat span { font-size:9px } .toolbar { display:flex } .toolbar input { min-width:0; flex:1 } .section-head { align-items:start } .string-row { padding:14px } .string-row:hover { padding-left:16px } .bonus-gallery-head { display:block } .bonus-gallery-head p { margin-top:9px } .bonus-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px } .bonus-art { height:116px } .bonus-image { max-width:88px; max-height:88px } .bonus-card-body { padding:11px } .archive-summary,.archive-content { padding-left:16px; padding-right:16px } .type-tabs { display:grid; grid-template-columns:1fr 1fr } .type-filter { justify-content:space-between; border-radius:8px } .history-type-section > summary { grid-template-columns:1fr; gap:7px; padding:16px } .history-type-title { display:grid; grid-template-columns:16px minmax(0,1fr); column-gap:8px; align-items:start } .history-type-title::before { grid-row:1/3 } .history-type-title small { grid-column:2 } .history-type-summary { padding-left:24px; text-align:left } .history-date-group > summary { grid-template-columns:14px minmax(0,1fr); gap:8px; padding:13px 14px } .history-date-count { grid-column:2; text-align:left } .history-date-content { padding-left:20px; padding-right:14px } .history-file { grid-template-columns:64px minmax(0,1fr) } .history-file a { grid-column:1/-1 } .history-file-image { grid-template-columns:76px minmax(0,1fr) } .history-image,.image-placeholder { width:68px; height:56px } .history-file-image .history-file-meta { grid-column:1/-1 } .dashboard-footer { align-items:flex-start; flex-direction:column } .dashboard-signature { align-self:flex-end } }
+@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto } *,*::before,*::after { transition:none !important } }
+</style>
+</head>
+<body><main>
+<header class="hero">
+<div class="eyebrow">FORGE OF EMPIRES · ZZ1 BETA</div>
+<h1>GB Update tracker</h1>
+<p class="intro meta">Track the recently updated Great Building bonus icons and descriptions on zz1. Descriptions removed by later updates are excluded. Data through 2026-09-17.</p>
+<nav class="nav" aria-label="Dashboard sections"><a href="#great-building-bonuses">Bonus icons</a><a href="#active-strings">Bonus descriptions</a><a href="#snapshot">60-day change history</a></nav>
+</header>
+<div class="stats stats-2"><div class="stat"><strong>6</strong><span>Dates with GB bonus updates</span></div><div class="stat"><strong>115</strong><span>Reports scanned</span></div></div>
+<section class="bonus-gallery-section" id="great-building-bonuses">
+<div class="bonus-gallery-head"><div><div class="eyebrow">GREAT BUILDING BONUSES</div><h2>Bonus icons</h2></div>
+<p class="meta">The highest-resolution current icon for each Great Building bonus found during the last 60 days.</p></div>
+<div class="bonus-gallery-tools"><input id="bonus-search" type="search" placeholder="Search bonus icons…" aria-label="Search Great Building bonus icons"></div>
+<p class="bonus-result-status" id="bonus-result-status" aria-live="polite"></p>
+<div class="bonus-grid" id="bonus-grid"><article class="bonus-card" data-search="age reserves great_building_bonus_age_reserves-1a3b79684.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_age_reserves-1a3b79684.png" target="_blank" aria-label="Open original Age Reserves icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_age_reserves-1a3b79684.png" alt="Age Reserves"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Age Reserves</h3><div class="bonus-filename">great_building_bonus_age_reserves-1a3b79684.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="aid blueprints gold great_building_bonus_aid_blueprints_gold-667c20d9d.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_aid_blueprints_gold-667c20d9d.png" target="_blank" aria-label="Open original Aid Blueprints Gold icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_aid_blueprints_gold-667c20d9d.png" alt="Aid Blueprints Gold"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Aid Blueprints Gold</h3><div class="bonus-filename">great_building_bonus_aid_blueprints_gold-667c20d9d.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="all units critical hit chance great_building_bonus_all_units_critical_hit_chance-832a2093a.png 2026-08-26">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_all_units_critical_hit_chance-832a2093a.png" target="_blank" aria-label="Open original All Units Critical Hit Chance icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_all_units_critical_hit_chance-832a2093a.png" alt="All Units Critical Hit Chance"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>All Units Critical Hit Chance</h3><div class="bonus-filename">great_building_bonus_all_units_critical_hit_chance-832a2093a.png</div><span class="bonus-date">Updated 2026-08-26 · Highest resolution of 4 current variants</span></div></article><article class="bonus-card" data-search="allies quest boost great_building_bonus_allies_quest_boost-9a8994d44.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_allies_quest_boost-9a8994d44.png" target="_blank" aria-label="Open original Allies Quest Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_allies_quest_boost-9a8994d44.png" alt="Allies Quest Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Allies Quest Boost</h3><div class="bonus-filename">great_building_bonus_allies_quest_boost-9a8994d44.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="contribution boost great_building_bonus_contribution_boost-9fa454b6c.png 2026-07-23">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_contribution_boost-9fa454b6c.png" target="_blank" aria-label="Open original Contribution Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_contribution_boost-9fa454b6c.png" alt="Contribution Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Contribution Boost</h3><div class="bonus-filename">great_building_bonus_contribution_boost-9fa454b6c.png</div><span class="bonus-date">Updated 2026-07-23 · Highest resolution of 2 current variants</span></div></article><article class="bonus-card" data-search="contribution boost gold great_building_bonus_contribution_boost_gold-a430fbeaf.png 2026-07-23">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_contribution_boost_gold-a430fbeaf.png" target="_blank" aria-label="Open original Contribution Boost Gold icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_contribution_boost_gold-a430fbeaf.png" alt="Contribution Boost Gold"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Contribution Boost Gold</h3><div class="bonus-filename">great_building_bonus_contribution_boost_gold-a430fbeaf.png</div><span class="bonus-date">Updated 2026-07-23 · Highest resolution of 2 current variants</span></div></article><article class="bonus-card" data-search="double damage block great_building_bonus_double_damage_block-e3befe61f.png 2026-07-23">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_double_damage_block-e3befe61f.png" target="_blank" aria-label="Open original Double Damage Block icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_double_damage_block-e3befe61f.png" alt="Double Damage Block"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Double Damage Block</h3><div class="bonus-filename">great_building_bonus_double_damage_block-e3befe61f.png</div><span class="bonus-date">Updated 2026-07-23 · Highest resolution of 2 current variants</span></div></article><article class="bonus-card" data-search="forgepoints production boost great_building_bonus_forgepoints_production_boost-767d138c8.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_forgepoints_production_boost-767d138c8.png" target="_blank" aria-label="Open original Forgepoints Production Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_forgepoints_production_boost-767d138c8.png" alt="Forgepoints Production Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Forgepoints Production Boost</h3><div class="bonus-filename">great_building_bonus_forgepoints_production_boost-767d138c8.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 5 current variants</span></div></article><article class="bonus-card" data-search="goods production boost great_building_bonus_goods_production_boost-bc72246bb.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_goods_production_boost-bc72246bb.png" target="_blank" aria-label="Open original Goods Production Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_goods_production_boost-bc72246bb.png" alt="Goods Production Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Goods Production Boost</h3><div class="bonus-filename">great_building_bonus_goods_production_boost-bc72246bb.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 5 current variants</span></div></article><article class="bonus-card" data-search="guild goods adjacent era great_building_bonus_guild_goods_adjacent_era-59ab3586e.png 2026-08-26">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_adjacent_era-59ab3586e.png" target="_blank" aria-label="Open original Guild Goods Adjacent Era icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_adjacent_era-59ab3586e.png" alt="Guild Goods Adjacent Era"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Guild Goods Adjacent Era</h3><div class="bonus-filename">great_building_bonus_guild_goods_adjacent_era-59ab3586e.png</div><span class="bonus-date">Updated 2026-08-26 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="guild goods boost great_building_bonus_guild_goods_boost-d28512087.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_boost-d28512087.png" target="_blank" aria-label="Open original Guild Goods Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_boost-d28512087.png" alt="Guild Goods Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Guild Goods Boost</h3><div class="bonus-filename">great_building_bonus_guild_goods_boost-d28512087.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 5 current variants</span></div></article><article class="bonus-card" data-search="guild goods multi era great_building_bonus_guild_goods_multi_era-7a9f2f866.png 2026-08-21">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_multi_era-7a9f2f866.png" target="_blank" aria-label="Open original Guild Goods Multi Era icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_multi_era-7a9f2f866.png" alt="Guild Goods Multi Era"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Guild Goods Multi Era</h3><div class="bonus-filename">great_building_bonus_guild_goods_multi_era-7a9f2f866.png</div><span class="bonus-date">Updated 2026-08-21 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="guild goods next era great_building_bonus_guild_goods_next_era-3626924f2.png 2026-08-26">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_next_era-3626924f2.png" target="_blank" aria-label="Open original Guild Goods Next Era icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_next_era-3626924f2.png" alt="Guild Goods Next Era"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Guild Goods Next Era</h3><div class="bonus-filename">great_building_bonus_guild_goods_next_era-3626924f2.png</div><span class="bonus-date">Updated 2026-08-26 · Highest resolution of 5 current variants</span></div></article><article class="bonus-card" data-search="guild raids double collection great_building_bonus_guild_raids_double_collection-d7222f6fa.png 2026-09-07">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_raids_double_collection-d7222f6fa.png" target="_blank" aria-label="Open original Guild Raids Double Collection icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_raids_double_collection-d7222f6fa.png" alt="Guild Raids Double Collection"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Guild Raids Double Collection</h3><div class="bonus-filename">great_building_bonus_guild_raids_double_collection-d7222f6fa.png</div><span class="bonus-date">Updated 2026-09-07 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="helping hands boosted great_building_bonus_helping_hands_boosted-2523e35ea.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_helping_hands_boosted-2523e35ea.png" target="_blank" aria-label="Open original Helping Hands Boosted icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_helping_hands_boosted-2523e35ea.png" alt="Helping Hands Boosted"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Helping Hands Boosted</h3><div class="bonus-filename">great_building_bonus_helping_hands_boosted-2523e35ea.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 4 current variants</span></div></article><article class="bonus-card" data-search="military ally boost great_building_bonus_military_ally_boost-1b35e55f5.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_military_ally_boost-1b35e55f5.png" target="_blank" aria-label="Open original Military Ally Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_military_ally_boost-1b35e55f5.png" alt="Military Ally Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Military Ally Boost</h3><div class="bonus-filename">great_building_bonus_military_ally_boost-1b35e55f5.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="missile launch wave 2 great_building_bonus_missile_launch_wave_2-5de43f7cb.png 2026-08-26">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_missile_launch_wave_2-5de43f7cb.png" target="_blank" aria-label="Open original Missile Launch Wave 2 icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_missile_launch_wave_2-5de43f7cb.png" alt="Missile Launch Wave 2"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Missile Launch Wave 2</h3><div class="bonus-filename">great_building_bonus_missile_launch_wave_2-5de43f7cb.png</div><span class="bonus-date">Updated 2026-08-26 · Highest resolution of 4 current variants</span></div></article><article class="bonus-card" data-search="science ally boost great_building_bonus_science_ally_boost-4cc92e34a.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_science_ally_boost-4cc92e34a.png" target="_blank" aria-label="Open original Science Ally Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_science_ally_boost-4cc92e34a.png" alt="Science Ally Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Science Ally Boost</h3><div class="bonus-filename">great_building_bonus_science_ally_boost-4cc92e34a.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 3 current variants</span></div></article><article class="bonus-card" data-search="second strike great_building_bonus_second_strike-b6010bc1a.png 2026-08-26">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_second_strike-b6010bc1a.png" target="_blank" aria-label="Open original Second Strike icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_second_strike-b6010bc1a.png" alt="Second Strike"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Second Strike</h3><div class="bonus-filename">great_building_bonus_second_strike-b6010bc1a.png</div><span class="bonus-date">Updated 2026-08-26 · Highest resolution of 4 current variants</span></div></article><article class="bonus-card" data-search="special goods production boost great_building_bonus_special_goods_production_boost-183ed0d6f.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_special_goods_production_boost-183ed0d6f.png" target="_blank" aria-label="Open original Special Goods Production Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_special_goods_production_boost-183ed0d6f.png" alt="Special Goods Production Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Special Goods Production Boost</h3><div class="bonus-filename">great_building_bonus_special_goods_production_boost-183ed0d6f.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 5 current variants</span></div></article><article class="bonus-card" data-search="spoils of war enhanced great_building_bonus_spoils_of_war_enhanced-9ec983c47.png 2026-09-10">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_spoils_of_war_enhanced-9ec983c47.png" target="_blank" aria-label="Open original Spoils Of War Enhanced icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_spoils_of_war_enhanced-9ec983c47.png" alt="Spoils Of War Enhanced"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Spoils Of War Enhanced</h3><div class="bonus-filename">great_building_bonus_spoils_of_war_enhanced-9ec983c47.png</div><span class="bonus-date">Updated 2026-09-10 · Highest resolution of 4 current variants</span></div></article><article class="bonus-card" data-search="unit production boost great_building_bonus_unit_production_boost-1d56ac7ab.png 2026-08-27">
+<div class="bonus-art"><a href="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_unit_production_boost-1d56ac7ab.png" target="_blank" aria-label="Open original Unit Production Boost icon"><img class="bonus-image" decoding="async" fetchpriority="low" src="https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_unit_production_boost-1d56ac7ab.png" alt="Unit Production Boost"></a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
+<div class="bonus-card-body"><h3>Unit Production Boost</h3><div class="bonus-filename">great_building_bonus_unit_production_boost-1d56ac7ab.png</div><span class="bonus-date">Updated 2026-08-27 · Highest resolution of 5 current variants</span></div></article></div>
+</section>
+<section id="active-strings">
+<div class="section-head"><div><div class="eyebrow">BONUS DESCRIPTIONS</div><h2>Latest Great Building bonus descriptions</h2></div>
+<p class="meta">Grouped by the date each description was last added. Full text is shown for comparison.</p></div>
+<div class="toolbar"><input id="string-search" type="search" placeholder="Search Great Building bonus descriptions…" aria-label="Search Great Building bonus descriptions"></div>
+<div class="string-groups" id="active-string-list"><section class="string-date-group"><h3>2026-09-17</h3>
+<div class="string-rows"><article class="string-row" data-search="2026-09-17 gbp|qi settlement double collection: for the first %s buildings collected in your active qi settlement, there is a %s% chance the resources collected are doubled. this effect excludes townhall and refreshes with each collection of this building.">
+<p class="string-text">GBP|QI Settlement Double Collection: For the first %s buildings collected in your active QI Settlement, there is a %s% chance the resources collected are doubled. This effect excludes Townhall and refreshes with each collection of this building.</p></article><article class="string-row" data-search="2026-09-17 gbp|enhanced spoils of war: the first %d victorious main city battles have a %f% chance to provide you with a random reward. refreshes with each collection.">
+<p class="string-text">GBP|Enhanced Spoils of War: The first %d victorious main city battles have a %f% chance to provide you with a random reward. Refreshes with each collection.</p></article><article class="string-row" data-search="2026-09-17 gbp|enhanced spoils of war">
+<p class="string-text">GBP|Enhanced Spoils of War</p></article><article class="string-row" data-search="2026-09-17 gbp|enhanced critical hit: grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit&#x27;s age. does not apply to rogues.">
+<p class="string-text">GBP|Enhanced Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit&#x27;s age. Does not apply to Rogues.</p></article><article class="string-row" data-search="2026-09-17 gbp|enhanced critical hit: grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit&#x27;s age. does not apply in pvp arena battles. does not apply to rogues.">
+<p class="string-text">GBP|Enhanced Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit&#x27;s age. Does not apply in PvP Arena battles. Does not apply to Rogues.</p></article><article class="string-row" data-search="2026-09-17 gbp|enhanced critical hit">
+<p class="string-text">GBP|Enhanced Critical Hit</p></article></div></section><section class="string-date-group"><h3>2026-09-11</h3>
+<div class="string-rows"><article class="string-row" data-search="2026-09-11 gbp|qi settlement double collection">
+<p class="string-text">GBP|QI Settlement Double Collection</p></article><article class="string-row" data-search="2026-09-11 gbp|at the next level, the first %s collections in your active qi settlement have a %s% chance to double the resources collected.">
+<p class="string-text">GBP|At the next level, the first %s collections in your active QI Settlement have a %s% chance to double the resources collected.</p></article><article class="string-row" data-search="2026-09-11 gbp|%d% chance to double the resources collected in your qi settlement. %s left.">
+<p class="string-text">GBP|%d% chance to double the resources collected in your QI Settlement. %s left.</p></article></div></section><section class="string-date-group"><h3>2026-09-10</h3>
+<div class="string-rows"><article class="string-row" data-search="2026-09-10 gbp|improved helping hands gives a %f% chance of getting a better reward by aiding other players.">
+<p class="string-text">GBP|Improved Helping Hands gives a %f% chance of getting a better reward by aiding other players.</p></article><article class="string-row" data-search="2026-09-10 gbp|improved helping hands">
+<p class="string-text">GBP|Improved Helping Hands</p></article></div></section><section class="string-date-group"><h3>2026-09-04</h3>
+<div class="string-rows"><article class="string-row" data-search="2026-09-04 gbp|second strike: for the first %s battles, there is a %s% chance to kill one enemy unit at the start of the second wave. refreshes with each collection of this building.">
+<p class="string-text">GBP|Second Strike: For the first %s battles, there is a %s% chance to kill one enemy unit at the start of the second wave. Refreshes with each collection of this building.</p></article><article class="string-row" data-search="2026-09-04 gbp|second strike">
+<p class="string-text">GBP|Second Strike</p></article><article class="string-row" data-search="2026-09-04 gbp|at the next level, the first %s battles have a %s% chance to kill one enemy unit at the start of the second wave.">
+<p class="string-text">GBP|At the next level, the first %s battles have a %s% chance to kill one enemy unit at the start of the second wave.</p></article><article class="string-row" data-search="2026-09-04 gbp|%d% chance to kill an enemy unit at the start of the second wave. %s left.">
+<p class="string-text">GBP|%d% chance to kill an enemy unit at the start of the second wave. %s left.</p></article></div></section><section class="string-date-group"><h3>2026-09-02</h3>
+<div class="string-rows"><article class="string-row" data-search="2026-09-02 gbp|missile launch - second wave: for the first %s battles, there is a %s% chance of killing half the enemy units at the start of the second wave. cannot be used against players. refreshes with each collection.">
+<p class="string-text">GBP|Missile Launch - Second Wave: For the first %s battles, there is a %s% chance of killing half the enemy units at the start of the second wave. Cannot be used against players. Refreshes with each collection.</p></article><article class="string-row" data-search="2026-09-02 gbp|%d% chance of killing half the enemy units at the start of the second wave. %s left.">
+<p class="string-text">GBP|%d% chance of killing half the enemy units at the start of the second wave. %s left.</p></article></div></section><section class="string-date-group"><h3>2026-04-09</h3>
+<div class="string-rows"><article class="string-row" data-search="2026-04-09 gbp|%s - not built">
+<p class="string-text">GBP|%s - not built</p></article><article class="string-row" data-search="2026-04-09 gbp|%s - lvl %d/%d">
+<p class="string-text">GBP|%s - Lvl %d/%d</p></article></div></section></div>
+<details class="audit"><summary>Removed by a later update (4)</summary><ul class="strings"><li><span class="tag">2026-04-09</span> GBP|%s - %s - Lvl %d/%d</li><li><span class="tag">2026-04-09</span> GBP|%s - %s - not built</li><li><span class="tag">2026-08-11</span> GBP|Collect all Copper Blueprints of a great building to be able to build it.</li><li><span class="tag">2026-09-17</span> GBP|QI Settlement Double Collection: For the first %s buildings collected in your active QI Settlement, there is a %s% chance the resources collected are doubled. Refreshes with each collection of this building.</li></ul></details>
+</section>
+<details class="archive-shell" id="snapshot"><summary class="archive-summary"><span><strong>60-day change history</strong>
+<small>34 reports · 2026-07-20 through 2026-09-17</small></span></summary><div class="archive-content" id="history-pending"><p class="meta">Open the archive to load its 60-day records.</p></div></details>
+
+<footer class="dashboard-footer" id="dashboard-footer"><span class="realm-note">zz1 public beta</span>
+<div class="dashboard-signature"><strong>Another zpwd dashboard.</strong><span>Sleep deprived mode.</span></div></footer>
+</main>
+<script>
+const q=document.querySelector('#search'), k=document.querySelector('#kind'), cards=[...document.querySelectorAll('#files .card')];
+function filter(){const text=q.value.toLowerCase(),kind=k.value;for(const c of cards)c.classList.toggle('hidden',!c.dataset.search.includes(text)||(kind&&c.dataset.kind!==kind))}
+if(q&&k){q.addEventListener('input',filter);k.addEventListener('change',filter)}
+const sq=document.querySelector('#string-search'), stringRows=[...document.querySelectorAll('#active-string-list .string-row')], stringGroups=[...document.querySelectorAll('#active-string-list .string-date-group')];
+if(sq) sq.addEventListener('input',()=>{const value=sq.value.toLowerCase();for(const row of stringRows)row.classList.toggle('hidden',!row.dataset.search.includes(value));for(const group of stringGroups)group.classList.toggle('hidden',![...group.querySelectorAll('.string-row')].some(row=>!row.classList.contains('hidden')))});
+const bq=document.querySelector('#bonus-search'),bonusCards=[...document.querySelectorAll('#bonus-grid .bonus-card')],bonusStatus=document.querySelector('#bonus-result-status');
+function filterBonuses(){if(!bq)return;const value=bq.value.trim().toLowerCase();let visible=0;for(const card of bonusCards){const matches=card.dataset.search.includes(value);card.classList.toggle('hidden',!matches);if(matches)visible++}bonusStatus.textContent=`${visible} bonus ${visible===1?'icon':'icons'}`}
+if(bq){bq.addEventListener('input',filterBonuses);filterBonuses()}
+let hq,typeButtons=[],typeSections=[],historyStatus,historyEmpty;
+let activeHistoryType='all';
+function filterHistory(){
+  if(!hq)return;
+  const value=hq.value.trim().toLowerCase();let visibleItems=0;const visibleDateKeys=new Set();
+  for(const section of typeSections){
+    const typeMatches=activeHistoryType==='all'||section.dataset.historyType===activeHistoryType;let sectionItems=0;
+    for(const dateGroup of section.querySelectorAll('.history-date-group')){
+      const dateMatches=Boolean(value&&dateGroup.dataset.date.includes(value));let dateItems=0;
+      for(const item of dateGroup.querySelectorAll('.history-item')){
+        const matches=!value||dateMatches||(`${section.dataset.historyType} ${item.textContent}`).toLowerCase().includes(value);
+        item.classList.toggle('hidden',!matches);if(matches)dateItems++;
+      }
+      const showDate=typeMatches&&dateItems>0;dateGroup.classList.toggle('hidden',!showDate);
+      if(showDate){visibleDateKeys.add(dateGroup.dataset.date);sectionItems+=dateItems;if(value)dateGroup.open=true}
+    }
+    const showSection=typeMatches&&sectionItems>0;section.classList.toggle('hidden',!showSection);
+    if(showSection){visibleItems+=sectionItems;if(value||activeHistoryType!=='all')section.open=true}
+  }
+  historyEmpty.hidden=visibleItems>0;
+  const scope=activeHistoryType==='all'?'all types':activeHistoryType;
+  historyStatus.textContent=`${visibleItems.toLocaleString()} entries across ${visibleDateKeys.size} ${visibleDateKeys.size===1?'date':'dates'} · ${scope}`;
+}
+function activateHistory(){
+  hq=document.querySelector('#history-search');typeButtons=[...document.querySelectorAll('.type-filter')];typeSections=[...document.querySelectorAll('.history-type-section')];historyStatus=document.querySelector('#history-result-status');historyEmpty=document.querySelector('#history-empty');
+  for(const button of typeButtons)button.addEventListener('click',()=>{activeHistoryType=button.dataset.historyFilter;for(const candidate of typeButtons)candidate.setAttribute('aria-pressed',String(candidate===button));filterHistory()});
+  if(hq){hq.addEventListener('input',filterHistory);filterHistory()}
+  for(const img of document.querySelectorAll('.history-image')){
+    const row=img.closest('.history-file-image'),placeholder=row.querySelector('.image-placeholder'),state=row.querySelector('.image-state');
+    img.addEventListener('error',()=>{
+      const fallback=img.dataset.fallbackSrc;
+      if(fallback&&!img.dataset.fallbackTried){img.dataset.fallbackTried='1';img.src=fallback;return}
+      img.hidden=true;placeholder.hidden=false;row.classList.add('image-unavailable');state.textContent='Preview unavailable';
+    });
+    img.addEventListener('load',()=>{if(img.dataset.fallbackTried)state.textContent='Original unavailable; showing the current version'});
+  }
+}
+const snapshotLink=document.querySelector('a[href="#snapshot"]'),snapshot=document.querySelector('#snapshot');
+let historyLoaded=false,historyPromise;
+function loadHistory(){
+  if(!snapshot||historyLoaded||historyPromise)return historyPromise;
+  const pending=snapshot.querySelector('.archive-content');
+  pending.innerHTML='<p class="meta" role="status">Gathering the archive…</p>';
+  historyPromise=(async()=>{
+    try{
+      const response=await fetch('./history.html');
+      if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      pending.outerHTML=await response.text();
+      historyLoaded=true;activateHistory();
+    }catch(error){
+      pending.innerHTML='<p class="meta" role="alert">The archive could not load. Serve the dashboard directory over HTTP, then try again. <button type="button" id="retry-history">Retry</button></p>';
+      pending.querySelector('#retry-history').addEventListener('click',loadHistory);
+    }finally{historyPromise=null}
+  })();
+  return historyPromise;
+}
+if(snapshot)snapshot.addEventListener('toggle',()=>{if(snapshot.open)loadHistory()});
+if(snapshotLink&&snapshot) snapshotLink.addEventListener('click',()=>{snapshot.open=true});
+if(snapshot&&location.hash==='#snapshot'){snapshot.open=true;loadHistory();requestAnimationFrame(()=>snapshot.scrollIntoView({block:'start',behavior:'instant'}))}
+const bonusLink=document.querySelector('a[href="#great-building-bonuses"]'),bonusSection=document.querySelector('#great-building-bonuses');
+if(bonusLink&&bonusSection) bonusLink.addEventListener('click',()=>requestAnimationFrame(()=>bonusSection.scrollIntoView({block:'start',behavior:'instant'})));
+if(bonusSection&&location.hash==='#great-building-bonuses') requestAnimationFrame(()=>bonusSection.scrollIntoView({block:'start',behavior:'instant'}));
+for(const img of document.querySelectorAll('.bonus-image'))img.addEventListener('error',()=>{img.hidden=true;img.closest('.bonus-art').querySelector('.bonus-image-placeholder').hidden=false});
+</script></body></html>
