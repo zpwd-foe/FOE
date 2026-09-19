@@ -10,7 +10,7 @@ from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from .html_report import _current_great_building_bonus_images, write_html
+from .html_report import DASHBOARD_ASSETS, _current_great_building_bonus_images, write_html
 from .history import collect_history, select_index_entries, write_history_results
 from .models import ParsedReport
 from .network import fetch_text, probe_bootstrap
@@ -342,14 +342,14 @@ def run_refresh(args: argparse.Namespace) -> int:
         if not saved_dashboard.is_file():
             raise RuntimeError(f"latest snapshot is missing: {saved_dashboard}; use --force to rebuild")
         saved_history = saved_dashboard.with_name("history.html")
-        if not saved_history.is_file() and (saved_dashboard.parent / "dashboard-state.json").is_file():
-            render_dashboard(saved_dashboard.parent)
+        checked_at = datetime.now().astimezone().isoformat()
+        render_dashboard(saved_dashboard.parent, checked_at=checked_at)
         if saved_history.is_file():
             _publish_dashboard(saved_history, args.dashboard_dir / "history.html")
         elif 'id="history-pending"' in saved_dashboard.read_text(encoding="utf-8"):
             raise RuntimeError(f"latest snapshot is missing its history archive: {saved_history}")
         _publish_dashboard(saved_dashboard, dashboard_file)
-        print(json.dumps({"status": "up_to_date", **plan}, indent=2))
+        print(json.dumps({"status": "up_to_date", "checked_at": checked_at, **plan}, indent=2))
         return 0
 
     print(f"Probing beta bootstrap: {args.bootstrap}")
@@ -393,6 +393,7 @@ def run_refresh(args: argparse.Namespace) -> int:
         "buildings": latest_history["buildings"],
         "metadata_families": latest_history["metadata_families"],
     })
+    checked_at = datetime.now().astimezone().isoformat()
     metadata = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "bootstrap": bootstrap,
@@ -405,14 +406,15 @@ def run_refresh(args: argparse.Namespace) -> int:
         staged = Path(temporary) / latest_id
         write_inventory(latest_report, staged, metadata)
         (staged / "dashboard-state.json").write_text(
-            json.dumps({"string_results": string_data, "history_results": history_data}, indent=2, ensure_ascii=False) + "\n",
+            json.dumps({"checked_at": checked_at, "string_results": string_data, "history_results": history_data}, indent=2, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
-        write_html(latest_report, staged, metadata, string_results=string_data, history_results=history_data)
+        write_html(latest_report, staged, {**metadata, "checked_at": checked_at}, string_results=string_data, history_results=history_data)
         if target.exists():
             if not target.is_dir() or not (target / "inventory.json").is_file():
                 raise RuntimeError(f"snapshot target exists but is not a valid snapshot: {target}")
-            for filename in ("inventory.json", "inventory.csv", "dashboard-state.json", "history.html", "index.html"):
+            (target / "assets").mkdir(exist_ok=True)
+            for filename in (*(f"assets/{name}" for name in DASHBOARD_ASSETS), "inventory.json", "inventory.csv", "dashboard-state.json", "history.html", "index.html"):
                 os.replace(staged / filename, target / filename)
         else:
             os.replace(staged, target)
@@ -422,6 +424,7 @@ def run_refresh(args: argparse.Namespace) -> int:
     update_latest_pointer(args.output, latest_id)
     print(json.dumps({
         "status": "refreshed",
+        "checked_at": checked_at,
         **plan,
         "bonus_descriptions": len(strings),
         "bonus_icons": len(_current_great_building_bonus_images(history)),
@@ -431,8 +434,13 @@ def run_refresh(args: argparse.Namespace) -> int:
 
 
 def _publish_dashboard(source: Path, destination: Path) -> None:
+    if source.name == "index.html":
+        for filename in DASHBOARD_ASSETS:
+            asset = source.parent / "assets" / filename
+            if asset.is_file():
+                _publish_dashboard(asset, destination.parent / "assets" / filename)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(prefix=".dashboard-", suffix=".html", dir=destination.parent, delete=False) as temporary:
+    with tempfile.NamedTemporaryFile(prefix=".dashboard-", suffix=source.suffix, dir=destination.parent, delete=False) as temporary:
         temporary_path = Path(temporary.name)
     try:
         shutil.copyfile(source, temporary_path)
@@ -446,6 +454,8 @@ def render_dashboard(
     destination: Path,
     string_results_path: Path | None = None,
     history_results_path: Path | None = None,
+    *,
+    checked_at: str | None = None,
 ) -> Path:
     inventory_path = destination / "inventory.json"
     if not inventory_path.is_file():
@@ -457,6 +467,8 @@ def render_dashboard(
         state["string_results"] = json.loads(string_results_path.read_text(encoding="utf-8"))
     if history_results_path:
         state["history_results"] = json.loads(history_results_path.read_text(encoding="utf-8"))
+    if checked_at is not None:
+        state["checked_at"] = checked_at
     state_path.write_text(json.dumps(state, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     report = ParsedReport.from_dict(inventory)
     metadata = {
@@ -464,6 +476,8 @@ def render_dashboard(
         for key in ("generated_at", "bootstrap", "cdn_host", "report_url")
         if key in inventory
     }
+    if state.get("checked_at"):
+        metadata["checked_at"] = state["checked_at"]
     write_html(
         report,
         destination,

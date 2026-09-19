@@ -17,3 +17,6 @@ foe-cdn-inspector = "foe_cdn_inspector.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["foe_cdn_inspector*"]
+
+[tool.setuptools.package-data]
+foe_cdn_inspector = ["assets/*.jpg", "assets/*.png"]

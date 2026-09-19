@@ -2,11 +2,14 @@ import contextlib
 import io
 import json
 import unittest
+from datetime import datetime, timezone
+from html.parser import HTMLParser
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from foe_cdn_inspector.cli import build_parser, run_refresh
+from foe_cdn_inspector.cli import build_parser, render_dashboard, run_refresh
+from foe_cdn_inspector.html_report import DASHBOARD_ASSETS
 from foe_cdn_inspector.strings import StringEntry
 
 
@@ -91,17 +94,28 @@ class RefreshTests(unittest.TestCase):
             saved = snapshots / "2026-09-18_11-16-22" / "index.html"
             saved.parent.mkdir(parents=True)
             saved.write_text("saved dashboard", encoding="utf-8")
+            saved.with_name("inventory.json").write_text(json.dumps({"report_id": "2026-09-18_11-16-22"}), encoding="utf-8")
+            saved.with_name("dashboard-state.json").write_text(json.dumps({"checked_at": "2026-09-18T12:00:00+00:00"}), encoding="utf-8")
             saved.with_name("history.html").write_text("saved archive", encoding="utf-8")
             (snapshots / "latest.txt").write_text("2026-09-18_11-16-22\n", encoding="utf-8")
             args = refresh_args(folder)
             with (
                 patch("foe_cdn_inspector.cli.fetch_text", return_value=INDEX_HTML),
                 patch("foe_cdn_inspector.cli.collect_history") as collect,
+                patch("foe_cdn_inspector.cli.datetime") as clock,
                 contextlib.redirect_stdout(io.StringIO()),
             ):
+                clock.now.return_value = datetime(2026, 9, 19, 16, tzinfo=timezone.utc)
                 self.assertEqual(run_refresh(args), 0)
             collect.assert_not_called()
-            self.assertEqual((folder / "dashboard" / "index.html").read_text(encoding="utf-8"), "saved dashboard")
+            page = (folder / "dashboard" / "index.html").read_text(encoding="utf-8")
+            self.assertEqual(page, saved.read_text(encoding="utf-8"))
+            self.assertIn('Data through <time datetime="2026-09-19">Sep 19, 2026</time>', page)
+            self.assertEqual(json.loads(saved.with_name("inventory.json").read_text())["report_id"], "2026-09-18_11-16-22")
+            state = json.loads(saved.with_name("dashboard-state.json").read_text())
+            self.assertTrue(state["checked_at"].startswith("2026-09-19T"))
+            render_dashboard(saved.parent)
+            self.assertEqual(saved.read_text(encoding="utf-8"), page)
             self.assertEqual((folder / "dashboard" / "history.html").read_text(encoding="utf-8"), "saved archive")
 
     def test_success_writes_snapshot_and_stable_dashboard(self):
@@ -123,12 +137,22 @@ class RefreshTests(unittest.TestCase):
             saved = folder / "snapshots" / "2026-09-18_11-16-22" / "index.html"
             stable = folder / "dashboard" / "index.html"
             self.assertEqual(stable.read_bytes(), saved.read_bytes())
+            for filename in DASHBOARD_ASSETS:
+                asset = stable.parent / "assets" / filename
+                self.assertEqual(asset.read_bytes(), (saved.parent / "assets" / filename).read_bytes())
+                self.assertIn(f"assets/{filename}", stable.read_text(encoding="utf-8"))
             self.assertEqual(
                 (folder / "dashboard" / "history.html").read_bytes(),
                 saved.with_name("history.html").read_bytes(),
             )
-            self.assertIn("GBP|Example", stable.read_text(encoding="utf-8"))
+            page_text = []
+            parser = HTMLParser()
+            parser.handle_data = page_text.append
+            parser.feed(stable.read_text(encoding="utf-8"))
+            self.assertIn("GBP|Example", "".join(page_text))
             self.assertEqual((folder / "snapshots" / "latest.txt").read_text(encoding="utf-8").strip(), "2026-09-18_11-16-22")
+            state = json.loads(saved.with_name("dashboard-state.json").read_text())
+            self.assertIn(f'Data through <time datetime="{state["checked_at"][:10]}">', stable.read_text())
             result = json.loads((folder / "results" / "history-last-60-days.json").read_text(encoding="utf-8"))
             self.assertEqual(result["since"], "2026-07-21")
             self.assertEqual(result["until"], "2026-09-18")

@@ -47,6 +47,8 @@ python3 -m foe_cdn_inspector refresh
 
 The command checks the newest published report, verifies the `zz1` beta bootstrap, and refreshes the `GBP|` bonus descriptions from 2026-03-01 onward. It also rebuilds the full 60-day change history, ending on the newest report date. Previously parsed reports are read from `.cache/`; only new reports need to be fetched. The current page is written to `dashboard/index.html`, with the large archive in `dashboard/history.html` loaded only when opened. A dated copy of both files remains under `snapshots/<report-id>/`. Both `dashboard/` files are tracked deployment artifacts: after refreshing, commit and push them to update a Git-connected Cloudflare Pages site. Set the Pages project root directory to `foe-cdn-inspector` and the build output directory to `dashboard`; no build command is needed. If a report fails to collect, the current dashboard and `snapshots/latest.txt` are left unchanged.
 
+The header’s **Data through** date records the latest successful update check, even when no new report is available. The check timestamp is saved in `dashboard-state.json` and retained during local UI rebuilds. The archive’s date range still ends on the newest published report, so checking for updates does not imply that new game data was released. Failed refreshes and dry runs do not advance the displayed check date.
+
 To preview what would be refreshed without changing files, or to rebuild after a UI change when no new report has appeared:
 
 ```bash

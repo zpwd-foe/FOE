@@ -1,4 +1,5 @@
 import unittest
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -47,7 +48,7 @@ class HistoryImageTests(unittest.TestCase):
         }
         rendered = _history_file(record)
         self.assertNotIn("<img", rendered)
-        self.assertIn("Removed from the CDN", rendered)
+        self.assertIn("Marked as removed in this report", rendered)
 
     def test_removed_non_image_asset_has_no_link(self):
         rendered = _history_file(
@@ -120,6 +121,16 @@ class HistoryImageTests(unittest.TestCase):
 
 
 class HistoryOrganizationTests(unittest.TestCase):
+    def test_data_through_uses_check_date_not_report_date(self):
+        with TemporaryDirectory() as folder:
+            destination = Path(folder)
+            write_html(
+                ParsedReport(report_id="2026-09-17_11-16-22"), destination,
+                {"checked_at": "2026-09-19T18:00:00-04:00", "generated_at": "2026-09-17T18:00:00+00:00"},
+            )
+            page = (destination / "index.html").read_text()
+        self.assertIn('Data through <time datetime="2026-09-19">Sep 19, 2026</time>', page)
+
     def test_dashboard_has_requested_signature_and_no_source_reference(self):
         with TemporaryDirectory() as folder:
             destination = Path(folder)
@@ -133,6 +144,14 @@ class HistoryOrganizationTests(unittest.TestCase):
         self.assertIn("Another zpwd dashboard.", rendered)
         self.assertIn("Sleep deprived mode.", rendered)
         self.assertNotIn("linnun.net", rendered)
+        self.assertIn("--bg-app:#090D14", rendered)
+        self.assertIn("--bg-surface:#111827", rendered)
+        self.assertIn("--bg-card:#182235", rendered)
+        self.assertIn("--accent-primary:#3B82F6", rendered)
+        self.assertIn("--status-added:#38BDF8", rendered)
+        self.assertIn("--status-changed:#818CF8", rendered)
+        self.assertIn("--status-removed:#F87171", rendered)
+        self.assertNotIn("#e9bb54", rendered.lower())
 
     def test_bonus_icons_precede_latest_description_text_and_stats_are_reduced(self):
         with TemporaryDirectory() as folder:
@@ -158,12 +177,16 @@ class HistoryOrganizationTests(unittest.TestCase):
             rendered.index('id="active-strings"'),
         )
         self.assertIn("Latest Great Building bonus descriptions", rendered)
-        self.assertIn("Track the recently updated Great Building bonus icons and descriptions on zz1.", rendered)
+        self.assertIn("Track recently updated icons and descriptions for upcoming Great Building bonuses.", rendered)
         self.assertIn('class="stats stats-2"', rendered)
         self.assertIn("Dates with GB bonus updates", rendered)
-        self.assertIn("Reports scanned", rendered)
         self.assertIn("Bonus icons", rendered)
-        self.assertIn("60-day change history", rendered)
+        self.assertIn("60-day archive", rendered)
+        self.assertIn("Beta previews, not confirmed releases. Details may change.", rendered)
+        self.assertIn("Great Building bonus icons", rendered)
+        self.assertIn("Beta reports reviewed", rendered)
+        css = rendered.split("<style>", 1)[1].split("</style>", 1)[0]
+        self.assertTrue(all(int(size) >= 12 for size in re.findall(r"font(?:-size)?:(\d+)px", css)))
         self.assertIn("const visibleDateKeys=new Set()", rendered)
         self.assertIn("visibleDateKeys.add(dateGroup.dataset.date)", rendered)
         self.assertNotIn("Live GBP strings", rendered)
@@ -235,7 +258,55 @@ class HistoryOrganizationTests(unittest.TestCase):
         self.assertNotIn("metadata?id=building_99", page)
         self.assertIn("metadata?id=building_99", archive)
         self.assertNotIn('data-search="added metadata', archive)
-        self.assertGreater(len(archive), len(page))
+        self.assertLess(len(page), 100_000)
+
+    def test_header_clouds_loop_one_way_without_playback_controls(self):
+        with TemporaryDirectory() as folder:
+            destination = Path(folder)
+            write_html(ParsedReport(report_id="2026-09-17_11-16-22"), destination, {})
+            page = (destination / "index.html").read_text(encoding="utf-8")
+
+        self.assertIn('class="hero-clouds" aria-hidden="true"', page)
+        self.assertNotIn('cloud-toggle', page)
+        self.assertNotIn('Pause cloud animation', page)
+        self.assertNotIn('Resume cloud animation', page)
+        self.assertIn('@keyframes cloud-drift', page)
+        self.assertIn('animation:cloud-drift var(--drift-duration) linear var(--drift-offset) infinite', page)
+        for layer in ('high', 'mid', 'low'):
+            self.assertIn(f'class="cloud-layer cloud-layer-{layer}"', page)
+        self.assertIn('--drift-duration:132s', page)
+        self.assertIn('--drift-duration:157s', page)
+        self.assertIn('--drift-duration:181s', page)
+        self.assertIn('.cloud-layer-low { top:52%', page)
+        self.assertIn('--cloud-shade:.48', page)
+        self.assertNotIn('infinite alternate', page)
+        self.assertIn('background-size:50% 100%; background-repeat:repeat-x', page)
+        self.assertIn('background-image:url("assets/gb-midnight-cloud-wisps-v1.png")', page)
+        self.assertNotIn('cloud-layer-near', page)
+        self.assertIn('to { transform:translate3d(50%,0,0) }', page)
+        self.assertIn('animation-play-state:paused', page)
+        self.assertIn('.cloud-layer { animation:none !important }', page)
+        self.assertIn('document.hidden||!cloudHeroVisible', page)
+        self.assertIn('saturate(.62) brightness(var(--cloud-shade))', page)
+        self.assertIn('filter:url(#cloud-warp)', page)
+        self.assertIn('<feDisplacementMap in="SourceGraphic"', page)
+        self.assertIn("cloudNoise.setAttribute('baseFrequency'", page)
+        self.assertIn("cloudDisplacement.setAttribute('scale'", page)
+        self.assertIn('@keyframes cloud-density', page)
+        self.assertIn('cancelAnimationFrame(cloudMorphFrame)', page)
+        self.assertIn('requestAnimationFrame(morphClouds)', page)
+        self.assertIn('now-cloudMorphPaint>=1000/12', page)
+        self.assertIn('||cloudMotion.matches', page)
+        self.assertIn('drift.updatePlaybackRate(wind)', page)
+        self.assertIn('phase/(43+index*17)+index*2.1', page)
+        self.assertIn('phase=Math.random()', page)
+        self.assertIn("layer.style.setProperty('--drift-offset',`${-phase*driftDuration}s`)", page)
+        self.assertIn("layer.style.setProperty('--cloud-start',`${phase*50}%`)", page)
+        self.assertIn('transform:translate3d(var(--cloud-start,0%),0,0)', page)
+        self.assertIn('.hero > .hero-clouds.clouds-ready { visibility:visible }', page)
+        self.assertLess(page.index('phase=Math.random()'), page.index("classList.add('clouds-ready')"))
+        sync_function = page.split('function syncCloudMotion()', 1)[1].split("cloudMotion.addEventListener", 1)[0]
+        self.assertNotIn('Math.random()', sync_function)
 
     def test_empty_dates_are_omitted_from_a_type(self):
         report = {
