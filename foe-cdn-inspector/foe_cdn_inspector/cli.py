@@ -341,6 +341,13 @@ def run_refresh(args: argparse.Namespace) -> int:
         saved_dashboard = args.output / latest_id / "index.html"
         if not saved_dashboard.is_file():
             raise RuntimeError(f"latest snapshot is missing: {saved_dashboard}; use --force to rebuild")
+        saved_history = saved_dashboard.with_name("history.html")
+        if not saved_history.is_file() and (saved_dashboard.parent / "dashboard-state.json").is_file():
+            render_dashboard(saved_dashboard.parent)
+        if saved_history.is_file():
+            _publish_dashboard(saved_history, args.dashboard_dir / "history.html")
+        elif 'id="history-pending"' in saved_dashboard.read_text(encoding="utf-8"):
+            raise RuntimeError(f"latest snapshot is missing its history archive: {saved_history}")
         _publish_dashboard(saved_dashboard, dashboard_file)
         print(json.dumps({"status": "up_to_date", **plan}, indent=2))
         return 0
@@ -405,11 +412,12 @@ def run_refresh(args: argparse.Namespace) -> int:
         if target.exists():
             if not target.is_dir() or not (target / "inventory.json").is_file():
                 raise RuntimeError(f"snapshot target exists but is not a valid snapshot: {target}")
-            for filename in ("inventory.json", "inventory.csv", "dashboard-state.json", "index.html"):
+            for filename in ("inventory.json", "inventory.csv", "dashboard-state.json", "history.html", "index.html"):
                 os.replace(staged / filename, target / filename)
         else:
             os.replace(staged, target)
 
+    _publish_dashboard(target / "history.html", args.dashboard_dir / "history.html")
     _publish_dashboard(target / "index.html", dashboard_file)
     update_latest_pointer(args.output, latest_id)
     print(json.dumps({

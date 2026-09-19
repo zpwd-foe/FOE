@@ -69,6 +69,7 @@ class RefreshTests(unittest.TestCase):
             dashboard = folder / "dashboard"
             dashboard.mkdir()
             (dashboard / "index.html").write_text("original", encoding="utf-8")
+            (dashboard / "history.html").write_text("original archive", encoding="utf-8")
             args = refresh_args(folder)
             with (
                 patch("foe_cdn_inspector.cli.fetch_text", side_effect=[INDEX_HTML, "bootstrap"]),
@@ -79,6 +80,7 @@ class RefreshTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "dashboard was not updated"):
                     run_refresh(args)
             self.assertEqual((dashboard / "index.html").read_text(encoding="utf-8"), "original")
+            self.assertEqual((dashboard / "history.html").read_text(encoding="utf-8"), "original archive")
             self.assertEqual((snapshots / "latest.txt").read_text(encoding="utf-8").strip(), "2026-09-17_11-16-22")
             self.assertFalse((snapshots / "2026-09-18_11-16-22").exists())
 
@@ -89,6 +91,7 @@ class RefreshTests(unittest.TestCase):
             saved = snapshots / "2026-09-18_11-16-22" / "index.html"
             saved.parent.mkdir(parents=True)
             saved.write_text("saved dashboard", encoding="utf-8")
+            saved.with_name("history.html").write_text("saved archive", encoding="utf-8")
             (snapshots / "latest.txt").write_text("2026-09-18_11-16-22\n", encoding="utf-8")
             args = refresh_args(folder)
             with (
@@ -99,6 +102,7 @@ class RefreshTests(unittest.TestCase):
                 self.assertEqual(run_refresh(args), 0)
             collect.assert_not_called()
             self.assertEqual((folder / "dashboard" / "index.html").read_text(encoding="utf-8"), "saved dashboard")
+            self.assertEqual((folder / "dashboard" / "history.html").read_text(encoding="utf-8"), "saved archive")
 
     def test_success_writes_snapshot_and_stable_dashboard(self):
         with TemporaryDirectory() as folder_name:
@@ -119,6 +123,10 @@ class RefreshTests(unittest.TestCase):
             saved = folder / "snapshots" / "2026-09-18_11-16-22" / "index.html"
             stable = folder / "dashboard" / "index.html"
             self.assertEqual(stable.read_bytes(), saved.read_bytes())
+            self.assertEqual(
+                (folder / "dashboard" / "history.html").read_bytes(),
+                saved.with_name("history.html").read_bytes(),
+            )
             self.assertIn("GBP|Example", stable.read_text(encoding="utf-8"))
             self.assertEqual((folder / "snapshots" / "latest.txt").read_text(encoding="utf-8").strip(), "2026-09-18_11-16-22")
             result = json.loads((folder / "results" / "history-last-60-days.json").read_text(encoding="utf-8"))

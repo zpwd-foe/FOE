@@ -45,7 +45,7 @@ From this project directory, run one command whenever a new beta report is avail
 python3 -m foe_cdn_inspector refresh
 ```
 
-The command checks the newest published report, verifies the `zz1` beta bootstrap, and refreshes the `GBP|` bonus descriptions from 2026-03-01 onward. It also rebuilds the full 60-day change history, ending on the newest report date. Previously parsed reports are read from `.cache/`; only new reports need to be fetched. The current page is written to `dashboard/index.html`, while a dated copy remains under `snapshots/<report-id>/`. If a report fails to collect, the current dashboard and `snapshots/latest.txt` are left unchanged.
+The command checks the newest published report, verifies the `zz1` beta bootstrap, and refreshes the `GBP|` bonus descriptions from 2026-03-01 onward. It also rebuilds the full 60-day change history, ending on the newest report date. Previously parsed reports are read from `.cache/`; only new reports need to be fetched. The current page is written to `dashboard/index.html`, with the large archive in `dashboard/history.html` loaded only when opened. A dated copy of both files remains under `snapshots/<report-id>/`. Upload the whole `dashboard/` directory to Cloudflare Pages, not just `index.html`. If a report fails to collect, the current dashboard and `snapshots/latest.txt` are left unchanged.
 
 To preview what would be refreshed without changing files, or to rebuild after a UI change when no new report has appeared:
 

@@ -71,7 +71,15 @@ def write_html(
     string_nav = '<a href="#active-strings">Bonus descriptions</a>' if string_results else ""
     bonus_section = _great_building_bonus_section(history_results) if history_results else ""
     bonus_nav = '<a href="#great-building-bonuses">Bonus icons</a>' if history_results else ""
-    history_section = _history_section(history_results) if history_results else ""
+    history_section = ""
+    if history_results:
+        history_shell, history_content = _history_parts(history_results)
+        (destination / "history.html").write_text(history_content, encoding="utf-8")
+        history_section = (
+            f'{history_shell}<div class="archive-content" id="history-pending">'
+            '<p class="meta">Open the archive to load its 60-day records.</p>'
+            '</div></details>'
+        )
     history_nav = '<a href="#snapshot">60-day change history</a>' if history_results else ""
     page_heading = "GB Update tracker"
     if string_results:
@@ -241,7 +249,7 @@ if(sq) sq.addEventListener('input',()=>{{const value=sq.value.toLowerCase();for(
 const bq=document.querySelector('#bonus-search'),bonusCards=[...document.querySelectorAll('#bonus-grid .bonus-card')],bonusStatus=document.querySelector('#bonus-result-status');
 function filterBonuses(){{if(!bq)return;const value=bq.value.trim().toLowerCase();let visible=0;for(const card of bonusCards){{const matches=card.dataset.search.includes(value);card.classList.toggle('hidden',!matches);if(matches)visible++}}bonusStatus.textContent=`${{visible}} bonus ${{visible===1?'icon':'icons'}}`}}
 if(bq){{bq.addEventListener('input',filterBonuses);filterBonuses()}}
-const hq=document.querySelector('#history-search'),typeButtons=[...document.querySelectorAll('.type-filter')],typeSections=[...document.querySelectorAll('.history-type-section')],historyStatus=document.querySelector('#history-result-status'),historyEmpty=document.querySelector('#history-empty');
+let hq,typeButtons=[],typeSections=[],historyStatus,historyEmpty;
 let activeHistoryType='all';
 function filterHistory(){{
   if(!hq)return;
@@ -251,7 +259,7 @@ function filterHistory(){{
     for(const dateGroup of section.querySelectorAll('.history-date-group')){{
       const dateMatches=Boolean(value&&dateGroup.dataset.date.includes(value));let dateItems=0;
       for(const item of dateGroup.querySelectorAll('.history-item')){{
-        const matches=!value||dateMatches||(item.dataset.search||item.textContent).toLowerCase().includes(value);
+        const matches=!value||dateMatches||(`${{section.dataset.historyType}} ${{item.textContent}}`).toLowerCase().includes(value);
         item.classList.toggle('hidden',!matches);if(matches)dateItems++;
       }}
       const showDate=typeMatches&&dateItems>0;dateGroup.classList.toggle('hidden',!showDate);
@@ -264,23 +272,45 @@ function filterHistory(){{
   const scope=activeHistoryType==='all'?'all types':activeHistoryType;
   historyStatus.textContent=`${{visibleItems.toLocaleString()}} entries across ${{visibleDateKeys.size}} ${{visibleDateKeys.size===1?'date':'dates'}} · ${{scope}}`;
 }}
-for(const button of typeButtons)button.addEventListener('click',()=>{{activeHistoryType=button.dataset.historyFilter;for(const candidate of typeButtons)candidate.setAttribute('aria-pressed',String(candidate===button));filterHistory()}});
-if(hq){{hq.addEventListener('input',filterHistory);filterHistory()}}
+function activateHistory(){{
+  hq=document.querySelector('#history-search');typeButtons=[...document.querySelectorAll('.type-filter')];typeSections=[...document.querySelectorAll('.history-type-section')];historyStatus=document.querySelector('#history-result-status');historyEmpty=document.querySelector('#history-empty');
+  for(const button of typeButtons)button.addEventListener('click',()=>{{activeHistoryType=button.dataset.historyFilter;for(const candidate of typeButtons)candidate.setAttribute('aria-pressed',String(candidate===button));filterHistory()}});
+  if(hq){{hq.addEventListener('input',filterHistory);filterHistory()}}
+  for(const img of document.querySelectorAll('.history-image')){{
+    const row=img.closest('.history-file-image'),placeholder=row.querySelector('.image-placeholder'),state=row.querySelector('.image-state');
+    img.addEventListener('error',()=>{{
+      const fallback=img.dataset.fallbackSrc;
+      if(fallback&&!img.dataset.fallbackTried){{img.dataset.fallbackTried='1';img.src=fallback;return}}
+      img.hidden=true;placeholder.hidden=false;row.classList.add('image-unavailable');state.textContent='Preview unavailable';
+    }});
+    img.addEventListener('load',()=>{{if(img.dataset.fallbackTried)state.textContent='Original unavailable; showing the current version'}});
+  }}
+}}
 const snapshotLink=document.querySelector('a[href="#snapshot"]'),snapshot=document.querySelector('#snapshot');
+let historyLoaded=false,historyPromise;
+function loadHistory(){{
+  if(!snapshot||historyLoaded||historyPromise)return historyPromise;
+  const pending=snapshot.querySelector('.archive-content');
+  pending.innerHTML='<p class="meta" role="status">Gathering the archive…</p>';
+  historyPromise=(async()=>{{
+    try{{
+      const response=await fetch('./history.html');
+      if(!response.ok)throw new Error(`HTTP ${{response.status}}`);
+      pending.outerHTML=await response.text();
+      historyLoaded=true;activateHistory();
+    }}catch(error){{
+      pending.innerHTML='<p class="meta" role="alert">The archive could not load. Serve the dashboard directory over HTTP, then try again. <button type="button" id="retry-history">Retry</button></p>';
+      pending.querySelector('#retry-history').addEventListener('click',loadHistory);
+    }}finally{{historyPromise=null}}
+  }})();
+  return historyPromise;
+}}
+if(snapshot)snapshot.addEventListener('toggle',()=>{{if(snapshot.open)loadHistory()}});
 if(snapshotLink&&snapshot) snapshotLink.addEventListener('click',()=>{{snapshot.open=true}});
-if(snapshot&&location.hash==='#snapshot'){{snapshot.open=true;requestAnimationFrame(()=>snapshot.scrollIntoView({{block:'start',behavior:'instant'}}))}}
+if(snapshot&&location.hash==='#snapshot'){{snapshot.open=true;loadHistory();requestAnimationFrame(()=>snapshot.scrollIntoView({{block:'start',behavior:'instant'}}))}}
 const bonusLink=document.querySelector('a[href="#great-building-bonuses"]'),bonusSection=document.querySelector('#great-building-bonuses');
 if(bonusLink&&bonusSection) bonusLink.addEventListener('click',()=>requestAnimationFrame(()=>bonusSection.scrollIntoView({{block:'start',behavior:'instant'}})));
 if(bonusSection&&location.hash==='#great-building-bonuses') requestAnimationFrame(()=>bonusSection.scrollIntoView({{block:'start',behavior:'instant'}}));
-for(const img of document.querySelectorAll('.history-image')){{
-  const row=img.closest('.history-file-image'),placeholder=row.querySelector('.image-placeholder'),state=row.querySelector('.image-state');
-  img.addEventListener('error',()=>{{
-    const fallback=img.dataset.fallbackSrc;
-    if(fallback&&!img.dataset.fallbackTried){{img.dataset.fallbackTried='1';img.src=fallback;return}}
-    img.hidden=true;placeholder.hidden=false;row.classList.add('image-unavailable');state.textContent='Preview unavailable';
-  }});
-  img.addEventListener('load',()=>{{if(img.dataset.fallbackTried)state.textContent='Original unavailable; showing the current version'}});
-}}
 for(const img of document.querySelectorAll('.bonus-image'))img.addEventListener('error',()=>{{img.hidden=true;img.closest('.bonus-art').querySelector('.bonus-image-placeholder').hidden=false}});
 </script></body></html>"""
     (destination / "index.html").write_text(document, encoding="utf-8")
@@ -407,6 +437,11 @@ def _great_building_bonus_card(record: dict) -> str:
 
 
 def _history_section(results: dict) -> str:
+    shell, content = _history_parts(results)
+    return f"{shell}{content}</details>"
+
+
+def _history_parts(results: dict) -> tuple[str, str]:
     reports = results.get("reports", [])
     latest_images = _latest_image_urls(reports)
     type_specs = [
@@ -443,15 +478,16 @@ def _history_section(results: dict) -> str:
     except ValueError:
         inclusive_days = None
     snapshot_title = f"{inclusive_days}-day change history" if inclusive_days else "Date range · change history"
-    return f'''<details class="archive-shell" id="snapshot"><summary class="archive-summary"><span><strong>{snapshot_title}</strong>
-<small>{results.get('reports_count', 0)} reports · {html.escape(results.get('since', ''))} through {html.escape(until)}</small></span></summary>
-<div class="archive-content"><div class="archive-tools"><div><div class="eyebrow">BROWSE CHANGES</div><p class="meta">Choose a type, then a date. Search by name, change, file kind, or date. Only the highest-resolution version of each image is shown.</p></div></div>
+    shell = f'''<details class="archive-shell" id="snapshot"><summary class="archive-summary"><span><strong>{snapshot_title}</strong>
+<small>{results.get('reports_count', 0)} reports · {html.escape(results.get('since', ''))} through {html.escape(until)}</small></span></summary>'''
+    content = f'''<div class="archive-content"><div class="archive-tools"><div><div class="eyebrow">BROWSE CHANGES</div><p class="meta">Choose a type, then a date. Search by name, change, file kind, or date. Only the highest-resolution version of each image is shown.</p></div></div>
 <div class="history-controls"><div class="toolbar"><input id="history-search" type="search" placeholder="Search by name, date, or change…" aria-label="Search the 60-day change history"></div>
 <div class="type-tabs" role="group" aria-label="Filter change history by type"><button class="type-filter" type="button" data-history-filter="all" aria-pressed="true">All types<small>{all_count:,}</small></button>{type_filters}</div></div>
 <p class="history-result-status" id="history-result-status" aria-live="polite"></p>
 <div class="history-type-list" id="history-list">{type_rows or '<p>No reports in this range.</p>'}</div>
 <p class="history-empty" id="history-empty" hidden>No changes match these filters.</p>
-</div></details>'''
+</div>'''
+    return shell, content
 
 
 def _history_type_section(
@@ -531,7 +567,7 @@ def _history_type_date(
         families = report.get("metadata_families", [])
         metadata_files = report.get("metadata_files", [])
         family_rows = "".join(
-            f'<li class="history-string history-item" data-search="family metadata {html.escape(str(value).lower())}"><span class="change">family</span><span>{html.escape(str(value))}</span></li>'
+            f'<li class="history-string history-item"><span class="change">family</span><span>{html.escape(str(value))}</span></li>'
             for value in families
         )
         file_rows = "".join(_history_file(record) for record in metadata_files)
@@ -633,9 +669,6 @@ def _history_file(
     url = record.get("url", "")
     name = url.rsplit("/", 1)[-1]
     change = html.escape(record.get("change", ""))
-    item_search = html.escape(
-        f'{record.get("change", "")} {record.get("kind", "")} {name} {url}'.lower()
-    )
     variant_note = (
         f'<span class="image-variants">Highest resolution · {variant_count - 1} smaller '
         f'{"variant" if variant_count == 2 else "variants"} hidden</span>'
@@ -644,24 +677,23 @@ def _history_file(
     )
     if record.get("kind") == "image":
         if record.get("change") == "removed":
-            return f'''<li class="history-file history-file-image history-item image-unavailable" data-search="{item_search}"><span class="image-placeholder">Removed</span>
+            return f'''<li class="history-file history-file-image history-item image-unavailable"><span class="image-placeholder">Removed</span>
 <span class="change change-{change}">{change}</span><span class="history-file-meta"><span class="history-file-name">{html.escape(name)}</span>{variant_note}<span class="image-state">Removed from the CDN</span></span></li>'''
         latest_url = (latest_images or {}).get(_image_asset_key(url))
         fallback = ""
         if latest_url and latest_url != url:
             fallback = f' data-fallback-src="{html.escape(latest_url)}"'
-        return f'''<li class="history-file history-file-image history-item" data-search="{item_search}"><img class="history-image" loading="lazy" src="{html.escape(url)}"{fallback} alt="Preview of {html.escape(name)}">
+        return f'''<li class="history-file history-file-image history-item"><img class="history-image" loading="lazy" src="{html.escape(url)}"{fallback} alt="Preview of {html.escape(name)}">
 <span class="image-placeholder" hidden>Preview unavailable</span><span class="change change-{change}">{change}</span><span class="history-file-meta"><span class="history-file-name">{html.escape(name)}</span>{variant_note}<span class="image-state"></span></span></li>'''
     if record.get("change") == "removed":
-        return f'''<li class="history-file history-item image-unavailable" data-search="{item_search}"><span class="change change-{change}">{change}</span>
+        return f'''<li class="history-file history-item image-unavailable"><span class="change change-{change}">{change}</span>
 <span class="change">{html.escape(record.get('kind', ''))}</span><span class="history-file-name">{html.escape(name)}</span></li>'''
-    return f'''<li class="history-file history-item" data-search="{item_search}"><span class="change change-{change}">{change}</span>
+    return f'''<li class="history-file history-item"><span class="change change-{change}">{change}</span>
 <span class="change">{html.escape(record.get('kind', ''))}</span><a href="{html.escape(url)}" target="_blank">{html.escape(name)}</a></li>'''
 
 
 def _history_string(value: str, change: str) -> str:
-    search = html.escape(f"{change} string {value}".lower())
-    return f'''<div class="history-string history-item" data-search="{search}"><span class="change change-{change}">{change}</span><span>{html.escape(value)}</span></div>'''
+    return f'''<div class="history-string history-item"><span class="change change-{change}">{change}</span><span>{html.escape(value)}</span></div>'''
 
 
 def _history_building(value: dict | str, change: str) -> str:
@@ -675,8 +707,7 @@ def _history_building(value: dict | str, change: str) -> str:
         name = str(value)
         details = ""
     detail_html = f'<span class="meta">{html.escape(details)}</span>' if details else ""
-    search = html.escape(f"{change} building {name} {details}".lower())
-    return f'''<div class="history-string history-item" data-search="{search}"><span class="change change-{change}">{change}</span><span><strong>{html.escape(str(name))}</strong> {detail_html}</span></div>'''
+    return f'''<div class="history-string history-item"><span class="change change-{change}">{change}</span><span><strong>{html.escape(str(name))}</strong> {detail_html}</span></div>'''
 
 
 def _active_string_section(results: dict) -> str:

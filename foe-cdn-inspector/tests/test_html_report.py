@@ -205,6 +205,37 @@ class HistoryOrganizationTests(unittest.TestCase):
         self.assertNotIn("example.test/report", rendered)
         self.assertNotIn("open source report", rendered)
 
+    def test_dashboard_loads_history_from_a_separate_file(self):
+        results = {
+            "since": "2026-08-01",
+            "until": "2026-09-29",
+            "reports_count": 1,
+            "reports": [{
+                "date": "2026-09-17",
+                "files": [],
+                "strings": {"added": [], "removed": []},
+                "buildings": {"added": [], "updated": [], "removed": []},
+                "metadata_families": [],
+                "metadata_files": [{
+                    "kind": "metadata",
+                    "change": "added",
+                    "url": f"https://cdn.example/start/metadata?id=building_{index}"
+                } for index in range(100)],
+            }],
+        }
+        with TemporaryDirectory() as folder:
+            destination = Path(folder)
+            write_html(ParsedReport(report_id="2026-09-17_11-16-22"), destination, {}, history_results=results)
+            page = (destination / "index.html").read_text(encoding="utf-8")
+            archive = (destination / "history.html").read_text(encoding="utf-8")
+
+        self.assertIn("fetch('./history.html')", page)
+        self.assertIn('id="history-pending"', page)
+        self.assertNotIn("metadata?id=building_99", page)
+        self.assertIn("metadata?id=building_99", archive)
+        self.assertNotIn('data-search="added metadata', archive)
+        self.assertGreater(len(archive), len(page))
+
     def test_empty_dates_are_omitted_from_a_type(self):
         report = {
             "date": "2026-09-17",
