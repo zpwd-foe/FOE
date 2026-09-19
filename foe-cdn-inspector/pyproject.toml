@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foe-cdn-inspector"
+version = "0.1.0"
+description = "Inspect recent public Forge of Empires beta CDN changes"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "FOE_GitHub contributors" }]
+dependencies = []
+
+[project.scripts]
+foe-cdn-inspector = "foe_cdn_inspector.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["foe_cdn_inspector*"]
