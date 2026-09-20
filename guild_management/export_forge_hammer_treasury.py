@@ -888,6 +888,7 @@ def launch_chrome(
         "treasury": "1" if export_treasury else "0",
         "contributions": "1" if export_contributions else "0",
         "world_name": config.world_name,
+        "page_evidence": hashlib.sha256(nonce.encode()).hexdigest()[:16],
     }
     if live_debug:
         trigger_params["live_debug"] = "1"
@@ -926,6 +927,34 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
+def import_page_evidence(config: BrowserConfig, tag: str) -> dict[str, object]:
+    """Keep passive page diagnostics private; their absence never causes a retry."""
+    if not re.fullmatch(r"[a-f0-9]{16}", tag):
+        raise BrowserExportError("Invalid page-evidence tag.")
+    source = config.download_dir / f"foe-contribution-pages-{tag}.json"
+    try:
+        if not source.is_file():
+            return {"status": "unavailable", "reason": "Companion evidence was not downloaded; CSV reconciliation is still required."}
+        if source.is_symlink() or source.stat().st_size > 8_000_000:
+            return {"status": "unavailable", "reason": "Invalid evidence file size or path."}
+        payload = json.loads(source.read_text(encoding="utf-8"))
+        if payload.get("version") != 1 or not isinstance(payload.get("pages"), list):
+            raise ValueError("Unsupported evidence schema")
+        # Explicit allowlist: never persist URLs, cookies, headers, or login data.
+        evidence = {key: payload.get(key) for key in ("version", "status", "capturedAt", "timestampPolicy", "identityPolicy", "treasuryCapturedAt")}
+        evidence["pages"] = [
+            {**{key: page.get(key) for key in ("requestId", "offset", "limit", "receivedAt", "totalCount")},
+             "rows": [{key: row.get(key) for key in ("player", "resource", "amount", "action", "timestamp")} for row in page.get("rows", [])]}
+            for page in payload["pages"]
+        ]
+        destination = config.state_file.parent / ".foe-refresh/evidence" / source.name
+        destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        _write_state(destination, evidence)
+        return {"status": "saved", "file": source.name, "pages": len(evidence["pages"]), "sha256": _sha256(destination)}
+    except (OSError, ValueError, TypeError, AttributeError) as error:
+        return {"status": "unavailable", "reason": type(error).__name__}
+
+
 def rebuild_treasury_dashboard(csv_path: Path) -> None:
     subprocess.run(
         [
@@ -951,6 +980,18 @@ def rebuild_contribution_dashboard(input_dir: Path) -> None:
         ],
         cwd=PROJECT_DIR,
         check=True,
+    )
+
+
+def rebuild_dashboard_pair(csv_path: Path, contribution_dir: Path) -> None:
+    if contribution_dir.resolve() != (PROJECT_DIR / "input/guild-goods-contribution").resolve():
+        raise BrowserExportError(
+            "Paired refresh requires the project's contribution input directory; "
+            "use --no-refresh for a custom export destination."
+        )
+    subprocess.run(
+        [sys.executable, "-B", str(PROJECT_DIR / "automation/build_pair.py"), "--csv", str(csv_path)],
+        cwd=PROJECT_DIR, check=True,
     )
 
 
@@ -1008,8 +1049,7 @@ def main() -> int:
                     "treasury file and all contribution CSVs."
                 )
             elif args.refresh:
-                rebuild_contribution_dashboard(config.contribution_input_dir)
-                rebuild_treasury_dashboard(treasury_destination)
+                rebuild_dashboard_pair(treasury_destination, config.contribution_input_dir)
                 print("Treasury and contribution dashboards rebuilt.")
             return 0
 
@@ -1156,9 +1196,9 @@ def main() -> int:
                 raise BrowserExportError("A requested Forge Hammer export did not complete.")
 
             if args.refresh:
-                rebuild_contribution_dashboard(config.contribution_input_dir)
-                rebuild_treasury_dashboard(treasury_destination)
+                rebuild_dashboard_pair(treasury_destination, config.contribution_input_dir)
         except BaseException as error:
+            state["page_evidence"] = import_page_evidence(config, state["nonce_fingerprint"])
             state.update(
                 status="failed",
                 completed_at=dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -1200,6 +1240,7 @@ def main() -> int:
                 "sha256": contribution_summary.sha256,
             },
             dashboards_refreshed=args.refresh,
+            page_evidence=import_page_evidence(config, state["nonce_fingerprint"]),
         )
         _write_state(config.state_file, state)
         print(

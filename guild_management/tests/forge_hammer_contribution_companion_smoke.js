@@ -8,12 +8,16 @@ const elements = new Map();
 const requestHandlers = [];
 const responseHandlers = [];
 const requestedOffsets = [];
+let evidenceBlob;
+let evidenceFilename;
+URL.createObjectURL = blob => { evidenceBlob = blob; return 'blob:offline-evidence'; };
+URL.revokeObjectURL = () => {};
 let exportedRows = null;
 let nextRequestId = 900;
 
 global.window = global;
 window.location = {
-  hash: '#forge-hammer-treasury-export=offline-contribution-smoke&treasury=0&contributions=1&contribution_cutoff=2026-08-16T09%3A00%3A00',
+  hash: '#forge-hammer-treasury-export=offline-contribution-smoke&treasury=0&contributions=1&contribution_cutoff=2026-08-16T09%3A00%3A00&page_evidence=0123456789abcdef',
   pathname: '/game/index',
   search: '',
 };
@@ -26,7 +30,7 @@ global.document = {
     },
   },
   createElement() {
-    return { id: '', style: {}, textContent: '' };
+    return { id: '', style: {}, textContent: '', click() { evidenceFilename = this.download; }, remove() {} };
   },
   getElementById(id) {
     return elements.get(id) || null;
@@ -168,7 +172,7 @@ Promise.resolve().then(() => {
   contributionDispatcher.addEventListener(contributionEventType, () => {});
 });
 
-setTimeout(() => {
+setTimeout(async () => {
   if (exportedRows !== 30) {
     const status = elements.get('goe-forge-hammer-export-status');
     console.error(status?.textContent || `Exported ${exportedRows} rows; expected 30.`);
@@ -178,5 +182,16 @@ setTimeout(() => {
     console.error(`Unexpected page offsets: ${JSON.stringify(requestedOffsets)}`);
     process.exit(1);
   }
+  const assert = require('assert/strict');
+  assert.equal(evidenceFilename, 'foe-contribution-pages-0123456789abcdef.json');
+  const evidence = JSON.parse(await evidenceBlob.text());
+  assert.equal(evidence.status, 'complete');
+  assert.equal(evidence.pages.length, 3);
+  assert.deepEqual(evidence.pages.map(page => page.offset), [0, 10, 20]);
+  assert.equal(evidence.pages.flatMap(page => page.rows).length, 30);
+  assert.deepEqual(evidence.pages[0].rows[0], evidence.pages[0].rows[1]);
+  assert.equal(evidence.pages[0].rows[0].timestamp, createPageLogs(0)[0].createdAt);
+  assert.ok(!JSON.stringify(evidence).includes('zpwd'));
+  assert.ok(!Object.hasOwn(evidence.pages[0].rows[0], 'id'));
   console.log('Forge Hammer contribution smoke test passed with offsets 0, 10, 20.');
 }, 1_500);

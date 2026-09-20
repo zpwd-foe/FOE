@@ -428,17 +428,13 @@ class ExistingExportWorkflowTests(unittest.TestCase):
                     return_value=config,
                 ),
                 mock.patch(
-                    "export_forge_hammer_treasury.rebuild_treasury_dashboard"
-                ) as refresh_treasury,
-                mock.patch(
-                    "export_forge_hammer_treasury.rebuild_contribution_dashboard"
-                ) as refresh_contributions,
+                    "export_forge_hammer_treasury.rebuild_dashboard_pair"
+                ) as refresh_pair,
                 mock.patch("export_forge_hammer_treasury.launch_chrome") as launch_chrome,
             ):
                 self.assertEqual(main(), 0)
 
-            refresh_treasury.assert_called_once_with(treasury)
-            refresh_contributions.assert_called_once_with(contribution_dir)
+            refresh_pair.assert_called_once_with(treasury, contribution_dir)
             launch_chrome.assert_not_called()
 
 

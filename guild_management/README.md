@@ -117,11 +117,30 @@ The command is intentionally fail-closed:
 
 After saving `stats-YYYY-MM-DD.csv` directly under `input/` and
 `GuildTreasury-YYYY-MM-DD.csv` under `input/guild-goods-contribution/`, the
-command refreshes both dashboards by default. Treasury uses the validated
+command builds and validates both dashboards in private staging before replacing
+the live output pair. Treasury uses the validated
 current-date CSV. Contribution refresh merges every CSV in its input directory
 because those exports are overlapping partial snapshots. Use `--no-refresh`
 only when CSV download and validation are intentionally being separated from
 dashboard generation; `--rebuild` remains as a compatibility alias.
+Custom export destinations require `--no-refresh`; the paired builder expects
+the standard project input directories.
+
+The contribution CSVs do not provide transaction IDs, and observed timestamps
+are minute-granular. A visible row signature is **not** a unique transaction
+identifier. Identical-looking production rows can be legitimate and must not be
+globally deduplicated. The companion now records passive page evidence: page
+offsets, response counts, page request IDs, observed source timestamps, and row
+order. Page request IDs identify requests, not transactions; local capture times
+do not add precision to transaction times. This evidence makes no additional game
+requests and does not authorize automatic row removal.
+
+The evidence download is copied to private, Git-ignored `.foe-refresh/evidence/`
+with mode 600. It contains player IDs but excludes names, cookies, headers, and
+URLs; it is never included in the dashboard or published. The original JSON also
+remains in the configured Downloads folder. If evidence cannot be saved, the
+exporter records that fact and still requires exact CSV/treasury reconciliation.
+Reload the unpacked companion extension after updating its source to enable this.
 
 Contribution generation reconciles signed log changes against treasury changes
 for every good before publishing. A legacy export can repeat a same-amount
@@ -138,9 +157,8 @@ The audit records the removed count and zero-based normalized-row indexes in
 `inventoryAudit`, along with checksums of the original exports. Source CSVs are
 never rewritten. The corrected canonical history is used by later refreshes;
 rebuilding the same files reuses its matching audit. If an export succeeds but
-generation fails, fix the reported cause and rerun the exporter: when both
-validated CSVs already exist, recovery rebuilds locally without another game
-request. Do not delete the CSVs or bypass the audit to force a retry.
+generation fails, fix the reported cause and resume from the saved CSVs as
+described below. Do not delete the CSVs or bypass the audit to force a retry.
 
 Use `--live-debug` for an explicitly authorized diagnostic attempt. It records
 the one-shot navigation, game-assigned request IDs, matching responses, Forge
@@ -159,7 +177,7 @@ timeout can be overridden with the optional settings documented in
 `automation/run_daily_refresh.py` is the fail-closed orchestration entry point
 for unattended updates. A scheduled run requires a clean `main` branch that
 exactly matches `origin/main`, runs the offline test suite before touching the
-game, invokes the Forge Hammer exporter exactly once, validates both generated
+game, invokes the Forge Hammer exporter exactly once in download-only mode, validates both generated
 datasets, and permits changes only under `dashboard/` plus the two source data
 payloads. When publishing is enabled, it creates a generated-data-only `FOE-30`
 commit and pushes it so Cloudflare Pages can deploy the refreshed dashboard.
@@ -173,6 +191,72 @@ notification. `KeepAlive` and `RunAtLoad` are deliberately disabled in the
 LaunchAgent. Before publishing, the runner also compares the rebuilt treasury
 dates with the previously published payload and refuses any update that drops a
 historical snapshot. Logs and the process lock are local and ignored by Git.
+
+#### Checkpoints and safe recovery
+
+Download, paired build, validation, and publishing are separate stages. Failures
+report the stage, reason, and last recorded successful run. A failure before
+joint validation leaves the existing dashboard untouched. Promotion uses
+recoverable backups; interrupted file moves are rolled back on recovery. This
+is not an atomic multi-file filesystem swap, so a local file server could see a
+brief gap during promotion. Remote publication happens only after validation,
+in one generated-data commit. Unexpected user edits stop automatic recovery.
+
+For a failed scheduled run whose two CSVs were saved:
+
+```bash
+../CityAnalysis/.venv/bin/python -B automation/run_daily_refresh.py --resume
+```
+
+Add `--publish` when publication is intended. A publishing-stage checkpoint
+requires `--resume --publish`; if a commit succeeded but its push failed, this
+pushes the same verified commit without rebuilding or exporting again. Diverged
+history, unexpected staged changes, and a missing privacy hook require review.
+Resume never launches Chrome, downloads missing CSVs, retries game actions, or
+force-pushes. Commit a code fix before resuming the strict scheduled workflow.
+Preflight accepts a last-good dashboard even when new CSVs are awaiting processing;
+post-build validation still requires every available contribution CSV.
+
+For a saved pair without a daily-run checkpoint, or to test a code fix locally:
+
+```bash
+../CityAnalysis/.venv/bin/python -B automation/build_pair.py \
+  --csv input/stats-YYYY-MM-DD.csv --check-only
+```
+
+Remove `--check-only` to promote the validated local result. File checksums bind
+recovery to the inputs, build code, and outputs; unchanged verified checkpoints
+can be reused. The matching dated contribution CSV must exist. Neither command
+edits the source CSVs. `.foe-refresh/` retains snapshots, backups, and build logs;
+`.foe-daily-refresh.json` retains the daily checkpoint. Both are local-only and
+Git-ignored. Keep these for a failed run until recovery is complete; older run
+directories can then be archived manually. They are not automatically deleted.
+
+#### Separate automation checkout (opt-in)
+
+To keep development edits from blocking the scheduled job, first commit and
+push the safeguards, then prepare a fresh directory **outside** the development
+repository:
+
+```bash
+../CityAnalysis/.venv/bin/python -B automation/prepare_checkout.py \
+  --destination /absolute/path/to/foe-automation
+```
+
+The helper clones `origin/main`, carries over the existing privacy pre-push hook,
+and copies only ignored CSV inputs, `.env.foe`, and the browser-attempt state with
+private permissions. It preserves the no-repeat-game-attempt guard. It does not
+copy a browser profile, migrate an unfinished daily checkpoint, install a job,
+or launch Chrome. Resolve any pending publish in the original checkout first.
+
+Reload the companion extension from the new clone in the dedicated Chrome
+profile, validate the clone with `--validate-only`, then explicitly reinstall the
+same LaunchAgent label with `--project-dir` pointing to its `guild_management`
+folder and an existing Python environment. Preserve your actual current schedule
+when setting `--hour`/`--minute`; the example below is not a migration default.
+Keep only one scheduled job. The clone deliberately does not auto-merge code:
+after future code pushes, update its clean `main` with `git pull --ff-only` before
+the next run. Divergence stops the job rather than discarding local work.
 
 For reliable unattended runs, use a Chrome data directory dedicated to this
 workflow. Add these local-only settings to `.env.foe`:

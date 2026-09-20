@@ -115,6 +115,8 @@ class MetadataTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(AutomationError, "every available"):
                 validate_generated_metadata(project)
+            # A newly downloaded CSV must not block the pre-build validation.
+            validate_generated_metadata(project, require_current_sources=False)
 
     def test_rejects_a_treasury_history_regression(self) -> None:
         previous = tuple(

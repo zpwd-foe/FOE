@@ -20,6 +20,7 @@ DEFAULT_PROJECT_DIR = Path(__file__).resolve().parents[1]
 DAILY_EXPORTER_ARGUMENTS = (
     "export_forge_hammer_treasury.py",
     "--close-running-profile",
+    "--no-refresh",
 )
 ALLOWED_EXACT_PATHS = {
     "site/data/contribution-data.js",
@@ -43,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project-dir", type=Path, default=DEFAULT_PROJECT_DIR)
     parser.add_argument("--publish", action="store_true")
     parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument("--resume", action="store_true", help="Resume a saved local build/publish checkpoint. Never opens Chrome or sends game requests.")
     parser.add_argument("--notify", action="store_true")
     parser.add_argument("--remote", default="origin")
     parser.add_argument("--branch", default="main")
@@ -202,7 +204,7 @@ def ensure_treasury_history_preserved(
         )
 
 
-def validate_generated_metadata(project_dir: Path) -> tuple[dt.date, dt.date]:
+def validate_generated_metadata(project_dir: Path, *, require_current_sources: bool = True) -> tuple[dt.date, dt.date]:
     treasury_dates = treasury_snapshot_dates(project_dir)
     contribution = read_assignment(
         project_dir / "site/data/contribution-data.js",
@@ -231,7 +233,7 @@ def validate_generated_metadata(project_dir: Path) -> tuple[dt.date, dt.date]:
             "GuildTreasury-*.csv"
         )
     )
-    if sorted(str(name) for name in source_files) != expected_sources:
+    if require_current_sources and sorted(str(name) for name in source_files) != expected_sources:
         raise AutomationError(
             "Contribution dashboard did not merge every available contribution CSV."
         )
@@ -250,7 +252,7 @@ def validate_compatibility_page(project_dir: Path) -> None:
         raise AutomationError("The legacy contribution page no longer points to the dashboard.")
 
 
-def run_offline_validation(project_dir: Path) -> None:
+def run_offline_validation(project_dir: Path, *, require_current_sources: bool = True) -> None:
     node = shutil.which("node")
     if not node:
         raise AutomationError("Node.js is required for dashboard validation.")
@@ -277,7 +279,7 @@ def run_offline_validation(project_dir: Path) -> None:
     ):
         run([node, "--check", script], cwd=project_dir)
     run(["git", "diff", "--check"], cwd=project_dir)
-    validate_generated_metadata(project_dir)
+    validate_generated_metadata(project_dir, require_current_sources=require_current_sources)
     validate_compatibility_page(project_dir)
 
 
@@ -388,6 +390,46 @@ def send_notification(title: str, message: str) -> None:
     )
 
 
+def resume_publish(project_dir: Path, checkpoint: dict, args: argparse.Namespace) -> None:
+    """Finish only a verified generated-data commit/push; never collect again."""
+    from automation.build_pair import output_hashes
+
+    if output_hashes(project_dir) != checkpoint.get("outputs"):
+        raise AutomationError("Generated outputs no longer match the publishing checkpoint.")
+    if git_output(project_dir, "branch", "--show-current") != args.branch:
+        raise AutomationError("Publishing checkpoint is on the wrong branch.")
+    if run(["git", "diff", "--cached", "--quiet"], cwd=project_dir, check=False).returncode:
+        raise AutomationError("Review staged changes before resuming publication.")
+    head = git_output(project_dir, "rev-parse", "HEAD")
+    base = checkpoint["baseHead"]
+    if head == base:
+        ensure_remote_is_current(project_dir, args.remote, args.branch)
+        changes = ensure_only_generated_changes(project_dir)
+        publish_generated_changes(project_dir, paths=changes, ticket=args.ticket,
+                                  remote=args.remote, branch=args.branch,
+                                  through_date=dt.date.fromisoformat(checkpoint["throughDate"]))
+        return
+    ensure_clean_start(project_dir)
+    if git_output(project_dir, "rev-parse", "HEAD^") != base:
+        raise AutomationError("History changed since the publishing checkpoint; review it manually.")
+    paths = normalized_git_paths(project_dir, git_output(project_dir, "diff", "--name-only", base, head))
+    if not paths or any(not is_allowed_generated_path(path) for path in paths):
+        raise AutomationError("Pending commit contains changes outside the generated-data allowlist.")
+    message = git_output(project_dir, "log", "-1", "--format=%s")
+    if not message.startswith(f"{args.ticket}: Refresh treasury and contribution data through "):
+        raise AutomationError("Pending commit does not match the expected refresh commit.")
+    ensure_privacy(project_dir, paths)
+    hook = Path(git_output(project_dir, "rev-parse", "--git-path", "hooks/pre-push"))
+    if not hook.is_absolute():
+        hook = project_dir / hook
+    if not hook.is_file() or not os.access(hook, os.X_OK):
+        raise AutomationError("Privacy pre-push hook is required before resuming publication.")
+    run(["git", "fetch", "--quiet", args.remote, f"{args.branch}:refs/remotes/{args.remote}/{args.branch}"], cwd=project_dir)
+    if git_output(project_dir, "rev-parse", f"{args.remote}/{args.branch}") not in {base, head}:
+        raise AutomationError("Remote advanced during the failed push; no automatic merge or force-push attempted.")
+    run(["git", "push", args.remote, args.branch], cwd=project_dir)
+
+
 @contextmanager
 def exclusive_lock(path: Path) -> Iterator[None]:
     descriptor = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
@@ -410,11 +452,17 @@ def exclusive_lock(path: Path) -> Iterator[None]:
 def main() -> int:
     args = parse_args()
     project_dir = args.project_dir.expanduser().resolve()
+    if str(project_dir) not in sys.path:
+        sys.path.insert(0, str(project_dir))
+    from automation.build_pair import build_pair, load_state, output_hashes, restore_pair, safe_error, save_state
+
+    checkpoint_path = project_dir / ".foe-daily-refresh.json"
+    checkpoint = {}
     lock_path = project_dir / ".foe-dashboard-refresh.lock"
     try:
         with exclusive_lock(lock_path):
             if args.validate_only:
-                run_offline_validation(project_dir)
+                run_offline_validation(project_dir, require_current_sources=False)
                 run(
                     [
                         sys.executable,
@@ -427,29 +475,65 @@ def main() -> int:
                 print("Scheduled refresh validation passed; no game request was sent.")
                 return 0
 
-            ensure_clean_start(project_dir)
-            ensure_remote_is_current(project_dir, args.remote, args.branch)
-            run_offline_validation(project_dir)
-            previous_treasury_dates = treasury_snapshot_dates(project_dir)
-            # This is the only exporter invocation in an actual scheduled run.
-            run(
-                [
-                    sys.executable,
-                    "-B",
-                    *DAILY_EXPORTER_ARGUMENTS,
-                ],
-                cwd=project_dir,
-            )
-            current_treasury_dates = treasury_snapshot_dates(project_dir)
-            ensure_treasury_history_preserved(
-                previous_treasury_dates,
-                current_treasury_dates,
-            )
-            treasury_date, contribution_date = validate_generated_metadata(project_dir)
+            if args.resume:
+                checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+                if not isinstance(checkpoint, dict):
+                    checkpoint = {}
+                if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(checkpoint.get("date", ""))) or not re.fullmatch(r"[0-9a-f]{40}", str(checkpoint.get("baseHead", ""))):
+                    raise AutomationError("No valid saved refresh checkpoint to resume.")
+                pair_checkpoint = load_state(project_dir)
+                if pair_checkpoint.get("phase") == "promoting":
+                    with exclusive_lock(project_dir / ".foe-refresh/pair.lock"):
+                        restore_pair(project_dir, pair_checkpoint)
+                if checkpoint.get("stage") == "publishing":
+                    if not args.publish:
+                        raise AutomationError("Publishing checkpoint requires --resume --publish; no game action will run.")
+                    resume_publish(project_dir, checkpoint, args)
+                    checkpoint.update(stage="complete", lastSuccess=dt.datetime.now().astimezone().isoformat())
+                    checkpoint.pop("failure", None)
+                    save_state(checkpoint_path, checkpoint)
+                    print("Saved publishing checkpoint completed. No game request was sent.")
+                    return 0
+                if git_output(project_dir, "rev-parse", "HEAD") != checkpoint["baseHead"]:
+                    # A committed code fix may be used to rebuild saved CSVs.
+                    ensure_clean_start(project_dir)
+                    checkpoint["baseHead"] = git_output(project_dir, "rev-parse", "HEAD")
+                elif project_changes(project_dir):
+                    ensure_only_generated_changes(project_dir)
+                    expected_outputs = checkpoint.get("outputs")
+                    if pair_checkpoint.get("phase") == "complete" and pair_checkpoint.get("treasury") == f"input/stats-{checkpoint['date']}.csv":
+                        expected_outputs = pair_checkpoint.get("outputs")
+                    if output_hashes(project_dir) != expected_outputs:
+                        raise AutomationError("Local changes do not match the saved generated outputs.")
+                ensure_remote_is_current(project_dir, args.remote, args.branch)
+            else:
+                ensure_clean_start(project_dir)
+                ensure_remote_is_current(project_dir, args.remote, args.branch)
+                previous = json.loads(checkpoint_path.read_text()) if checkpoint_path.is_file() else {}
+                if not isinstance(previous, dict):
+                    raise AutomationError("Invalid local daily checkpoint; manual review required.")
+                if previous.get("stage") == "publishing":
+                    raise AutomationError("A publish checkpoint is pending; use --resume --publish before another export.")
+                checkpoint = {"date": dt.date.today().isoformat(), "baseHead": git_output(project_dir, "rev-parse", "HEAD"), "lastSuccess": previous.get("lastSuccess"), "stage": "preflight"}
+                save_state(checkpoint_path, checkpoint)
+                # Already downloaded, unprocessed CSVs must not fail this preflight.
+                run_offline_validation(project_dir, require_current_sources=False)
+                checkpoint["stage"] = "export"
+                save_state(checkpoint_path, checkpoint)
+                run([sys.executable, "-B", *DAILY_EXPORTER_ARGUMENTS], cwd=project_dir)
+
+            date = dt.date.fromisoformat(checkpoint["date"])
+            checkpoint["stage"] = "build and reconciliation"
+            save_state(checkpoint_path, checkpoint)
+            pair = build_pair(project_dir, project_dir / f"input/stats-{date.isoformat()}.csv")
+            checkpoint.update(stage="validation", outputs=pair["outputs"], throughDate=pair["throughDate"])
+            save_state(checkpoint_path, checkpoint)
             run_offline_validation(project_dir)
             changes = ensure_only_generated_changes(project_dir)
-            through_date = min(treasury_date, contribution_date)
+            through_date = dt.date.fromisoformat(pair["throughDate"])
             if args.publish:
+                checkpoint["stage"] = "publishing"
+                save_state(checkpoint_path, checkpoint)
                 publish_generated_changes(
                     project_dir,
                     paths=changes,
@@ -460,19 +544,31 @@ def main() -> int:
                 )
             elif changes:
                 print("Dashboard refreshed locally; automatic publishing is disabled.")
+            checkpoint.update(stage="complete", lastSuccess=dt.datetime.now().astimezone().isoformat())
+            checkpoint.pop("failure", None)
+            save_state(checkpoint_path, checkpoint)
             if args.notify:
                 send_notification(
                     "Guild dashboard refresh complete",
                     f"Treasury and contributions are current through {through_date.isoformat()}.",
                 )
             return 0
-    except (AutomationError, OSError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
-        print(f"Scheduled refresh failed: {error}", file=sys.stderr)
+    except (AutomationError, OSError, ValueError, subprocess.CalledProcessError) as error:
+        detail = safe_error(error)
+        if checkpoint:
+            checkpoint["failure"] = detail
+            save_state(checkpoint_path, checkpoint)
+        stage = checkpoint.get("stage", "preflight")
+        last = checkpoint.get("lastSuccess") or "not recorded"
+        message = f"Stage: {stage}. Last successful run: {last}. {detail}"
+        print(f"Scheduled refresh failed: {message}", file=sys.stderr)
+        if stage != "export":
+            print("Saved-input recovery: --resume (add --publish only when publishing is intended). No game requests on resume.", file=sys.stderr)
         print("No automatic retry will be attempted.", file=sys.stderr)
         if args.notify:
             send_notification(
                 "Guild dashboard refresh needs attention",
-                "The one-shot refresh stopped safely. Review the local automation log.",
+                message[:500],
             )
         return 1
 

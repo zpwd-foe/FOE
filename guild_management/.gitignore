@@ -6,3 +6,6 @@
 .foe-dashboard-refresh.lock
 .foe-launchd.out.log
 .foe-launchd.err.log
+.foe-refresh/
+.foe-daily-refresh.json
+.foe-isolated-checkout.json

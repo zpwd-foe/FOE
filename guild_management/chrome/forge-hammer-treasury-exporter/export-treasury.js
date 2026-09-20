@@ -224,6 +224,34 @@
   const contributionCutoffText = triggerParams.get('contribution_cutoff');
   const expectedWorldName = triggerParams.get('world_name') || 'Yorkton';
   const liveExportDebug = triggerParams.get('live_debug') === '1';
+  const pageEvidenceTag = triggerParams.get('page_evidence');
+  const pageEvidence = {
+    version: 1,
+    timestampPolicy: 'Source values as observed; capture times are not transaction times.',
+    identityPolicy: 'Visible signatures are not transaction IDs and do not prove duplicates.',
+    pages: [],
+    treasuryCapturedAt: null,
+  };
+  let pageEvidenceSaved = false;
+  const savePageEvidence = status => {
+    if (!/^[a-f0-9]{16}$/.test(pageEvidenceTag || '') || pageEvidenceSaved) return;
+    pageEvidenceSaved = true;
+    try {
+      const blob = new Blob([JSON.stringify({ ...pageEvidence, status, capturedAt: new Date().toISOString() })], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `foe-contribution-pages-${pageEvidenceTag}.json`;
+      link.hidden = true;
+      document.documentElement.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      // Diagnostics must never turn a successful CSV export into another attempt.
+      console.warn('Page evidence could not be saved; CSV reconciliation is still required.');
+    }
+  };
   const isGameClientPage = /^\/game\/index(?:\/|$)/.test(window.location.pathname);
   const diagnosticTrace = triggerEnvelope.diagnostics ||= [];
   const trace = (event, data = {}) => {
@@ -722,6 +750,7 @@
     const responseHandler = data => {
       if (!outgoingRequest || data?.requestId !== outgoingRequest.requestId) return;
       response = data;
+      pageEvidence.treasuryCapturedAt = new Date().toISOString();
       trace('treasury-response', {
         requestId: data.requestId,
         hasResources: Boolean(responseResources(data)),
@@ -775,6 +804,22 @@
     };
     const responseHandler = data => {
       if (!activeRequest || data?.requestId !== activeRequest.requestId) return;
+      // Passive evidence only. Request IDs correlate pages, not transactions.
+      // Do not invent seconds/IDs or deduplicate identical-looking game rows.
+      if (pageEvidenceTag) pageEvidence.pages.push({
+        requestId: data.requestId,
+        offset: activeRequest.requestData?.[1],
+        limit: activeRequest.requestData?.[0],
+        receivedAt: new Date().toISOString(),
+        totalCount: data.responseData?.count,
+        rows: (Array.isArray(data.responseData?.logs) ? data.responseData.logs : []).map(log => ({
+          player: String(log?.player?.player_id ?? log?.player?.id ?? ''),
+          resource: String(log?.resource ?? ''),
+          amount: Number(log?.amount ?? 0),
+          action: String(log?.action ?? ''),
+          timestamp: String(log?.createdAt ?? ''),
+        })),
+      });
       trace('contribution-page-response', {
         requestId: data.requestId,
         offset: activeRequest?.requestData?.[1] ?? null,
@@ -1175,6 +1220,7 @@
       exportContributions ? 'contributions' : null,
     ].filter(Boolean).join(' and ');
     trace('workflow-complete', { completed });
+    savePageEvidence('complete');
     saveDiagnosticReport('complete');
     setStatus(
       liveExportDebug
@@ -1195,6 +1241,7 @@
     gameHooks.restoreBaseDispatcher?.();
     gameHooks.restoreDispatcher?.();
     trace('workflow-error', { message: error.message });
+    savePageEvidence('failed');
     saveDiagnosticReport('error', error.message);
     setStatus(`Forge Hammer export stopped: ${error.message}`, 'error');
     console.error('[GoE data exporter]', {
