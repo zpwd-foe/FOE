@@ -267,6 +267,72 @@ def file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def inventory_backed_duplicate_indexes(
+    rows: Sequence[dict[str, object]],
+    cutoff: dt.datetime,
+    mismatches: Sequence[dict[str, object]],
+) -> list[int]:
+    """Identify one unambiguous repeated page fragment, never arbitrary excess.
+
+    Legacy offset pages can repeat equal-amount rows even when the server count
+    stays constant. Only consider a contiguous fragment (at most one 10-row
+    page) whose exact signatures already occur in the preceding page. Every row
+    must be positive, ID-less building production from the same player/time.
+    Exclude capture boundaries, where non-simultaneous snapshots are ambiguous.
+    The fragment must explain *every* per-good discrepancy exactly; multiple
+    possible transaction multisets are deliberately left for manual review.
+    """
+    if not rows or not mismatches or any(int(item["difference"]) >= 0 for item in mismatches):
+        return []
+    excess = Counter({str(item["good"]): -int(item["difference"]) for item in mismatches})
+    latest = max(row["timestamp"] for row in rows)
+    candidates: dict[tuple[object, ...], list[int]] = {}
+    for start, first in enumerate(rows):
+        timestamp = first["timestamp"]
+        if not cutoff < timestamp < latest:
+            continue
+        player = str(first["playerId"]) or str(first["playerName"])
+        preceding = Counter(record_key(row) for row in rows[max(0, start - 10) : start])
+        removed: Counter[tuple[object, ...]] = Counter()
+        amounts: Counter[str] = Counter()
+        for index in range(start, min(start + 10, len(rows))):
+            row = rows[index]
+            good, amount = str(row["good"]), int(row["amount"])
+            if (
+                row["timestamp"] != timestamp
+                or (str(row["playerId"]) or str(row["playerName"])) != player
+                or row["message"] != "Building production"
+                or row.get("transactionId")
+                or amount <= 0
+                or good not in excess
+            ):
+                break
+            key = record_key(row)
+            removed[key] += 1
+            amounts[good] += amount
+            if removed[key] > preceding[key] or amounts[good] > excess[good]:
+                break
+            if amounts == excess:
+                # Different physical copies of identical rows are one outcome;
+                # different players/timestamps/signatures are not interchangeable.
+                signature = tuple(sorted(removed.items()))
+                candidates.setdefault(signature, list(range(start, index + 1)))
+                if len(candidates) > 1:
+                    return []
+                break
+    return next(iter(candidates.values()), [])
+
+
+def without_audited_duplicates(
+    rows: list[dict[str, object]], indexes: Sequence[int]
+) -> list[dict[str, object]]:
+    """Apply indexes recorded by the inventory audit to the same normalized CSV."""
+    excluded = set(indexes)
+    if len(excluded) != len(indexes) or any(index < 0 or index >= len(rows) for index in excluded):
+        raise ValueError("Inventory-backed duplicate row indexes are invalid")
+    return [row for index, row in enumerate(rows) if index not in excluded]
+
+
 def audit_inventory_delta(
     baseline_contribution: Path,
     current_contribution: Path,
@@ -350,6 +416,12 @@ def audit_inventory_delta(
             "All-goods inventory audit found contribution goods absent from treasury: "
             + ", ".join(unknown_logged_goods)
         )
+    duplicate_indexes = inventory_backed_duplicate_indexes(current_rows, cutoff, mismatches)
+    if duplicate_indexes:
+        for index in duplicate_indexes:
+            row = current_rows[index]
+            contribution_delta[str(row["good"])] -= int(row["amount"])
+        per_age, mismatches = compare_delta(contribution_delta)
     if mismatches:
         examples = "; ".join(
             f"{item['good']} ({int(item['difference']):+d})"
@@ -366,6 +438,8 @@ def audit_inventory_delta(
         "goodsChecked": len(current_goods),
         "agesChecked": len(per_age),
         "retainedMixedProductionRows": retained_mixed_rows,
+        "removedDuplicateProductionRows": len(duplicate_indexes),
+        "duplicateProductionRowIndexes": duplicate_indexes,
         "baselineContribution": baseline_contribution.name,
         "currentContribution": current_contribution.name,
         "baselineTreasury": baseline_treasury.name,
@@ -386,6 +460,7 @@ def merge_exports(
     *,
     closed_history_baseline: Path | None = None,
     keep_latest_mixed_production_after: dt.datetime | None = None,
+    drop_latest_duplicate_indexes: Sequence[int] = (),
 ) -> tuple[list[dict[str, object]], int]:
     """Merge overlapping exports without collapsing repeated real transactions.
 
@@ -415,6 +490,8 @@ def merge_exports(
                 else None
             ),
         )
+        if path_index == len(paths) - 1:
+            source_rows = without_audited_duplicates(source_rows, drop_latest_duplicate_indexes)
         if closed_history_baseline is not None and path_index == len(paths) - 1:
             baseline_rows, _ = normalized_export(closed_history_baseline)
             source_rows, _ = reconcile_closed_history(baseline_rows, source_rows)
@@ -603,6 +680,7 @@ def append_audited_rows(
     cutoff: dt.datetime,
     *,
     keep_mixed_production: bool = False,
+    duplicate_indexes: Sequence[int] = (),
 ) -> list[dict[str, object]]:
     """Extend a previously audited canonical payload without reopening history."""
     rows = payload_rows(existing_payload)
@@ -616,6 +694,7 @@ def append_audited_rows(
         current_contribution,
         keep_mixed_production_after=cutoff if keep_mixed_production else None,
     )
+    current_rows = without_audited_duplicates(current_rows, duplicate_indexes)
     latest_names = {
         str(row["playerId"]): str(row["playerName"])
         for row in current_rows
@@ -690,6 +769,7 @@ def main() -> None:
                     keep_mixed_production=bool(
                         inventory_audit["retainedMixedProductionRows"]
                     ),
+                    duplicate_indexes=inventory_audit["duplicateProductionRowIndexes"],
                 )
                 old_meta = existing_payload["meta"]
                 raw_current_count = len(read_export(current_contribution))
@@ -712,6 +792,7 @@ def main() -> None:
                         if inventory_audit["retainedMixedProductionRows"]
                         else None
                     ),
+                    drop_latest_duplicate_indexes=inventory_audit["duplicateProductionRowIndexes"],
                 )
     payload = build_payload(
         rows,
@@ -741,6 +822,12 @@ def main() -> None:
             f"{inventory_audit['goodsChecked']} goods across "
             f"{inventory_audit['agesChecked']} ages."
         )
+        if inventory_audit.get("removedDuplicateProductionRows"):
+            print(
+                "Inventory-backed page-fragment correction: "
+                f"{inventory_audit['removedDuplicateProductionRows']} repeated production rows "
+                "excluded from the generated data; source CSV unchanged."
+            )
 
 
 if __name__ == "__main__":

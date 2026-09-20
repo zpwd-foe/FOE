@@ -123,6 +123,25 @@ because those exports are overlapping partial snapshots. Use `--no-refresh`
 only when CSV download and validation are intentionally being separated from
 dashboard generation; `--rebuild` remains as a compatibility alias.
 
+Contribution generation reconciles signed log changes against treasury changes
+for every good before publishing. A legacy export can repeat a same-amount
+page fragment even when the server's total row count does not change. The
+generator may exclude that fragment only when its exact signatures already
+appear in the preceding 10 rows, all rows are positive building production for
+one player and timestamp away from either capture boundary, and one unique
+correction makes every good balance exactly. It never applies a numerical
+tolerance, removes donations or usage, or guesses between different possible
+transactions. Genuine repeated production is retained when inventory supports
+it. Ambiguous or unexplained differences still stop the update.
+
+The audit records the removed count and zero-based normalized-row indexes in
+`inventoryAudit`, along with checksums of the original exports. Source CSVs are
+never rewritten. The corrected canonical history is used by later refreshes;
+rebuilding the same files reuses its matching audit. If an export succeeds but
+generation fails, fix the reported cause and rerun the exporter: when both
+validated CSVs already exist, recovery rebuilds locally without another game
+request. Do not delete the CSVs or bypass the audit to force a retry.
+
 Use `--live-debug` for an explicitly authorized diagnostic attempt. It records
 the one-shot navigation, game-assigned request IDs, matching responses, Forge
 Hammer storage, pagination, and export milestones to a local
