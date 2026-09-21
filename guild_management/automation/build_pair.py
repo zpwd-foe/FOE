@@ -218,6 +218,10 @@ def build_pair(project: Path, treasury: Path, *, promote: bool = True) -> dict:
                     if source.is_file():
                         target.parent.mkdir(parents=True, exist_ok=True)
                         shutil.copy2(source, target)
+                # The data generators update an existing portal. Seed their
+                # isolated output with hosting rules and separately maintained
+                # resources; only stale generated assets should be removed.
+                shutil.copytree(project / "dashboard", snapshot / "dashboard")
                 for script, args in (
                     ("generate_contribution_dashboard.py", []),
                     ("generate_treasury_dashboard.py", ["--csv", relative_treasury]),

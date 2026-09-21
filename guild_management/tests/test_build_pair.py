@@ -92,6 +92,23 @@ class PairedBuildTests(unittest.TestCase):
         self.run_mock.assert_not_called()
         self.assertEqual((self.project / ".foe-refresh/pair.json").stat().st_mode & 0o777, 0o600)
 
+    def test_refresh_preserves_hosting_rules_and_separate_resources(self) -> None:
+        preserved = {
+            "dashboard/_headers": "/*\n  X-Content-Type-Options: nosniff\n",
+            "dashboard/_redirects": "/old / 301\n",
+            "dashboard/resources/cityDesign/example/index.html": "existing city map",
+            "dashboard/resources/cityDesign/example/city-map.123456789abc.js": "existing map data",
+        }
+        for name, content in preserved.items():
+            path = self.project / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+        self.old = output_hashes(self.project)
+        build_pair(self.project, self.treasury)
+        for name, content in preserved.items():
+            self.assertEqual((self.project / name).read_text(), content)
+        self.assertEqual((self.project / "dashboard/index.html").read_text(), "new complete dashboard")
+
     def test_resume_uses_validated_checkpoint_without_rebuilding(self) -> None:
         build_pair(self.project, self.treasury, promote=False)
         self.assertEqual(output_hashes(self.project), self.old)
