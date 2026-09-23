@@ -51,6 +51,14 @@ responseHandlers.push(data => {
     ...log,
     createdAt: new Date(log.createdAt),
   }));
+  if (mode === 'parser-milliseconds' || mode === 'timestamp-mismatch') {
+    // Forge Hammer mutates the response rows, retaining parsing-time
+    // milliseconds when it turns minute-only game labels into Date objects.
+    data.responseData.logs.forEach(log => {
+      log.createdAt = new Date(log.createdAt);
+      log.createdAt.setMilliseconds(data.requestId % 1000);
+    });
+  }
   Treasury.Logs = Treasury.Logs.concat(logs);
 });
 
@@ -88,7 +96,11 @@ const createPageLogs = offset => {
   if (offset === 0) return Array.from({ length: 10 }, (_unused, index) => createLog(index));
   if (offset === 10) {
     const start = mode === 'mismatch' ? 6 : 5;
-    return Array.from({ length: 10 }, (_unused, index) => createLog(start + index));
+    const logs = Array.from({ length: 10 }, (_unused, index) => createLog(start + index));
+    if (mode === 'timestamp-mismatch') {
+      logs[0].createdAt = new Date(new Date(logs[0].createdAt).getTime() + 1000).toISOString();
+    }
+    return logs;
   }
   return Array.from({ length: 10 }, (_unused, index) => createLog(15 + index));
 };
@@ -169,7 +181,7 @@ Promise.resolve().then(() => {
 
 setTimeout(() => {
   const status = elements.get('goe-forge-hammer-export-status');
-  if (mode === 'mismatch') {
+  if (mode === 'mismatch' || mode === 'timestamp-mismatch') {
     if (exportedMarkers !== null) {
       console.error('Ambiguous contribution overlap was exported instead of rejected.');
       process.exit(1);

@@ -102,6 +102,8 @@ The command is intentionally fail-closed:
 - Contribution offsets must be `0, 10, 20, ...` with exactly one matching
   response each. If new records increase the server's total between pages, the
   companion removes only the exact page-boundary overlap proven by that increase.
+  Boundary comparison ignores parsing-time milliseconds introduced by Forge
+  Hammer's minute-label date parser; differences in seconds still fail the check.
   A shrinking count, a full-page shift, or an overlap mismatch fails closed
   instead of exporting ambiguous rows. Paging stops only at the requested
   overlap or when the response's total count proves that the server has no next

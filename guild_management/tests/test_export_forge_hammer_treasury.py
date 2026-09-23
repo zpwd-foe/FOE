@@ -674,33 +674,37 @@ class CompanionExtensionSafetyTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for the companion smoke test")
     def test_contribution_page_growth_removes_only_proven_overlap(self) -> None:
-        result = subprocess.run(
-            [
-                "node",
-                str(Path(__file__).with_name("forge_hammer_contribution_overlap_smoke.js")),
-                "overlap",
-            ],
-            capture_output=True,
-            check=False,
-            text=True,
-            timeout=5,
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for mode in ("overlap", "parser-milliseconds"):
+            with self.subTest(mode=mode):
+                result = subprocess.run(
+                    [
+                        "node",
+                        str(Path(__file__).with_name("forge_hammer_contribution_overlap_smoke.js")),
+                        mode,
+                    ],
+                    capture_output=True,
+                    check=False,
+                    text=True,
+                    timeout=5,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for the companion smoke test")
     def test_contribution_page_growth_fails_when_overlap_is_ambiguous(self) -> None:
-        result = subprocess.run(
-            [
-                "node",
-                str(Path(__file__).with_name("forge_hammer_contribution_overlap_smoke.js")),
-                "mismatch",
-            ],
-            capture_output=True,
-            check=False,
-            text=True,
-            timeout=5,
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for mode in ("mismatch", "timestamp-mismatch"):
+            with self.subTest(mode=mode):
+                result = subprocess.run(
+                    [
+                        "node",
+                        str(Path(__file__).with_name("forge_hammer_contribution_overlap_smoke.js")),
+                        mode,
+                    ],
+                    capture_output=True,
+                    check=False,
+                    text=True,
+                    timeout=5,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 if __name__ == "__main__":
     unittest.main()

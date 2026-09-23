@@ -927,7 +927,10 @@
       String(log?.resource ?? ''),
       Number(log?.amount ?? 0),
       String(log?.action ?? ''),
-      contributionTimestamp(log?.createdAt),
+      // Forge Hammer's minute-label parser clears seconds but retains the
+      // parsing clock's milliseconds. They differ across page loads and are
+      // not source precision. Keep second-level differences in this check.
+      Math.floor(contributionTimestamp(log?.createdAt) / 1000),
     ]);
   };
 
