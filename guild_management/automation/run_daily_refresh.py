@@ -124,7 +124,9 @@ def ensure_clean_start(project_dir: Path) -> None:
         )
 
 
-def ensure_remote_is_current(project_dir: Path, remote: str, branch: str) -> None:
+def ensure_remote_is_current(
+    project_dir: Path, remote: str, branch: str, *, allow_fast_forward: bool = False,
+) -> bool:
     current_branch = git_output(project_dir, "branch", "--show-current")
     if current_branch != branch:
         raise AutomationError(
@@ -142,11 +144,30 @@ def ensure_remote_is_current(project_dir: Path, remote: str, branch: str) -> Non
     )
     head = git_output(project_dir, "rev-parse", "HEAD")
     remote_head = git_output(project_dir, "rev-parse", f"{remote}/{branch}")
+    if head != remote_head and allow_fast_forward:
+        root = Path(git_output(project_dir, "rev-parse", "--show-toplevel"))
+        ensure_clean_start(root)
+        ancestor = run(["git", "merge-base", "--is-ancestor", head, remote_head],
+                       cwd=project_dir, check=False, capture_output=True)
+        if ancestor.returncode == 0:
+            run(["git", "merge", "--ff-only", "--no-edit", remote_head],
+                cwd=project_dir, capture_output=True)
+            return True
     if head != remote_head:
         raise AutomationError(
             "The local and remote branches differ. Update or publish the branch manually; "
             "no game request was attempted."
         )
+    return False
+
+
+def is_isolated_checkout(project_dir: Path, branch: str) -> bool:
+    marker = project_dir / ".foe-isolated-checkout.json"
+    if not marker.is_file():
+        return False
+    if json.loads(marker.read_text()) != {"version": 1, "branch": branch}:
+        raise AutomationError("Invalid isolated-checkout marker; manual review required.")
+    return True
 
 
 def read_assignment(path: Path, variable: str) -> dict[str, object]:
@@ -458,6 +479,7 @@ def main() -> int:
 
     checkpoint_path = project_dir / ".foe-daily-refresh.json"
     checkpoint = {}
+    last_success = None
     lock_path = project_dir / ".foe-dashboard-refresh.lock"
     try:
         with exclusive_lock(lock_path):
@@ -507,13 +529,22 @@ def main() -> int:
                         raise AutomationError("Local changes do not match the saved generated outputs.")
                 ensure_remote_is_current(project_dir, args.remote, args.branch)
             else:
-                ensure_clean_start(project_dir)
-                ensure_remote_is_current(project_dir, args.remote, args.branch)
                 previous = json.loads(checkpoint_path.read_text()) if checkpoint_path.is_file() else {}
                 if not isinstance(previous, dict):
                     raise AutomationError("Invalid local daily checkpoint; manual review required.")
+                last_success = previous.get("lastSuccess")
                 if previous.get("stage") == "publishing":
                     raise AutomationError("A publish checkpoint is pending; use --resume --publish before another export.")
+                ensure_clean_start(project_dir)
+                updated = ensure_remote_is_current(
+                    project_dir, args.remote, args.branch,
+                    allow_fast_forward=is_isolated_checkout(project_dir, args.branch),
+                )
+                if updated:
+                    print("Automation checkout updated; restarting with the new code.", flush=True)
+                    # Python opens the lock descriptor close-on-exec. The new
+                    # process reacquires it before validating or touching Chrome.
+                    os.execv(sys.executable, [sys.executable, "-B", *sys.argv])
                 checkpoint = {"date": dt.date.today().isoformat(), "baseHead": git_output(project_dir, "rev-parse", "HEAD"), "lastSuccess": previous.get("lastSuccess"), "stage": "preflight"}
                 save_state(checkpoint_path, checkpoint)
                 # Already downloaded, unprocessed CSVs must not fail this preflight.
@@ -559,10 +590,10 @@ def main() -> int:
             checkpoint["failure"] = detail
             save_state(checkpoint_path, checkpoint)
         stage = checkpoint.get("stage", "preflight")
-        last = checkpoint.get("lastSuccess") or "not recorded"
+        last = checkpoint.get("lastSuccess") or last_success or "not recorded"
         message = f"Stage: {stage}. Last successful run: {last}. {detail}"
         print(f"Scheduled refresh failed: {message}", file=sys.stderr)
-        if stage != "export":
+        if checkpoint and stage != "export":
             print("Saved-input recovery: --resume (add --publish only when publishing is intended). No game requests on resume.", file=sys.stderr)
         print("No automatic retry will be attempted.", file=sys.stderr)
         if args.notify:

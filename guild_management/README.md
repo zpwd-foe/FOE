@@ -246,10 +246,20 @@ repository:
 ```
 
 The helper clones `origin/main`, carries over the existing privacy pre-push hook,
-and copies only ignored CSV inputs, `.env.foe`, and the browser-attempt state with
-private permissions. It preserves the no-repeat-game-attempt guard. It does not
+and copies only ignored CSV inputs, `.env.foe`, browser-attempt state, and a
+completed daily checkpoint with private permissions. It preserves the
+no-repeat-game-attempt guard. It does not
 copy a browser profile, migrate an unfinished daily checkpoint, install a job,
 or launch Chrome. Resolve any pending publish in the original checkout first.
+Uncommitted development files and staged changes stay in the source checkout;
+the helper never copies them or changes the source index. The source branch
+must still match `origin/main` so the deployed code is known.
+
+Only a checkout created with the helper's `.foe-isolated-checkout.json` marker
+can automatically fast-forward to newer `origin/main` commits. It requires a
+clean repository, refuses local commits or divergence, and restarts the runner
+with the updated code before validation or game access. Development checkouts
+and saved-checkpoint recovery retain the strict branch-equality check.
 
 Reload the companion extension from the new clone in the dedicated Chrome
 profile, validate the clone with `--validate-only`, then explicitly reinstall the

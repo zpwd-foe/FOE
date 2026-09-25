@@ -62,7 +62,7 @@ class ResumeTests(unittest.TestCase):
         self.patch("parse_args", return_value=self.args)
         self.patch("git_output", return_value="a" * 40)
         self.patch("ensure_clean_start")
-        self.patch("ensure_remote_is_current")
+        self.remote = self.patch("ensure_remote_is_current", return_value=False)
         self.patch("project_changes", return_value=set())
         self.patch("ensure_only_generated_changes", return_value=set())
         self.validation = self.patch("run_offline_validation")
@@ -134,6 +134,32 @@ class ResumeTests(unittest.TestCase):
         self.run.assert_called_once()
         self.build.assert_not_called()
         self.assertEqual(json.loads(self.path.read_text())["stage"], "export")
+
+    def test_fast_forward_restarts_before_validation_or_export(self):
+        self.args.resume = False
+        self.remote.return_value = True
+        (self.project / ".foe-isolated-checkout.json").write_text(
+            json.dumps({"version": 1, "branch": "main"})
+        )
+        with mock.patch.object(runner.os, "execv", side_effect=SystemExit(0)) as restart:
+            with self.assertRaises(SystemExit):
+                runner.main()
+        restart.assert_called_once()
+        self.assertTrue(self.remote.call_args.kwargs["allow_fast_forward"])
+        self.validation.assert_not_called()
+        self.run.assert_not_called()
+        self.build.assert_not_called()
+        self.assertEqual(json.loads(self.path.read_text()), self.checkpoint)
+
+    def test_pending_publish_blocks_checkout_update_and_new_export(self):
+        self.args.resume = False
+        self.checkpoint["stage"] = "publishing"
+        save_state(self.path, self.checkpoint)
+        self.assertEqual(runner.main(), 1)
+        self.remote.assert_not_called()
+        self.run.assert_not_called()
+        self.build.assert_not_called()
+        self.assertEqual(json.loads(self.path.read_text()), self.checkpoint)
 
 
 class ResumePublishTests(unittest.TestCase):

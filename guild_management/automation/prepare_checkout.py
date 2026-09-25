@@ -29,7 +29,8 @@ def prepare_checkout(source: Path, destination: Path) -> Path:
     root = Path(git_output(source, "rev-parse", "--show-toplevel")).resolve()
     if destination.is_relative_to(root):
         raise AutomationError("Use a separate directory outside the development repository.")
-    ensure_clean_start(source)
+    # Clone committed remote code, never the development worktree or index.
+    # Unrelated local work is precisely why an isolated checkout is needed.
     ensure_remote_is_current(source, "origin", "main")
     checkpoint = source / ".foe-daily-refresh.json"
     if checkpoint.is_file():
@@ -60,7 +61,7 @@ def prepare_checkout(source: Path, destination: Path) -> Path:
     # Only the private inputs and browser-attempt guard move, never public data
     # from an uncommitted development worktree or cookies/browser profile files.
     files = [*source.glob("input/*.csv"), *source.glob("input/guild-goods-contribution/*.csv")]
-    files += [source / name for name in (".env.foe", ".foe-forge-hammer-state.json") if (source / name).is_file()]
+    files += [source / name for name in (".env.foe", ".foe-forge-hammer-state.json", ".foe-daily-refresh.json") if (source / name).is_file()]
     for path in files:
         if path.is_symlink():
             raise AutomationError("Private input symlinks require manual migration.")
