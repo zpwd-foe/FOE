@@ -1,3 +1,5 @@
+import base64
+import json
 import unittest
 from datetime import date
 
@@ -50,6 +52,31 @@ class TrackerTests(unittest.TestCase):
     def test_bootstrap_parser_handles_semicolons_inside_strings(self):
         source = '<script>var ONELPS_RUNTIME_CONFIG = {"config":{"marketId":"zz","snippet":"a;b"}};</script>'
         self.assertEqual(probe_bootstrap(source, "https://zz1.example")["market_id"], "zz")
+
+    def test_bootstrap_parser_decodes_base64_utf8_config(self):
+        payload = {"config": {"marketId": "zz", "lang": "en", "landingPageId": "Café; test"}}
+        encoded = base64.b64encode(json.dumps(payload, ensure_ascii=False).encode("utf-8")).decode("ascii")
+        for quote in ("'", '"'):
+            with self.subTest(quote=quote):
+                source = (
+                    "<script>var ONELPS_RUNTIME_CONFIG = JSON.parse(new TextDecoder().decode("
+                    f"Uint8Array.from(atob({quote}{encoded}{quote}), c => c.charCodeAt(0))));</script>"
+                )
+                result = probe_bootstrap(source, "https://zz1.example")
+                self.assertEqual(result["market_id"], "zz")
+                self.assertEqual(result["language"], "en")
+                self.assertEqual(result["landing_page"], "Café; test")
+
+    def test_bootstrap_parser_reports_invalid_encoded_config(self):
+        for encoded in ("a", "/w==", "bm90IGpzb24=", "bnVsbA==", "eyJjb25maWciOltdfQ=="):
+            with self.subTest(encoded=encoded):
+                source = (
+                    "var ONELPS_RUNTIME_CONFIG = JSON.parse(new TextDecoder().decode("
+                    f"Uint8Array.from(atob('{encoded}'), c => c.charCodeAt(0))));"
+                )
+                result = probe_bootstrap(source, "https://zz1.example")
+                self.assertIn("warning", result)
+                self.assertNotIn("market_id", result)
 
     def test_parses_assets_strings_and_building_summary(self):
         source = """

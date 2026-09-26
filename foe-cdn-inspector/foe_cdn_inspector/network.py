@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import re
 import urllib.error
@@ -126,12 +127,26 @@ def probe_bootstrap(html_text: str, source_url: str) -> dict[str, Any]:
     if start < 0:
         return {"source_url": source_url, "warning": "runtime config not found"}
     start += len(marker)
+    config_text = html_text[start:].lstrip()
     try:
+        # Newer landing pages wrap UTF-8 JSON in Base64. Decode the literal
+        # payload without evaluating any JavaScript from the remote page.
+        encoded = re.match(
+            r"JSON\.parse\(\s*new\s+TextDecoder\(\)\.decode\(\s*Uint8Array\.from\(\s*"
+            r"atob\(\s*(['\"])([A-Za-z0-9+/=]*)\1\s*\)\s*,\s*"
+            r"c\s*=>\s*c\.charCodeAt\(0\)\s*\)\s*\)\s*\)",
+            config_text,
+        )
         # The config contains JavaScript snippets with semicolons inside JSON
         # strings, so looking for the first semicolon would truncate it.
-        payload, _ = json.JSONDecoder().raw_decode(html_text[start:])
-    except json.JSONDecodeError as exc:
-        return {"source_url": source_url, "warning": f"runtime config was invalid JSON: {exc}"}
+        if encoded:
+            payload = json.loads(base64.b64decode(encoded.group(2), validate=True).decode("utf-8"))
+        else:
+            payload, _ = json.JSONDecoder().raw_decode(config_text)
+    except ValueError as exc:
+        return {"source_url": source_url, "warning": f"runtime config was invalid: {exc}"}
+    if not isinstance(payload, dict) or not isinstance(payload.get("config", {}), dict):
+        return {"source_url": source_url, "warning": "runtime config was not an object"}
     config = payload.get("config", {})
     return {
         "source_url": source_url,
