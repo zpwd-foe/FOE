@@ -10,7 +10,7 @@ window.RANDOM_IDEAS = [
     description: "A teddy bear, a wooden box, and forty-eight ways to take a switch personally.",
     tags: ["Interactive", "Entirely unnecessary"],
     artwork: "bear",
-    caption: "Fig. 01 — A minor disagreement with electricity.",
+    caption: "Fig. 01 — A small bear with strong opinions about that switch.",
     actionLabel: "Disturb the resident",
     status: "Available for interruptions",
     sample: false,
