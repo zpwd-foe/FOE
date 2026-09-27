@@ -6,6 +6,8 @@ Generated with built-in ImageGen. The final approved output is preserved unchang
 
 `zpwd-seal.svg` embeds those exact pixels and uses a square viewBox of `191 170 880 880` to leave a narrow paper margin around the impression. It is shared by the homepage header and both pages' favicons. This is a display crop, with no redrawing, recolouring, or image regeneration. The header uses CSS darken blending to settle the paper onto the notebook background, at 64px on desktop and 48px on narrow mobile screens.
 
+The deployment build substitutes `optimized/zpwd-seal.svg`: the same approved crop resized to 256 × 256 (four times the largest header display), encoded as lossless WebP inside an SVG. This reduces the SVG from 3.29 MB to 128 KB while retaining the original source files. Regenerate it with `npm run optimize:images` after updating the approved artwork.
+
 ## Original design
 
 ```text

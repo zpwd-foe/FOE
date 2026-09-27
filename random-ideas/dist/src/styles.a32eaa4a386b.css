@@ -70,7 +70,7 @@ h1{font:500 clamp(52px,5.5vw,74px)/1.2 var(--serif);letter-spacing:-.025em;margi
 .site-footer p{text-align:center}
 .site-footer>a:last-child{display:flex;align-items:center;gap:17px;min-height:44px;font-size:14px}
 .site-footer>a:last-child span{font-size:20px}
-.idea-dialog{padding:0;border:1px solid var(--line);border-radius:2px;width:min(620px,calc(100% - 32px));max-height:calc(100dvh - 48px);background:var(--paper) url('../assets/washi-paper.svg');color:var(--ink);box-shadow:0 24px 100px #302f2a30}
+.idea-dialog{padding:0;border:1px solid var(--line);border-radius:2px;width:min(620px,calc(100% - 32px));max-height:calc(100dvh - 48px);background:var(--paper) url('../assets/washi-paper.4da15c91730f.svg');color:var(--ink);box-shadow:0 24px 100px #302f2a30}
 .idea-dialog::backdrop{background:#22313b80;backdrop-filter:blur(4px)}
 .dialog-close{position:absolute;right:14px;top:14px;width:44px;height:44px;display:grid;place-items:center;border-radius:50%;background:var(--paper);box-shadow:0 1px 6px #302f2a20;z-index:1;font-size:19px}
 .dialog-close:hover{background:var(--wash)}

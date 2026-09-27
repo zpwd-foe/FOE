@@ -4,7 +4,7 @@
   font-weight: 400 600;
   font-stretch: 100%;
   font-display: swap;
-  src: url(../assets/fonts/noto-sans-latin-ext.woff2) format('woff2');
+  src: url(../assets/fonts/noto-sans-latin-ext.be4f6d04a074.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
@@ -14,7 +14,7 @@
   font-weight: 400 600;
   font-stretch: 100%;
   font-display: swap;
-  src: url(../assets/fonts/noto-sans-latin.woff2) format('woff2');
+  src: url(../assets/fonts/noto-sans-latin.afc7a910f4ff.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -23,7 +23,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(../assets/fonts/shippori-mincho-b1-400-latin-ext.woff2) format('woff2');
+  src: url(../assets/fonts/shippori-mincho-b1-400-latin-ext.c2c4efcabf56.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
@@ -32,7 +32,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(../assets/fonts/shippori-mincho-b1-400-latin.woff2) format('woff2');
+  src: url(../assets/fonts/shippori-mincho-b1-400-latin.cfcc86c11475.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -41,7 +41,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(../assets/fonts/shippori-mincho-b1-500-latin-ext.woff2) format('woff2');
+  src: url(../assets/fonts/shippori-mincho-b1-500-latin-ext.71d873bc1a95.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
@@ -50,7 +50,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(../assets/fonts/shippori-mincho-b1-500-latin.woff2) format('woff2');
+  src: url(../assets/fonts/shippori-mincho-b1-500-latin.2ae50ae674f7.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -84,7 +84,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; font-style: normal; le
 h1 em, h2 em { font-style: normal; font-weight: inherit; }
 .eyebrow { font: 500 14px/1.6 var(--sans); letter-spacing: .065em; color: var(--muted); margin: 0 0 23px; }
 
-.page-shell { position: relative; width: calc(100% - 56px); max-width: 1240px; padding: 0 78px 0 62px; margin: 28px auto 36px; border-right: 26px solid var(--accent); background: url('../assets/washi-paper.svg'), linear-gradient(90deg, transparent 88%, #6b594314), var(--paper); box-shadow: 0 2px 0 #beb39d, 0 4px 0 #eee5ce, 0 6px 0 #c4b9a3, 0 14px 30px #302f2a14; }
+.page-shell { position: relative; width: calc(100% - 56px); max-width: 1240px; padding: 0 78px 0 62px; margin: 28px auto 36px; border-right: 26px solid var(--accent); background: url('../assets/washi-paper.4da15c91730f.svg'), linear-gradient(90deg, transparent 88%, #6b594314), var(--paper); box-shadow: 0 2px 0 #beb39d, 0 4px 0 #eee5ce, 0 6px 0 #c4b9a3, 0 14px 30px #302f2a14; }
 .page-shell::before { content: ''; position: absolute; inset: 18px 38px 18px 25px; border: 1px solid var(--line); pointer-events: none; }
 .page-shell::after { content: ''; position: absolute; top: 6px; bottom: 6px; right: -5px; width: 7px; background: repeating-linear-gradient(90deg, #c8bca4 0 1px, #e9dfc9 1px 3px); box-shadow: 2px 0 3px #1b27352b; pointer-events: none; }
 .notebook-binding { position: absolute; top: 77px; bottom: 87px; right: -21px; width: 48px; z-index: 1; pointer-events: none; }

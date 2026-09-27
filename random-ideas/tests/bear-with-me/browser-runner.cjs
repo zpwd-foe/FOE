@@ -5,15 +5,16 @@ const os = require('node:os');
 const http = require('node:http');
 const { spawn } = require('node:child_process');
 const root = path.resolve(__dirname, '../..');
+const siteRoot = process.argv.includes('--dist') ? path.join(root, 'dist') : root;
 const output = path.resolve(process.argv[2] || path.join(os.tmpdir(), 'bear-layer-audit'));
 const chrome = process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const pause = ms => new Promise(resolve=>setTimeout(resolve,ms));
 async function main() {
   fs.mkdirSync(output,{recursive:true});
   const server = http.createServer((req,res)=>{
-    const file = path.resolve(root, '.' + decodeURIComponent(new URL(req.url,'http://localhost').pathname));
-    if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
-    const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.json':'application/json'};
+    const file = path.resolve(siteRoot, '.' + decodeURIComponent(new URL(req.url,'http://localhost').pathname));
+    if (!file.startsWith(siteRoot + path.sep)) { res.writeHead(403).end(); return; }
+    const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.svg':'image/svg+xml','.json':'application/json'};
     fs.readFile(file,(err,data)=>{if(err){res.writeHead(404).end();return;}res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');res.end(data);});
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));

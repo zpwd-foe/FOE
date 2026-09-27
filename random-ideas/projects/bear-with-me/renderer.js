@@ -330,7 +330,7 @@
     constructor() {
       this.state = { ...home };
       this.faceMode = "neutral";
-      this.assetsReady = window.BearArtwork.preload();
+      this.assetsReady = window.BearArtwork.preloadCore();
       this.speed = 1;
       this.reduced = false;
       this.props = new Map();

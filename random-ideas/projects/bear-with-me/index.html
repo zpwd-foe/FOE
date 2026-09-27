@@ -7,6 +7,7 @@
   <meta name="description" content="A teddy bear. A wooden box. Forty-eight increasingly unreasonable responses to a perfectly ordinary switch.">
   <title>Bear with me. — Z's Random Realm</title>
   <link rel="icon" href="../../assets/zpwd-seal.svg?v=1" type="image/svg+xml">
+  <link rel="preload" href="assets/hinoki-grain-v1.png" as="image" fetchpriority="high">
   <link rel="preload" href="../../assets/fonts/shippori-mincho-b1-500-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="../../assets/fonts/noto-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../../src/theme.css?v=shared-ink-1">
@@ -40,14 +41,14 @@
                    ear and paw below it. Follow the transparent gutter instead. -->
               <clipPath id="head-atlas-clip"><path d="M0 0H825V610H700V630H625V646H550V659H310V648H190V638H0Z"/></clipPath>
               <filter id="solid-material" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncA type="linear" slope="1.04"/></feComponentTransfer></filter>
-              <symbol id="plush-head" viewBox="0 0 825 660" preserveAspectRatio="none"><image href="assets/plush-atlas-v3.png" width="1536" height="1024" clip-path="url(#head-atlas-clip)" filter="url(#solid-material)"/></symbol>
+              <symbol id="plush-head" viewBox="0 0 825 660" preserveAspectRatio="none"><image data-bear-src="assets/plush-atlas-v3.png" width="1536" height="1024" clip-path="url(#head-atlas-clip)" filter="url(#solid-material)"/></symbol>
               <filter id="head-fur-tone" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".98 0 0 0 0 0 1.02 0 0 0 0 0 .96 0 0 0 0 0 1 0"/><feComponentTransfer><feFuncA type="linear" slope="1.04"/></feComponentTransfer></filter>
-              <symbol id="plush-head-fur" viewBox="0 0 825 660" preserveAspectRatio="none"><image href="assets/plush-head-fur-v1.png" width="1536" height="1024" filter="url(#head-fur-tone)" clip-path="url(#head-atlas-clip)"/></symbol>
-              <symbol id="plush-eyelids" viewBox="0 0 825 660" preserveAspectRatio="none"><image href="assets/plush-head-fur-v1.png" width="1536" height="1024" filter="url(#head-fur-tone)" clip-path="url(#head-atlas-clip)"/></symbol>
-              <symbol id="plush-body" viewBox="855 0 650 700" preserveAspectRatio="none"><image href="assets/plush-atlas-v2.png" width="1536" height="1024" filter="url(#solid-material)"/></symbol>
-              <symbol id="plush-ear" viewBox="80 670 365 333" preserveAspectRatio="none"><image href="assets/plush-atlas-v2.png" width="1536" height="1024" filter="url(#solid-material)"/></symbol>
-              <symbol id="plush-paw" viewBox="541 643 354 374" preserveAspectRatio="none"><image href="assets/plush-atlas-v2.png" width="1536" height="1024" filter="url(#solid-material)"/></symbol>
-              <symbol id="plush-arm" viewBox="963 708 512 286" preserveAspectRatio="none"><image href="assets/plush-atlas-v2.png" width="1536" height="1024"/></symbol>
+              <symbol id="plush-head-fur" viewBox="0 0 825 660" preserveAspectRatio="none"><image data-bear-src="assets/plush-head-fur-v1.png" width="1536" height="1024" filter="url(#head-fur-tone)" clip-path="url(#head-atlas-clip)"/></symbol>
+              <symbol id="plush-eyelids" viewBox="0 0 825 660" preserveAspectRatio="none"><image data-bear-src="assets/plush-head-fur-v1.png" width="1536" height="1024" filter="url(#head-fur-tone)" clip-path="url(#head-atlas-clip)"/></symbol>
+              <symbol id="plush-body" viewBox="855 0 650 700" preserveAspectRatio="none"><image data-bear-src="assets/plush-atlas-v2.png" width="1536" height="1024" filter="url(#solid-material)"/></symbol>
+              <symbol id="plush-ear" viewBox="80 670 365 333" preserveAspectRatio="none"><image data-bear-src="assets/plush-atlas-v2.png" width="1536" height="1024" filter="url(#solid-material)"/></symbol>
+              <symbol id="plush-paw" viewBox="541 643 354 374" preserveAspectRatio="none"><image data-bear-src="assets/plush-atlas-v2.png" width="1536" height="1024" filter="url(#solid-material)"/></symbol>
+              <symbol id="plush-arm" viewBox="963 708 512 286" preserveAspectRatio="none"><image data-bear-src="assets/plush-atlas-v2.png" width="1536" height="1024"/></symbol>
               <radialGradient id="prop-glint"><stop stop-color="#fff8dc" stop-opacity=".8"/><stop offset="1" stop-color="#fff8dc" stop-opacity="0"/></radialGradient>
               <filter id="prop-shadow" x="-.15" y="-.15" width="1.3" height="1.4"><feDropShadow dx="0" dy="1.4" stdDeviation="1.1" flood-color="#302216" flood-opacity=".22"/></filter>
               <clipPath id="blanket-atlas-clip"><path d="M550 230H1000V750H530V620H550Z"/></clipPath>
@@ -128,7 +129,7 @@
               <pattern id="hinoki-front" width="430" height="156" patternUnits="userSpaceOnUse" x="205" y="353"><image href="assets/hinoki-grain-v1.png" width="430" height="156" preserveAspectRatio="none"/></pattern>
               <pattern id="hinoki-end" width="88" height="190" patternUnits="userSpaceOnUse"><rect width="88" height="190" fill="#c3915d"/><image href="assets/hinoki-grain-v1.png" x="-140" y="-80" width="370" height="350" preserveAspectRatio="none" transform="rotate(-38 44 95)"/><rect width="88" height="190" fill="#794019" opacity=".49"/></pattern>
               <clipPath id="front-panel-clip"><rect x="226" y="367" width="388" height="104"/></clipPath>
-              <pattern id="mahogany-end" width="88" height="190" patternUnits="userSpaceOnUse" x="620" y="300"><image href="assets/mahogany-grain-v1.png" width="190" height="88" preserveAspectRatio="none" transform="translate(88 0) rotate(90)"/></pattern>
+              <pattern id="mahogany-end" width="88" height="190" patternUnits="userSpaceOnUse" x="620" y="300"><image data-prop-src="assets/mahogany-grain-v1.png" width="190" height="88" preserveAspectRatio="none" transform="translate(88 0) rotate(90)"/></pattern>
               <linearGradient id="front-light" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff3d9" stop-opacity=".1"/><stop offset=".12" stop-color="#fff3d9" stop-opacity="0"/><stop offset=".85" stop-color="#352410" stop-opacity=".08"/><stop offset="1" stop-color="#352410" stop-opacity=".2"/></linearGradient>
               <linearGradient id="ledge-light" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#624723" stop-opacity=".14"/><stop offset="1" stop-color="#fff1ca" stop-opacity=".24"/></linearGradient>
               <linearGradient id="side-light" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#261410" stop-opacity=".28"/><stop offset="1" stop-color="#362311" stop-opacity=".14"/></linearGradient>

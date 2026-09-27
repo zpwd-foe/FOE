@@ -1,2 +1,27 @@
-/*
+# Stable entry points revalidate on ordinary visits/reloads to pick up new asset URLs.
+/
   Cache-Control: public, max-age=0, must-revalidate
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/404
+  Cache-Control: public, max-age=0, must-revalidate
+/404.html
+  Cache-Control: public, max-age=0, must-revalidate
+/projects/bear-with-me/
+  Cache-Control: public, max-age=0, must-revalidate
+/projects/bear-with-me/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/asset-manifest.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Only content-fingerprinted assets are cached long-term.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/src/*
+  Cache-Control: public, max-age=31536000, immutable
+/projects/bear-with-me/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/projects/bear-with-me/*.js
+  Cache-Control: public, max-age=31536000, immutable
+/projects/bear-with-me/*.css
+  Cache-Control: public, max-age=31536000, immutable

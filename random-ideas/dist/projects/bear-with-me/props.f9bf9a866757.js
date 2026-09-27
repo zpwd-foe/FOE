@@ -2,36 +2,36 @@
 (() => {
   "use strict";
   const atlas = {
-    "book": ["props-everyday-v1.png",86,43,408,291],
-    "cookie": ["chocolate-cookie-v1.png",288,48,960,928],
-    "flower": ["props-everyday-v1.png",1189,15,189,327],
-    "cloth": ["props-everyday-v1.png",80,375,389,289],
-    "ruler": ["props-everyday-v1.png",532,467,473,83],
-    "clipboard": ["props-everyday-v1.png",1170,343,232,319],
-    "stamp": ["props-everyday-v1.png",110,678,326,309],
-    "stool": ["props-everyday-v1.png",607,678,324,323],
-    "stopwatch": ["props-everyday-v1.png",1157,665,252,338],
-    "curtain": ["props-theatre-v1.png",65,13,455,323],
-    "cover": ["props-theatre-v1.png",554,41,429,291],
-    "paper": ["props-theatre-v1.png",1051,84,411,198],
-    "periscope": ["props-theatre-v1.png",185,343,204,303],
-    "blocks": ["props-theatre-v1.png",589,362,320,287],
-    "rope": ["props-theatre-v1.png",1062,393,383,239],
-    "spoon": ["props-theatre-v1.png",231,660,83,337],
-    "hat": ["props-theatre-v1.png",573,679,385,310],
-    "flag": ["props-theatre-v1.png",1172,660,250,334],
-    "album": ["props-keepsakes-v1.png",39,45,490,286],
-    "chair": ["props-keepsakes-v1.png",641,11,236,343],
-    "cushion": ["props-keepsakes-v1.png",1036,64,456,271],
-    "heart": ["props-keepsakes-v1.png",117,386,300,269],
-    "scroll": ["props-keepsakes-v1.png",617,359,293,307],
-    "glasses": ["glasses-open-v1.png",0,0,1536,1024],
-    "headband": ["props-keepsakes-v1.png",47,725,517,237],
-    "disguise": ["props-keepsakes-v1.png",585,693,375,286],
-    "moustache": ["props-keepsakes-v1.png",1068,783,426,130],
-    "nightcap": ["props-costumes-v2.png",28,284,520,328],
-    "blanket": ["props-costumes-v2.png",535,232,459,513],
-    "cape": ["props-costumes-v2.png",997,231,535,464],
+    "book": ["props-everyday-v1.4347bb9fc5a9.webp",86,43,408,291],
+    "cookie": ["chocolate-cookie-v1.fc1ed0d5fe94.webp",288,48,960,928],
+    "flower": ["props-everyday-v1.4347bb9fc5a9.webp",1189,15,189,327],
+    "cloth": ["props-everyday-v1.4347bb9fc5a9.webp",80,375,389,289],
+    "ruler": ["props-everyday-v1.4347bb9fc5a9.webp",532,467,473,83],
+    "clipboard": ["props-everyday-v1.4347bb9fc5a9.webp",1170,343,232,319],
+    "stamp": ["props-everyday-v1.4347bb9fc5a9.webp",110,678,326,309],
+    "stool": ["props-everyday-v1.4347bb9fc5a9.webp",607,678,324,323],
+    "stopwatch": ["props-everyday-v1.4347bb9fc5a9.webp",1157,665,252,338],
+    "curtain": ["props-theatre-v1.630fe2be1b46.webp",65,13,455,323],
+    "cover": ["props-theatre-v1.630fe2be1b46.webp",554,41,429,291],
+    "paper": ["props-theatre-v1.630fe2be1b46.webp",1051,84,411,198],
+    "periscope": ["props-theatre-v1.630fe2be1b46.webp",185,343,204,303],
+    "blocks": ["props-theatre-v1.630fe2be1b46.webp",589,362,320,287],
+    "rope": ["props-theatre-v1.630fe2be1b46.webp",1062,393,383,239],
+    "spoon": ["props-theatre-v1.630fe2be1b46.webp",231,660,83,337],
+    "hat": ["props-theatre-v1.630fe2be1b46.webp",573,679,385,310],
+    "flag": ["props-theatre-v1.630fe2be1b46.webp",1172,660,250,334],
+    "album": ["props-keepsakes-v1.55d17341f003.webp",39,45,490,286],
+    "chair": ["props-keepsakes-v1.55d17341f003.webp",641,11,236,343],
+    "cushion": ["props-keepsakes-v1.55d17341f003.webp",1036,64,456,271],
+    "heart": ["props-keepsakes-v1.55d17341f003.webp",117,386,300,269],
+    "scroll": ["props-keepsakes-v1.55d17341f003.webp",617,359,293,307],
+    "glasses": ["glasses-open-v1.bda86455a568.webp",0,0,1536,1024],
+    "headband": ["props-keepsakes-v1.55d17341f003.webp",47,725,517,237],
+    "disguise": ["props-keepsakes-v1.55d17341f003.webp",585,693,375,286],
+    "moustache": ["props-keepsakes-v1.55d17341f003.webp",1068,783,426,130],
+    "nightcap": ["props-costumes-v2.8af5416f5c58.webp",28,284,520,328],
+    "blanket": ["props-costumes-v2.8af5416f5c58.webp",535,232,459,513],
+    "cape": ["props-costumes-v2.8af5416f5c58.webp",997,231,535,464],
   };
   const sheets = [...new Set(Object.values(atlas).map(([file]) => file))];
   const escapeText = value => String(value).replace(/[<>&"']/g, char => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[char]);
@@ -89,13 +89,50 @@
     blanket: sprite("blanket", 327, 277, 160, 120),
     cape: sprite("cape", 320, 275, 174, 125)
   };
-  function preload() {
-    // Decode before a performance starts, so an object's first appearance is complete.
-    return Promise.allSettled([...sheets, "plush-atlas-v2.png", "plush-atlas-v3.png", "plush-head-fur-v1.png", "hinoki-grain-v1.png"].map(file => {
-      const image = new Image();
-      image.src = `assets/${file}`;
-      return image.decode();
+  const requests = new Map();
+  function load(files, priority = 'low') {
+    return Promise.allSettled([...new Set(files)].map(file => {
+      if (!requests.has(file)) {
+        const image = new Image();
+        image.fetchPriority = priority;
+        image.src = file;
+        const ready = image.decode().catch(error => { requests.delete(file); throw error; });
+        requests.set(file, ready);
+      }
+      return requests.get(file);
     }));
   }
-  window.BearArtwork = { art, headwear, outfits, sheets, preload };
+  async function preloadCore() {
+    const wood = 'assets/hinoki-grain-v1.9faa1bd00760.webp';
+    const [loaded] = await load([wood], 'high');
+    if (loaded.status === 'fulfilled') {
+      for (const node of document.querySelectorAll('[data-full-texture]')) node.setAttribute('href', node.getAttribute('data-full-texture'));
+      window.performance?.mark('bear-wood-ready');
+    }
+    const files = [];
+    for (const node of document.querySelectorAll('[data-bear-src]')) {
+      const file = node.getAttribute('data-bear-src');
+      node.setAttribute('href', file);
+      files.push(file);
+    }
+    const result = await load(files, 'auto');
+    window.performance?.mark('bear-core-ready');
+    return result;
+  }
+  function preload(types = [...Object.keys(art), ...Object.keys(headwear), ...Object.keys(outfits)]) {
+    const files = [];
+    for (const type of types) {
+      const markup = [art[type], headwear[type], outfits[type]].filter(Boolean).join('');
+      for (const [, file] of markup.matchAll(/href="(assets\/[^"#]+)"/g)) files.push(file);
+    }
+    if (types.includes('screen')) {
+      for (const node of document.querySelectorAll('[data-prop-src]')) {
+        const file = node.getAttribute('data-prop-src');
+        node.setAttribute('href', file);
+        files.push(file);
+      }
+    }
+    return load(files);
+  }
+  window.BearArtwork = { art, headwear, outfits, sheets, preload, preloadCore };
 })();

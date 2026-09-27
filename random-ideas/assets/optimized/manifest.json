@@ -1,0 +1,106 @@
+{
+  "assets/bear-with-me-preview.png": {
+    "file": "assets/optimized/bear-with-me-preview.webp",
+    "sourceHash": "0d8ef008e3c11ea54aca2ec0b84b79dedfc8b9a881dcd6d46e757015c284a00f",
+    "outputHash": "3a13ace8de4b8cd92e2283f525dfe94153eb991b4ee2bceea80094873e7c403b",
+    "sourceBytes": 410295,
+    "bytes": 173776,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/plush-atlas-v2.png": {
+    "file": "assets/optimized/plush-atlas-v2.webp",
+    "sourceHash": "2399173096c9768c267558d8ade56f846c8b1b740d5bb1f222bc0300a40b04b0",
+    "outputHash": "8eb53312d2681d244a5150d8a8b3a88d1a4c70cebe26da40ea55e24950ab81db",
+    "sourceBytes": 3181718,
+    "bytes": 2093998,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/plush-atlas-v3.png": {
+    "file": "assets/optimized/plush-atlas-v3.webp",
+    "sourceHash": "30df4087d36d50b1145faad1c5bc20fe84d34cbf649fa0fab87e198f17e02ff4",
+    "outputHash": "fa20f62a79733edf613bb4ffda224d525ef366cd6b1112fe1c1276986a2233a8",
+    "sourceBytes": 2984077,
+    "bytes": 1943398,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/plush-head-fur-v1.png": {
+    "file": "assets/optimized/plush-head-fur-v1.webp",
+    "sourceHash": "0f2f8864e503bee22419955370cdf367521d68b109533c06f41fd3117d33ca4d",
+    "outputHash": "eaac74a5b0876d530eabd72b2f0668e869faae3650608175706b14883ab266ad",
+    "sourceBytes": 2809613,
+    "bytes": 1836426,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/hinoki-grain-v1.png": {
+    "file": "assets/optimized/hinoki-grain-v1.webp",
+    "sourceHash": "13bc22e6cdca81c17daef35866637c2765f6a0167020949915504a243613621e",
+    "outputHash": "9faa1bd0076020b1594573bcb0a70622038fd7fa61c6dd9f5d35497b81b3f146",
+    "sourceBytes": 2063523,
+    "bytes": 65326,
+    "pixels": "1024px wood texture, quality 90"
+  },
+  "projects/bear-with-me/assets/mahogany-grain-v1.png": {
+    "file": "assets/optimized/mahogany-grain-v1.webp",
+    "sourceHash": "01a75ae27cdaee2f60921bdc8ceb58cfa56fe967cfd529669ccd808ce76d24c7",
+    "outputHash": "499bf43aacda4123c785ca50db465b187da111db6f84bf73f7b9db2118b7d7b5",
+    "sourceBytes": 2844395,
+    "bytes": 175168,
+    "pixels": "1024px wood texture, quality 90"
+  },
+  "projects/bear-with-me/assets/chocolate-cookie-v1.png": {
+    "file": "assets/optimized/chocolate-cookie-v1.webp",
+    "sourceHash": "0e498f249f08b99b0812d537e648562c8b9bc9bcc4b916d51209f9e87fd18c9e",
+    "outputHash": "fc1ed0d5fe941548092c4ffc1e4e4356884e47c08ed5d5f1b95554ed0451ac6e",
+    "sourceBytes": 2416242,
+    "bytes": 1593334,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/glasses-open-v1.png": {
+    "file": "assets/optimized/glasses-open-v1.webp",
+    "sourceHash": "337a1b783cc60cd0be68a63645c8a964e9315e1048bd5e0dea507833ab8376c2",
+    "outputHash": "bda86455a5689bf9adf0eb37c49d33bca108f7d1ea09e2b6256b0f938b5a92f1",
+    "sourceBytes": 1170202,
+    "bytes": 764838,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/props-costumes-v2.png": {
+    "file": "assets/optimized/props-costumes-v2.webp",
+    "sourceHash": "81c279502eb0e488ff82a1179a9422fa18cdee08040c3ae4f3f32eaca2cf4668",
+    "outputHash": "8af5416f5c584e75c6930a6ecae9cb9fdbe8f069769340ce351cb325e7eeea59",
+    "sourceBytes": 1930855,
+    "bytes": 1252160,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/props-everyday-v1.png": {
+    "file": "assets/optimized/props-everyday-v1.webp",
+    "sourceHash": "c3c072b53c87d2b55d27f309d4f366a9204e1718b031884629f67fa03cc114b9",
+    "outputHash": "4347bb9fc5a9d314356af316f57358ec858027828c76b11368defc26c0c54300",
+    "sourceBytes": 2264055,
+    "bytes": 1438424,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/props-keepsakes-v1.png": {
+    "file": "assets/optimized/props-keepsakes-v1.webp",
+    "sourceHash": "d53656fa14495b72daa6dfba283382c1e97033c15518f995ee258f1ce1023d18",
+    "outputHash": "55d17341f0032ecb0d7671165e4b8f40ff2d9dd5af8cab4980c429ed89b1fc70",
+    "sourceBytes": 2387600,
+    "bytes": 1541450,
+    "pixels": "identical"
+  },
+  "projects/bear-with-me/assets/props-theatre-v1.png": {
+    "file": "assets/optimized/props-theatre-v1.webp",
+    "sourceHash": "10970a6e9b6a13185d25fa6533d9ddd7ea483a104e502828aeded7c5ca9febf1",
+    "outputHash": "630fe2be1b4664ae5a32422f80117ae90210a75f664b9e47c4386e5ff8bf2c29",
+    "sourceBytes": 2218412,
+    "bytes": 1396086,
+    "pixels": "identical"
+  },
+  "assets/zpwd-seal.svg": {
+    "file": "assets/optimized/zpwd-seal.svg",
+    "sourceHash": "594b5db3a84bfd18471f7182cbe56c516bb7ff2c9989159b75e281b4db75df1f",
+    "outputHash": "47ab2426b502dcbd614ab36c91cfb6ff20e5ce5a81079591e0ae112f77ddb855",
+    "sourceBytes": 3285487,
+    "bytes": 128054,
+    "approvedSourceHash": "5b41b90a57eb2e2768c28774850ef3b32fa7264a72122394d7a5e9faefa50bda"
+  }
+}

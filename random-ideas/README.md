@@ -1,6 +1,6 @@
 # Z's Random Realm
 
-A personal collection of little things with questionable usefulness, intended for **random.z301.uk**. Plain HTML, CSS, and JavaScript; no backend, dependencies, or external asset requests. Local previews run directly from source; a small deployment build copies the public files into `dist/`.
+A personal collection of little things with questionable usefulness, intended for **random.z301.uk**. Plain HTML, CSS, and JavaScript; no backend, runtime dependencies, or external asset requests. Local previews run directly from source; a small deployment build prepares optimized public files in `dist/`.
 
 ## Preview
 
@@ -45,6 +45,8 @@ The header and favicon use the approved ZPWD vermilion seal, arranged W/Z above 
 
 Build the public site with `node scripts/build-static.mjs`. The explicit list in `scripts/public-files.json` includes the pages, scripts, styles, active artwork, fonts, and font licences. Inputs, design references, source documentation, tests, and development scripts stay out of the deployment. Add new public files to that list when adding an entry. `dist/` is generated and committed, matching the prebuilt deployment used by `GBAnalysis`. Rebuild it before committing changes to public files.
 
+The build substitutes the checked-in image derivatives from `assets/optimized/`, fingerprints every asset filename by content, and rewrites references. Dependencies are processed before their consumers, so changes to images, fonts, or imported scripts also change the URLs of the styles/scripts that reference them. The box gets a small inline wood preview, followed by a high-priority detailed texture. Bear artwork loads next; prop sheets load only for scenes that use them. Original artwork stays unchanged. After editing source images, run `npm ci` and `npm run optimize:images` before rebuilding; Sharp is needed only for this image preparation step. The build itself uses Node built-ins and checks that derivatives match their sources. See [image preparation and measurements](assets/optimized/README.md).
+
 Configure Cloudflare Pages through the existing GitHub connection to `zpwd-foe/FOE`, like `foe-gb-analysis`. The checked-in output is ready to deploy with these settings:
 
 | Setting | Value |
@@ -52,11 +54,11 @@ Configure Cloudflare Pages through the existing GitHub connection to `zpwd-foe/F
 | Production branch | `main` |
 | Root directory | `random-ideas` |
 | Framework preset | None |
-| Build command | Leave blank (the output is already built) |
+| Build command | `node scripts/build-static.mjs` |
 | Build output directory | `dist` |
 | Custom domain | `random.z301.uk` |
 
-Alternatively, use `node scripts/build-static.mjs` as the Cloudflare build command to regenerate the output on every deployment. The same `dist/` can be uploaded to another static host. `_headers` makes browsers revalidate files after updates; `404.html` keeps missing paths from falling back to the homepage. Run `node --test tests/deploy.test.cjs` to check the publication boundary, required assets, and that the checked-in output matches the source. Cloudflare project creation and domain configuration are managed separately.
+The build command may also be left blank when deploying the checked-in output. The same `dist/` can be uploaded to another static host. `_headers` lets browsers cache fingerprinted assets for a year and explicitly requires revalidation of HTML and the asset manifest. Ordinary visits or reloads pick up new filenames after deployment; a hard refresh is unnecessary. An already-open page continues its current version until navigation or reload. `404.html` keeps missing paths from falling back to the homepage. Run `npm test` for the scene, loading, deployment, and cache-invalidation checks, including the publication boundary, required assets, and whether the checked-in output matches the source. Cloudflare project creation and domain configuration are managed separately.
 
 ## Browser checks
 
@@ -91,7 +93,7 @@ Run the real Chrome scene and pixel audit (Node 22+ and Chrome required):
 node tests/bear-with-me/browser-runner.cjs /private/tmp/bear-audit
 ```
 
-This runs all 48 scenes with normal and reduced motion, both optional interactions, and the interruption after retirement. It writes a JSON report, scene contact sheets, and desktop/mobile screenshots. Use `--no-gallery` to skip screenshots. Set `CHROME_PATH` when Chrome is outside the standard macOS application path. The runner starts its own loopback server and isolated browser profile; it does not use or change your browsing profile. See [rendering checks and fixes](projects/bear-with-me/RENDERING.md).
+This runs all 48 scenes with normal and reduced motion, both optional interactions, and the interruption after retirement. It writes a JSON report, scene contact sheets, and desktop/mobile screenshots. Add `--dist` to validate the deployment build, or `--no-gallery` to skip screenshots. Set `CHROME_PATH` when Chrome is outside the standard macOS application path. The runner starts its own loopback server and isolated browser profile; it does not use or change your browsing profile. See [rendering checks and fixes](projects/bear-with-me/RENDERING.md).
 
 The index card uses an export of the current renderer. Refresh it after changing the bear or box:
 

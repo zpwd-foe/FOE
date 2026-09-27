@@ -66,6 +66,16 @@ test("optional handshake and cookie interactions both complete", async () => {
   }
 });
 
+test('every performance declares all props and costumes before animation starts', async () => {
+  for (const scene of scenes) for (const accepted of [false, true]) {
+    const run = rehearsal(accepted);
+    await scene.play(run.c);
+    const used = new Set(run.log.flatMap(([action, first, second]) =>
+      ['prop', 'turn'].includes(action) ? [second] : ['wear', 'outfit'].includes(action) && first ? [first] : []));
+    assert.deepEqual([...used].sort(), [...scene.assets].sort(), `Missing assets for scene ${scene.id}`);
+  }
+});
+
 test("accepting a cookie removes it before the paw moves; an unanswered offer keeps it", async () => {
   const accepted = rehearsal(true), declined = rehearsal(false);
   const scene = scenes.find(s => s.id === 21);

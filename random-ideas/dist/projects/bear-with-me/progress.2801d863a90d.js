@@ -1,6 +1,6 @@
 ((root) => {
   "use strict";
-  const scenes = typeof module !== "undefined" && module.exports ? require("./scenes.js") : root.BearScenes;
+  const scenes = typeof module !== "undefined" && module.exports ? require("./scenes.15845e3eb853.js") : root.BearScenes;
   const ids = scenes.map(scene => scene.id), COUNT = ids.length;
   const retirement = ids.indexOf(50);
   const fresh = () => ({ version: 2, sceneIds: [...ids], counts: Array(COUNT).fill(0), last: -1, mode: "story", sound: false, motion: null, retired: false });

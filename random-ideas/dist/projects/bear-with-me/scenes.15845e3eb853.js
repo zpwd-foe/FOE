@@ -3,8 +3,18 @@
 ((root) => {
   "use strict";
   const scenes = [];
+  // Load only the props used by the selected performance. Scene tests verify coverage.
+  const sceneAssets = {
+    1: ['nightcap'], 7: ['book'], 8: ['blanket'], 15: ['cloth'],
+    21: ['cookie'], 22: ['flower'], 23: ['glasses', 'clipboard', 'ruler', 'stamp', 'denied'],
+    24: ['sign'], 25: ['stool'], 26: ['headband', 'stopwatch'], 28: ['sparkle'],
+    29: ['curtain', 'cover'], 32: ['screen'], 34: ['periscope', 'disguise'],
+    36: ['blocks'], 37: ['rope'], 38: ['hat', 'cookie', 'spoon'], 40: ['flag'],
+    42: ['album-back', 'album'], 43: ['cape'], 45: ['chair'], 46: ['cushion'],
+    48: ['heart'], 50: ['retired']
+  };
   // IDs stay fixed when a performance is removed, preserving saved discoveries.
-  const scene = (id, emotion, caption, description, play) => scenes.push({ id, emotion, caption, description, play });
+  const scene = (id, emotion, caption, description, play) => scenes.push({ id, emotion, caption, description, play, assets: sceneAssets[id] || [] });
 
   scene(1, "Sleepiness", "This could have waited.", "A sleepy bear misses the switch, then finds it.", async c => {
     c.motion = "heavy";

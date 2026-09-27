@@ -89,13 +89,50 @@
     blanket: sprite("blanket", 327, 277, 160, 120),
     cape: sprite("cape", 320, 275, 174, 125)
   };
-  function preload() {
-    // Decode before a performance starts, so an object's first appearance is complete.
-    return Promise.allSettled([...sheets, "plush-atlas-v2.png", "plush-atlas-v3.png", "plush-head-fur-v1.png", "hinoki-grain-v1.png"].map(file => {
-      const image = new Image();
-      image.src = `assets/${file}`;
-      return image.decode();
+  const requests = new Map();
+  function load(files, priority = 'low') {
+    return Promise.allSettled([...new Set(files)].map(file => {
+      if (!requests.has(file)) {
+        const image = new Image();
+        image.fetchPriority = priority;
+        image.src = file;
+        const ready = image.decode().catch(error => { requests.delete(file); throw error; });
+        requests.set(file, ready);
+      }
+      return requests.get(file);
     }));
   }
-  window.BearArtwork = { art, headwear, outfits, sheets, preload };
+  async function preloadCore() {
+    const wood = 'assets/hinoki-grain-v1.png';
+    const [loaded] = await load([wood], 'high');
+    if (loaded.status === 'fulfilled') {
+      for (const node of document.querySelectorAll('[data-full-texture]')) node.setAttribute('href', node.getAttribute('data-full-texture'));
+      window.performance?.mark('bear-wood-ready');
+    }
+    const files = [];
+    for (const node of document.querySelectorAll('[data-bear-src]')) {
+      const file = node.getAttribute('data-bear-src');
+      node.setAttribute('href', file);
+      files.push(file);
+    }
+    const result = await load(files, 'auto');
+    window.performance?.mark('bear-core-ready');
+    return result;
+  }
+  function preload(types = [...Object.keys(art), ...Object.keys(headwear), ...Object.keys(outfits)]) {
+    const files = [];
+    for (const type of types) {
+      const markup = [art[type], headwear[type], outfits[type]].filter(Boolean).join('');
+      for (const [, file] of markup.matchAll(/href="(assets\/[^"#]+)"/g)) files.push(file);
+    }
+    if (types.includes('screen')) {
+      for (const node of document.querySelectorAll('[data-prop-src]')) {
+        const file = node.getAttribute('data-prop-src');
+        node.setAttribute('href', file);
+        files.push(file);
+      }
+    }
+    return load(files);
+  }
+  window.BearArtwork = { art, headwear, outfits, sheets, preload, preloadCore };
 })();

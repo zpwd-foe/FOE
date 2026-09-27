@@ -1,0 +1,13 @@
+{
+  "name": "z-random-realm",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build-static.mjs",
+    "optimize:images": "node scripts/optimize-images.mjs",
+    "test": "node --test tests/*.test.cjs tests/bear-with-me/*.test.cjs"
+  },
+  "devDependencies": {
+    "sharp": "0.35.5"
+  }
+}

@@ -329,6 +329,7 @@
       this.setSwitch(true); this.refresh();
       try {
         await this.renderer.assetsReady;
+        await window.BearArtwork.preload([...scene.assets, ...(this.progress.retired ? ['retired'] : [])]);
         if (this.progress.retired) {
           await c.open(); await c.move({ eye: .55, tilt: -9, gazeY: 7 }, 400);
           await c.stow("retirement"); this.progress.retired = false;
