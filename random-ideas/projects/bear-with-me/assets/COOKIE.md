@@ -1,0 +1,7 @@
+# Chocolate cookie
+
+`chocolate-cookie-v1.png` was generated with the built-in ImageGen tool. The original 1536 × 1024 RGBA output is copied unchanged into this project. SVG crop bounds select the cookie for the offering and panic scenes; its interior remains opaque and its outline retains the generated transparency.
+
+## Final prompt
+
+Use case: product-mockup. Asset type: one transparent photographic chocolate cookie sprite for a realistic plush teddy-bear animation. Generate a single freshly baked round chocolate cookie: rich warm cocoa-brown dough, a slightly irregular crisp rim, a craggy softly domed surface, and about twelve clearly visible dark chocolate chunks with small glossy highlights. It must read as a chocolate cookie even when displayed at only 35 pixels wide. Front-facing, nearly circular silhouette, with a very slight view of the lower edge for believable thickness. Photorealistic miniature food product photography, soft warm studio light from upper left, subtle baked texture and pores, natural shading on the cookie itself. Composition: 1536x1024 landscape canvas, cookie centered, diameter approximately 800 pixels, fully inside frame. Genuinely transparent RGBA background with clean soft antialiased edges. No surrounding glow, no ground shadow, no plate, no floor, no crumbs outside the cookie, no hands, no bite, no text, no border, no checkerboard, no other objects.
