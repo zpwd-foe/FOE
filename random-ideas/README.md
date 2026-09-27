@@ -1,6 +1,6 @@
 # Z's Random Realm
 
-A personal collection of little things with questionable usefulness, intended for **random.z301.uk**. Plain HTML, CSS, and JavaScript; no build step, backend, dependencies, or external asset requests.
+A personal collection of little things with questionable usefulness, intended for **random.z301.uk**. Plain HTML, CSS, and JavaScript; no backend, dependencies, or external asset requests. Local previews run directly from source; a small deployment build copies the public files into `dist/`.
 
 ## Preview
 
@@ -43,9 +43,20 @@ Entries can include an optional `caption` below their illustration and an `actio
 
 The header and favicon use the approved ZPWD vermilion seal, arranged W/Z above D/P. The original image and generation prompts are documented in [assets/ZPWD-SEAL.md](assets/ZPWD-SEAL.md).
 
-Upload `index.html`, `src/`, `assets/`, and `projects/` to any static web host. Keep their relative paths intact. The site can live at a domain root or beneath a subdirectory; no server-side routing is needed.
+Build the public site with `node scripts/build-static.mjs`. The explicit list in `scripts/public-files.json` includes the pages, scripts, styles, active artwork, fonts, and font licences. Inputs, design references, source documentation, tests, and development scripts stay out of the deployment. Add new public files to that list when adding an entry. `dist/` is generated and committed, matching the prebuilt deployment used by `GBAnalysis`. Rebuild it before committing changes to public files.
 
-When a host is selected, add `random.z301.uk` as its custom domain, then configure the DNS records and HTTPS settings it provides. DNS and deployment have not been configured by this project. The README and any local validation artifacts do not need to be published.
+Configure Cloudflare Pages through the existing GitHub connection to `zpwd-foe/FOE`, like `foe-gb-analysis`. The checked-in output is ready to deploy with these settings:
+
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Root directory | `random-ideas` |
+| Framework preset | None |
+| Build command | Leave blank (the output is already built) |
+| Build output directory | `dist` |
+| Custom domain | `random.z301.uk` |
+
+Alternatively, use `node scripts/build-static.mjs` as the Cloudflare build command to regenerate the output on every deployment. The same `dist/` can be uploaded to another static host. `_headers` makes browsers revalidate files after updates; `404.html` keeps missing paths from falling back to the homepage. Run `node --test tests/deploy.test.cjs` to check the publication boundary, required assets, and that the checked-in output matches the source. Cloudflare project creation and domain configuration are managed separately.
 
 ## Browser checks
 

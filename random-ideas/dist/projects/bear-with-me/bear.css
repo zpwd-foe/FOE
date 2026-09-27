@@ -1,0 +1,58 @@
+/* The notebook frame, fonts, header, and underline are shared in src/theme.css. */
+.back-link { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; color: var(--accent); }
+.intro { text-align: center; padding: 39px 0 0; }
+.entry-label { color: var(--seal); margin-bottom: 13px; }
+h1 { font-size: clamp(40px, 5.5vw, 68px); line-height: 1.25; margin: 0 0 17px; }
+.subtitle { font-size: 17px; color: var(--muted); margin: 0; line-height: 1.7; }
+.experiment { max-width: 730px; margin: 4px auto 0; }
+.stage { position: relative; width: 100%; aspect-ratio: 480 / 340; background: radial-gradient(ellipse at 50% 69%, #c9bea726, transparent 58%); }
+#machine-art { display: block; width: 100%; height: 100%; overflow: visible; }
+#invitation text { font-family: var(--serif); font-style: normal; fill: var(--muted); }
+#invitation path { stroke: var(--line); }
+.machine-switch { position: absolute; left: calc(45.833% - 22px); top: calc(66.912% - 22px); width: 44px; height: 44px; min-width: 44px; min-height: 44px; background: transparent; border: 0; border-radius: 50%; z-index: 2; }
+.machine-switch:focus-visible { outline: 2px dashed var(--accent); outline-offset: 3px; background: #3447540d; }
+.machine-switch:disabled { cursor: wait; }
+.offered-paw { position: absolute; left: calc(20% + var(--stage-offset, 0%)); top: 40%; padding: 10px 15px; z-index: 3; }
+.stage-caption { min-height: 34px; display: flex; justify-content: center; align-items: center; gap: 8px; text-align: center; margin: -3px 0 0; padding: 0 15px; }
+.stage-caption p { font-size: 16px; margin: 0; line-height: 1.6; }
+.status-dot { width: 5px; height: 5px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+.status-dot.busy { background: var(--seal); }
+.switch-help { line-height: 1.7; text-align: center; color: var(--muted); font-size: 14px; margin: 9px 0 32px; }
+.controls { margin: 0 auto; max-width: 850px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 21px 0; display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; }
+.progress { display: flex; align-items: center; gap: 10px; }
+.progress-number { font: 500 31px/1.3 var(--serif); font-variant-numeric: tabular-nums; }
+.progress-copy { font: 14px/1.6 var(--sans); color: var(--muted); }
+.progress-track { width: 67px; height: 3px; background: var(--line); margin-left: 10px; overflow: hidden; }
+#progress-fill { display: block; width: 0; height: 100%; background: var(--accent); transition: width .3s; }
+.settings { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.settings select { padding-right: 25px; cursor: pointer; }
+.settings button span { padding-right: 3px; }
+.order-label { display: inline-flex; --underline-inset: 12px; }
+.order-label:has(select:focus-visible)::after { transform: scaleX(1); }
+.order-label:has(select:disabled)::after { transform: scaleX(0); }
+.footnote { max-width: 850px; margin: 15px auto 40px; display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 14px; line-height: 1.7; color: var(--muted); }
+.footnote button { white-space: nowrap; background: none; font-size: 14px; color: var(--accent); min-height: 44px; padding: 7px 0 7px 10px; --underline-inset: 10px; }
+.footnote button span { font-size: 15px; margin-left: 4px; }
+footer { border-top: 1px solid var(--line); padding: 24px 0 37px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 20px; font-size: 14px; line-height: 1.7; color: var(--muted); }
+footer a { display: inline-block; color: var(--accent); padding-bottom: 5px; }
+.no-script { text-align: center; padding: 20px; }
+@media (max-width: 850px) {
+  .controls { justify-content: center; gap: 18px; }
+  .progress { width: 100%; justify-content: center; }
+  .settings { justify-content: center; width: 100%; }
+}
+@media (max-width: 700px) {
+  .intro { padding-top: 32px; }
+  h1 { font-size: clamp(35px, 7.5vw, 50px); }
+  .subtitle { font-size: 16px; }
+  .experiment { margin-top: 17px; }
+  .stage { width: calc(100% + 30px); margin-left: -15px; }
+  .stage-caption { margin-top: 14px; min-height: 42px; }
+  .switch-help { margin-bottom: 27px; }
+  .progress-track { width: 60px; margin-left: 3px; }
+  .settings select { font-size: 16px; }
+  .footnote { align-items: start; flex-direction: column; gap: 7px; margin-bottom: 32px; }
+  .footnote button { padding-left: 0; --underline-inset: 0px; }
+  #invitation { transform: translate(-15px, -5px); }
+  .offered-paw { left: calc(22% + var(--stage-offset, 0%)); top: 40%; font-size: 14px; }
+}
