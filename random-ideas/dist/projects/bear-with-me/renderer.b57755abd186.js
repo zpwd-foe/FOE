@@ -115,6 +115,15 @@
         top: `${(fitting.top + fitting.height / 2 - host.top) * sy - height / 2}px`,
         width: `${width}px`, height: `${height}px`, transform: "none"
       });
+      const lamp = document.getElementById("indicator-lamp").getBoundingClientRect();
+      const lampX = (lamp.left + lamp.width / 2 - host.left) * sx;
+      const switchRight = (fitting.left + fitting.width / 2 - host.left) * sx + width / 2;
+      // Keep the hidden lamp control clear of the toggle's 44px target on mobile.
+      const lampWidth = Math.max(1, Math.min(24, 2 * (lampX - switchRight - 2)));
+      Object.assign(document.getElementById("scene-jump").style, {
+        left: `${lampX - lampWidth / 2}px`, top: `${(lamp.top + lamp.height / 2 - host.top) * sy - 12}px`,
+        width: `${lampWidth}px`, height: "24px"
+      });
     }
 
     static asanohaInlay() {

@@ -12,6 +12,8 @@ h1 { font-size: clamp(40px, 5.5vw, 68px); line-height: 1.25; margin: 0 0 17px; }
 .machine-switch { position: absolute; left: calc(45.833% - 22px); top: calc(66.912% - 22px); width: 44px; height: 44px; min-width: 44px; min-height: 44px; background: transparent; border: 0; border-radius: 50%; z-index: 2; }
 .machine-switch:focus-visible { outline: 2px dashed var(--accent); outline-offset: 3px; background: #3447540d; }
 .machine-switch:disabled { cursor: wait; }
+.indicator-hotspot { position: absolute; width: 24px; height: 24px; min-width: 0; min-height: 0; padding: 0; background: transparent; border: 0; border-radius: 50%; z-index: 2; cursor: default; touch-action: manipulation; }
+.indicator-hotspot:focus-visible { outline: 2px dashed var(--accent); outline-offset: 2px; }
 .offered-paw { position: absolute; left: calc(20% + var(--stage-offset, 0%)); top: 40%; padding: 10px 15px; z-index: 3; }
 .stage-caption { min-height: 34px; display: flex; justify-content: center; align-items: center; gap: 8px; text-align: center; margin: -3px 0 0; padding: 0 15px; }
 .stage-caption p { font-size: 16px; margin: 0; line-height: 1.6; }

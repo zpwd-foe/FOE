@@ -82,8 +82,31 @@ async function main() {
         report.clickTargets.push({width,on,pass:point.hit==='machine-switch'&&count===point.count+1});
       }
     }
-    await evaluate('bearMachine.play=clickProbe.play;bearMachine.resumeAudio=clickProbe.audio;delete window.clickProbe;bearMachine.cancelIdle();bearMachine.renderer.reset();');
     console.log(`Pointer checks: ${report.clickTargets.filter(t=>t.pass).length}/${report.clickTargets.length} passed`);
+    // Single LED clicks stay inert; a real double-click opens the hidden picker.
+    await evaluate(`window.jumpProbe={prompt:window.prompt,calls:0};window.prompt=()=>{jumpProbe.calls++;return '42';};`);
+    report.scenePicker=[];
+    for(const width of [320,390,768,1440]) {
+      await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<500});await pause(80);
+      for(const shifted of [false,true]) {
+        const point=await evaluate(`(() => {const r=bearMachine.renderer;r.reset();Object.assign(r.state,{boxX:${shifted?8:0},boxR:${shifted?3:0}});r.render();bearMachine.nextSceneId=null;const el=document.getElementById('switch-light'),p=new DOMPoint(0,-1.1).matrixTransform(el.getScreenCTM());return {x:p.x,y:p.y,plays:clickProbe.count,prompts:jumpProbe.calls,hit:document.elementFromPoint(p.x,p.y)?.id};})()`);
+        const press=async clickCount=>{
+          await send('Input.dispatchMouseEvent',{type:'mousePressed',x:point.x,y:point.y,button:'left',clickCount});
+          await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:point.x,y:point.y,button:'left',clickCount});
+        };
+        await press(1);
+        const single=await evaluate('({plays:clickProbe.count,prompts:jumpProbe.calls})');
+        await press(2);
+        const double=await evaluate('({plays:clickProbe.count,prompts:jumpProbe.calls,next:bearMachine.nextSceneId})');
+        report.scenePicker.push({width,shifted,pass:point.hit==='scene-jump'&&single.plays===point.plays&&single.prompts===point.prompts&&double.plays===point.plays&&double.prompts===point.prompts+1&&double.next===42});
+      }
+    }
+    const beforeKey=await evaluate(`document.getElementById('scene-jump').focus();jumpProbe.calls`);
+    await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Enter',code:'Enter',windowsVirtualKeyCode:13,text:'\r',unmodifiedText:'\r'});
+    await send('Input.dispatchKeyEvent',{type:'keyUp',key:'Enter',code:'Enter',windowsVirtualKeyCode:13});
+    report.scenePicker.push({keyboard:true,pass:await evaluate(`jumpProbe.calls===${beforeKey+1}`)});
+    await evaluate(`window.prompt=jumpProbe.prompt;delete window.jumpProbe;bearMachine.nextSceneId=null;document.activeElement.blur();bearMachine.play=clickProbe.play;bearMachine.resumeAudio=clickProbe.audio;delete window.clickProbe;bearMachine.cancelIdle();bearMachine.renderer.reset();`);
+    console.log(`Scene picker checks: ${report.scenePicker.filter(t=>t.pass).length}/${report.scenePicker.length} passed`);
     fs.writeFileSync(path.join(output,'report.json'),JSON.stringify(report,null,2));
     if(!process.argv.includes('--no-gallery')) {
       await evaluate(`document.querySelector('.audit-gallery')?.remove();document.querySelector('.page').style.display='';BearAudit.restore(BearAudit.frames.find(f=>f.scene===15&&f.props.some(p=>p.type==='cloth')&&f.state.rightInside===0&&f.state.ry>330));`);
@@ -92,7 +115,7 @@ async function main() {
         const png=await send('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(output,`${name}.png`),Buffer.from(png.data,'base64'));
       }
     }
-    process.exitCode=report.failures.length || report.pixels?.some(t=>!t.pass) || report.clickTargets.some(t=>!t.pass) ? 1 : 0;
+    process.exitCode=report.failures.length || report.pixels?.some(t=>!t.pass) || report.clickTargets.some(t=>!t.pass) || report.scenePicker.some(t=>!t.pass) ? 1 : 0;
   } finally {
     socket?.close();
     const exited = new Promise(resolve => {

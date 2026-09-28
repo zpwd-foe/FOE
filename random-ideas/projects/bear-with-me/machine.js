@@ -11,6 +11,7 @@
       this.renderer = new window.BearRenderer();
       this.progress = window.BearProgress.read(saved);
       this.busy = false;
+      this.nextSceneId = null;
       this.on = false;
       this.interruptions = 0;
       this.reprimands = 0;
@@ -54,6 +55,14 @@
       });
       $("machine-switch").addEventListener("pointerenter", event => { if (event.pointerType !== "touch") void this.peek(true); });
       $("machine-switch").addEventListener("pointerleave", () => { if (!this.busy) void this.hidePeek(); });
+      $("scene-jump").addEventListener("dblclick", event => {
+        event.preventDefault(); event.stopPropagation(); this.promptForScene();
+      });
+      $("scene-jump").addEventListener("click", event => {
+        event.stopPropagation();
+        // Keyboard and assistive activation need no double-click gesture.
+        if (event.detail === 0) this.promptForScene();
+      });
       $("stage").addEventListener("pointermove", event => {
         if (this.busy || this.renderer.state.rise > 150) return;
         const rect = $("stage").getBoundingClientRect();
@@ -314,8 +323,34 @@
       });
     }
 
-    async play(index = window.BearProgress.choose(this.progress)) {
-      if (this.busy || !Number.isInteger(index) || !window.BearScenes[index]) return false;
+    promptForScene() {
+      let message = "Go to scene #\nEnter a number from 1–50 (4 and 19 are unavailable).";
+      let value = String(this.nextSceneId ?? 1);
+      while (true) {
+        const answer = window.prompt(message, value);
+        if (answer === null || !answer.trim()) return;
+        value = answer.trim();
+        const id = /^\d+$/.test(value) ? Number(value) : NaN;
+        if (window.BearScenes.some(scene => scene.id === id)) {
+          this.nextSceneId = id;
+          const confirmation = `Scene ${id} is next. Flip the switch when you're ready.`;
+          if (!this.busy) $("caption").textContent = confirmation;
+          $("announcement").textContent = confirmation;
+          return;
+        }
+        message = "That scene isn't available.\nEnter a whole number from 1–50, except 4 and 19.";
+      }
+    }
+
+    async play(index) {
+      if (this.busy) return false;
+      const queued = index === undefined && this.nextSceneId != null;
+      if (index === undefined) index = queued
+        ? window.BearScenes.findIndex(scene => scene.id === this.nextSceneId)
+        : window.BearProgress.choose(this.progress);
+      if (!Number.isInteger(index) || !window.BearScenes[index]) return false;
+      // Consume before awaiting: a choice made during this scene is for the next one.
+      if (queued) this.nextSceneId = null;
       this.hesitated = this.hoverSince > 0 && performance.now() - this.hoverSince > 1200;
       this.hoverSince = 0;
       this.cancelIdle();
@@ -379,6 +414,7 @@
       this.cancelIdle(); this.renderer.reset(); this.setSwitch(false);
       const prefs = { sound: this.progress.sound, mode: this.progress.mode, motion: this.progress.motion };
       this.progress = { ...window.BearProgress.fresh(), ...prefs };
+      this.nextSceneId = null;
       this.returning = false; this.save(); this.refresh();
       this.hoverSince = 0; this.hesitated = false;
       $("invitation").setAttribute("opacity", "1");
