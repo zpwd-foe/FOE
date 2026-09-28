@@ -58,7 +58,7 @@ The 48 active scenes keep their original IDs so saved discoveries remain valid. 
 | 39 | Exhaustion | Rests on the rim while the active paw advances in small lifted steps. |
 | 40 | Defeat | Tries to withdraw with its flag, returns, turns the flag sideways, and puts it away. |
 | 41 | Loneliness | Offers a paw; acceptance gives two small shakes, while silence earns a self-handshake. |
-| 42 | Nostalgia | Reads the album with its cover toward us, turns it to show the photograph, then turns it back. |
+| 42 | Nostalgia | Reads the album with its cover toward us, turns it to show the photograph and `#iamsway` on the left inside page, then turns it back. |
 | 43 | Embarrassment | Snags the cape under the lid, frees itself, removes the cape by hand, and puts it away. |
 | 44 | Existential doubt | Looks at the switch, examines its paws, looks upward, and finally looks at the visitor. |
 | 45 | Resignation | Places a chair inside the opening, sits, leans far enough to reach, then retrieves the chair. |

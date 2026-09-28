@@ -70,6 +70,8 @@
     <path d="m-1-9 4-.7m-3 8 4-.7m-2 17 4-.7m-3 8 4-.7" stroke="#bbb08a" stroke-width=".65" opacity=".65"/>`;
   art.book = bookBack;
   art["album-back"] = bookBack;
+  // Ink on the blank inside page, visible only while the album faces the visitor.
+  art.album += `<text transform="translate(-23 1) skewY(4)" text-anchor="middle" fill="#493725" font-family="'Noto Sans', sans-serif" font-size="7.2" font-weight="600" textLength="32" lengthAdjust="spacingAndGlyphs">#iamsway</text>`;
   art.cape = sprite("cape", -55, -35, 110, 74);
   Object.assign(art, {
     sign: paper("DO NOT DISTURB", 134), denied: paper("UNNECESSARY", 116),
