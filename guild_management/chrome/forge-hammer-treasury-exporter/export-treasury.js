@@ -751,6 +751,7 @@
       if (!outgoingRequest || data?.requestId !== outgoingRequest.requestId) return;
       response = data;
       pageEvidence.treasuryCapturedAt = new Date().toISOString();
+      pageEvidence.treasuryTimezoneOffsetMinutes = new Date().getTimezoneOffset();
       trace('treasury-response', {
         requestId: data.requestId,
         hasResources: Boolean(responseResources(data)),

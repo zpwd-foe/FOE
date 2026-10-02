@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Sequence
 
 from build_dashboard import DEFAULT_CONTRIBUTION_DATA_SOURCE, publish_dashboard
+from capture_evidence import load_capture_context
 from generate_treasury_dashboard import age_mapping, read_export as read_treasury_export
 
 
@@ -338,16 +339,60 @@ def audit_inventory_delta(
     current_contribution: Path,
     baseline_treasury: Path,
     current_treasury: Path,
+    *,
+    capture_context: dict[str, object] | None = None,
+    baseline_payload: dict[str, object] | None = None,
 ) -> dict[str, object]:
     """Prove that signed log changes equal treasury changes for every good."""
     baseline_rows, _ = normalized_export(baseline_contribution)
+    if cached_audit_matches(baseline_payload, baseline_contribution, baseline_treasury):
+        # Canonical history may include inventory-proven mixed production or
+        # pending mixed batches that a fresh normalization would discard.
+        baseline_rows = payload_rows(baseline_payload)
     current_rows, _ = normalized_export(current_contribution)
     _, cutoff = reconcile_closed_history(baseline_rows, current_rows)
+    raw_current = read_export(current_contribution)
+    captured_at = (
+        dt.datetime.fromisoformat(str(capture_context["treasuryCapturedAt"]))
+        if capture_context else None
+    )
+    pending = [row for row in raw_current if row["timestamp"] > cutoff
+               and captured_at is not None and row["timestamp"] > captured_at]
+    if pending:
+        current_rows, _ = normalized_export(current_contribution, keep_mixed_production_after=captured_at)
+        pending = [row for row in current_rows if row["timestamp"] > cutoff and row["timestamp"] > captured_at]
+    carried: list[dict[str, object]] = []
+    baseline_audit = (baseline_payload or {}).get("meta", {}).get("inventoryAudit") or {}
+    if baseline_audit.get("pendingRecordCount"):
+        if not cached_audit_matches(baseline_payload, baseline_contribution, baseline_treasury):
+            raise ValueError("Pending contribution history does not match the baseline CSV checksums")
+        previous_capture = dt.datetime.fromisoformat(baseline_audit["timeAlignment"]["treasuryCapturedAt"])
+        carried = [row for row in payload_rows(baseline_payload) if row["timestamp"] > previous_capture]
+        if (len(carried) != baseline_audit["pendingRecordCount"]
+                or sum(int(row["amount"]) for row in carried) != baseline_audit["pendingSignedAmount"]
+                or any(row["timestamp"] > cutoff for row in carried)):
+            raise ValueError("Pending contribution history is inconsistent")
+        if captured_at is not None and captured_at <= previous_capture:
+            raise ValueError("Treasury capture time did not advance")
+    if captured_at is not None:
+        if captured_at <= cutoff and not carried:
+            raise ValueError("Treasury capture predates the closed contribution baseline")
+        boundary = captured_at.replace(second=0, microsecond=0)
+        if pending and any(row["timestamp"].replace(second=0, microsecond=0) == boundary
+                           for row in [*raw_current, *carried]):
+            raise ValueError("Contribution timestamps in the treasury capture minute are ambiguous")
+        if any(row["timestamp"] > captured_at for row in carried):
+            raise ValueError("New treasury capture still predates pending baseline contributions")
+
+    def in_current_interval(row: dict[str, object]) -> bool:
+        return row["timestamp"] > cutoff and (captured_at is None or row["timestamp"] <= captured_at)
 
     baseline_goods, baseline_snapshots = read_treasury_export(baseline_treasury)
     current_goods, current_snapshots = read_treasury_export(current_treasury)
     baseline_inventory = baseline_snapshots[-1][1]
     current_inventory = current_snapshots[-1][1]
+    if any(str(row["good"]) not in current_goods for row in pending):
+        raise ValueError("Pending contribution goods are absent from the treasury schema")
     if not set(baseline_goods).issubset(current_goods):
         removed = sorted(set(baseline_goods) - set(current_goods))
         raise ValueError(
@@ -356,8 +401,10 @@ def audit_inventory_delta(
         )
 
     contribution_delta: Counter[str] = Counter()
+    for row in carried:
+        contribution_delta[str(row["good"])] += int(row["amount"])
     for row in current_rows:
-        if row["timestamp"] > cutoff:
+        if in_current_interval(row):
             contribution_delta[str(row["good"])] += int(row["amount"])
 
     mapping = age_mapping(current_goods)
@@ -397,7 +444,7 @@ def audit_inventory_delta(
         mixed_rows = [
             raw_rows[index]
             for index in sorted(malformed_production_indexes(raw_rows))
-            if raw_rows[index]["timestamp"] > cutoff
+            if in_current_interval(raw_rows[index])
         ]
         if mixed_rows:
             candidate_delta = contribution_delta.copy()
@@ -416,7 +463,11 @@ def audit_inventory_delta(
             "All-goods inventory audit found contribution goods absent from treasury: "
             + ", ".join(unknown_logged_goods)
         )
-    duplicate_indexes = inventory_backed_duplicate_indexes(current_rows, cutoff, mismatches)
+    eligible = [(index, row) for index, row in enumerate(current_rows)
+                if captured_at is None or row["timestamp"] <= captured_at]
+    duplicate_indexes = [eligible[index][0] for index in inventory_backed_duplicate_indexes(
+        [row for _, row in eligible], cutoff, mismatches
+    )]
     if duplicate_indexes:
         for index in duplicate_indexes:
             row = current_rows[index]
@@ -434,6 +485,12 @@ def audit_inventory_delta(
 
     return {
         "status": "passed",
+        "auditVersion": 2,
+        "timeAlignment": capture_context,
+        "pendingRecordCount": len(pending),
+        "pendingSignedAmount": sum(int(row["amount"]) for row in pending),
+        "carriedPendingRecordCount": len(carried),
+        "carriedPendingSignedAmount": sum(int(row["amount"]) for row in carried),
         "cutoffTimestamp": cutoff.isoformat(timespec="seconds"),
         "goodsChecked": len(current_goods),
         "agesChecked": len(per_age),
@@ -681,6 +738,7 @@ def append_audited_rows(
     *,
     keep_mixed_production: bool = False,
     duplicate_indexes: Sequence[int] = (),
+    pending_after: dt.datetime | None = None,
 ) -> list[dict[str, object]]:
     """Extend a previously audited canonical payload without reopening history."""
     rows = payload_rows(existing_payload)
@@ -692,7 +750,7 @@ def append_audited_rows(
         )
     current_rows, _ = normalized_export(
         current_contribution,
-        keep_mixed_production_after=cutoff if keep_mixed_production else None,
+        keep_mixed_production_after=cutoff if keep_mixed_production else pending_after,
     )
     current_rows = without_audited_duplicates(current_rows, duplicate_indexes)
     latest_names = {
@@ -728,6 +786,9 @@ def main() -> None:
             current_treasury,
         ) = audit_files
         explicit_baseline = args.audit_baseline_contribution is not None
+        capture_context = load_capture_context(
+            args.input_dir.resolve().parent.parent, current_contribution, current_treasury
+        )
         if (
             not explicit_baseline
             and cached_audit_matches(
@@ -735,6 +796,7 @@ def main() -> None:
                 current_contribution,
                 current_treasury,
             )
+            and existing_payload["meta"]["inventoryAudit"].get("timeAlignment") == capture_context
         ):
             rows = payload_rows(existing_payload)
             meta = existing_payload["meta"]
@@ -750,6 +812,8 @@ def main() -> None:
                 current_contribution,
                 baseline_treasury,
                 current_treasury,
+                capture_context=capture_context,
+                baseline_payload=existing_payload,
             )
             if (
                 not explicit_baseline
@@ -770,6 +834,8 @@ def main() -> None:
                         inventory_audit["retainedMixedProductionRows"]
                     ),
                     duplicate_indexes=inventory_audit["duplicateProductionRowIndexes"],
+                    pending_after=(dt.datetime.fromisoformat(capture_context["treasuryCapturedAt"])
+                                   if inventory_audit["pendingRecordCount"] else None),
                 )
                 old_meta = existing_payload["meta"]
                 raw_current_count = len(read_export(current_contribution))
@@ -790,7 +856,8 @@ def main() -> None:
                             str(inventory_audit["cutoffTimestamp"])
                         )
                         if inventory_audit["retainedMixedProductionRows"]
-                        else None
+                        else (dt.datetime.fromisoformat(capture_context["treasuryCapturedAt"])
+                              if inventory_audit["pendingRecordCount"] else None)
                     ),
                     drop_latest_duplicate_indexes=inventory_audit["duplicateProductionRowIndexes"],
                 )
@@ -828,6 +895,14 @@ def main() -> None:
                 f"{inventory_audit['removedDuplicateProductionRows']} repeated production rows "
                 "excluded from the generated data; source CSV unchanged."
             )
+        if inventory_audit.get("pendingRecordCount"):
+            print(
+                f"Capture-time reconciliation passed; {inventory_audit['pendingRecordCount']} "
+                f"later records ({inventory_audit['pendingSignedAmount']:+,} goods) retained "
+                "for the next treasury audit. Source CSVs unchanged."
+            )
+        if inventory_audit.get("carriedPendingRecordCount"):
+            print(f"Reconciled {inventory_audit['carriedPendingRecordCount']} pending records from the prior capture.")
 
 
 if __name__ == "__main__":

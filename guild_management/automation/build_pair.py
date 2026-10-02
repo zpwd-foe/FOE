@@ -25,10 +25,12 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from automation.run_daily_refresh import (
-    AutomationError, ensure_privacy, ensure_treasury_history_preserved,
+    ensure_privacy, ensure_treasury_history_preserved,
     exclusive_lock, treasury_snapshot_dates, validate_compatibility_page,
     validate_generated_metadata,
 )
+from automation.errors import AutomationError
+from capture_evidence import evidence_inputs
 
 OUTPUTS = ("dashboard", "site/data/treasury-data.js", "site/data/contribution-data.js")
 
@@ -82,6 +84,7 @@ def load_state(project: Path) -> dict:
 
 def input_manifest(project: Path) -> dict[str, str | None]:
     paths = [*project.glob("input/*.csv"), *project.glob("input/guild-goods-contribution/*.csv")]
+    paths += evidence_inputs(project)
     return {path.relative_to(project).as_posix(): digest(path) for path in sorted(paths)}
 
 

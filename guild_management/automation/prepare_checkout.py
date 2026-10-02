@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from automation.build_pair import save_state, safe_error
+from capture_evidence import evidence_inputs
 from automation.run_daily_refresh import (
     AutomationError, ensure_clean_start, ensure_remote_is_current, git_output, run,
 )
@@ -62,7 +63,8 @@ def prepare_checkout(source: Path, destination: Path) -> Path:
     # from an uncommitted development worktree or cookies/browser profile files.
     files = [*source.glob("input/*.csv"), *source.glob("input/guild-goods-contribution/*.csv")]
     files += [source / name for name in (".env.foe", ".foe-forge-hammer-state.json", ".foe-daily-refresh.json") if (source / name).is_file()]
-    for path in files:
+    files += evidence_inputs(source)
+    for path in sorted(set(files)):
         if path.is_symlink():
             raise AutomationError("Private input symlinks require manual migration.")
         target = project / path.relative_to(source)

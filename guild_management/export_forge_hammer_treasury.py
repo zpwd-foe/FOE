@@ -941,7 +941,7 @@ def import_page_evidence(config: BrowserConfig, tag: str) -> dict[str, object]:
         if payload.get("version") != 1 or not isinstance(payload.get("pages"), list):
             raise ValueError("Unsupported evidence schema")
         # Explicit allowlist: never persist URLs, cookies, headers, or login data.
-        evidence = {key: payload.get(key) for key in ("version", "status", "capturedAt", "timestampPolicy", "identityPolicy", "treasuryCapturedAt")}
+        evidence = {key: payload.get(key) for key in ("version", "status", "capturedAt", "timestampPolicy", "identityPolicy", "treasuryCapturedAt", "treasuryTimezoneOffsetMinutes")}
         evidence["pages"] = [
             {**{key: page.get(key) for key in ("requestId", "offset", "limit", "receivedAt", "totalCount")},
              "rows": [{key: row.get(key) for key in ("player", "resource", "amount", "action", "timestamp")} for row in page.get("rows", [])]}
@@ -1166,6 +1166,10 @@ def main() -> int:
                     expected_date=sync_date,
                     expected_header=reference_header,
                 )
+                # Preserve the binding even if contribution collection fails.
+                state["treasury"] = {"output": display_path(treasury_destination),
+                                     "sha256": treasury_summary.sha256}
+                _write_state(config.state_file, state)
 
             if export_contributions:
                 contribution_downloaded = wait_for_download(
@@ -1195,6 +1199,14 @@ def main() -> int:
             if treasury_summary is None or contribution_summary is None:
                 raise BrowserExportError("A requested Forge Hammer export did not complete.")
 
+            # The local paired builder needs evidence before generation, including
+            # when today's treasury is reused by a contribution-only retry.
+            state["treasury"] = {"output": display_path(treasury_destination),
+                                 "sha256": treasury_summary.sha256}
+            state["contributions"] = {"output": display_path(contribution_destination),
+                                      "sha256": contribution_summary.sha256}
+            state["page_evidence"] = import_page_evidence(config, state["nonce_fingerprint"])
+            _write_state(config.state_file, state)
             if args.refresh:
                 rebuild_dashboard_pair(treasury_destination, config.contribution_input_dir)
         except BaseException as error:

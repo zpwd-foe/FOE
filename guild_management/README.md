@@ -158,9 +158,30 @@ it. Ambiguous or unexplained differences still stop the update.
 The audit records the removed count and zero-based normalized-row indexes in
 `inventoryAudit`, along with checksums of the original exports. Source CSVs are
 never rewritten. The corrected canonical history is used by later refreshes;
-rebuilding the same files reuses its matching audit. If an export succeeds but
-generation fails, fix the reported cause and resume from the saved CSVs as
-described below. Do not delete the CSVs or bypass the audit to force a retry.
+rebuilding the same files reuses its matching audit.
+
+When the contribution capture extends past the treasury response, the paired
+builder automatically reconciles the signed records through the observed treasury
+capture time. It checks the saved CSV and evidence checksums and reads the
+browser timezone from the evidence, including evidence inherited by a
+contribution-only retry. It never uses the treasury CSV's midnight date label as
+the actual capture time. New exports record the treasury checksum immediately,
+even if contribution collection later fails.
+
+Later contribution records remain in the canonical history and dashboard totals.
+The audit records their signed total and count as pending; the next treasury
+audit includes them exactly once along with new records. Positive contributions
+and negative usage are both preserved. This local recovery makes no game
+requests and does not edit either CSV or synthesize treasury balances. All goods
+must still balance exactly. Missing or changed evidence, transactions in an
+ambiguous capture minute, and unexplained differences stop publication.
+
+The private staging input manifest includes the exporter state and referenced
+page evidence, so changed evidence invalidates a cached build. Keep the last-good
+canonical contribution payload and private capture evidence for pending records.
+If a saved pair failed with a capture-time mismatch, resume it using the command
+below; supported cases recover automatically. Other failures still require
+diagnosis. Do not delete the CSVs or bypass the audit to force a retry.
 
 Use `--live-debug` for an explicitly authorized diagnostic attempt. It records
 the one-shot navigation, game-assigned request IDs, matching responses, Forge

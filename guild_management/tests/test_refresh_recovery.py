@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import runpy
 import subprocess
 import tempfile
 import unittest
@@ -48,6 +49,11 @@ class EvidenceTests(unittest.TestCase):
 
 
 class ResumeTests(unittest.TestCase):
+    def test_cli_and_imported_builder_share_the_caught_error_type(self):
+        namespace = runpy.run_path(str(Path(runner.__file__)), run_name="runner_cli_probe")
+        from automation.build_pair import AutomationError as BuilderError
+        self.assertIs(namespace["AutomationError"], BuilderError)
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

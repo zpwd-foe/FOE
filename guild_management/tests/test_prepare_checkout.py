@@ -60,6 +60,19 @@ class CheckoutTests(unittest.TestCase):
         with self.assertRaisesRegex(AutomationError, "must not exist"):
             prepare_checkout(self.project, self.root)
 
+    def test_migrates_only_referenced_private_capture_evidence(self):
+        evidence = self.project / ".foe-refresh/evidence/foe-contribution-pages-0123456789abcdef.json"
+        evidence.parent.mkdir(parents=True)
+        evidence.write_text('{"treasuryCapturedAt":"2026-09-19T20:00:00Z"}')
+        (evidence.parent / "unreferenced.json").write_text("private unrelated data")
+        state = {"page_evidence": {"file": evidence.name}}
+        (self.project / ".foe-forge-hammer-state.json").write_text(json.dumps(state))
+        project = prepare_checkout(self.project, self.root / "automation")
+        copied = project / evidence.relative_to(self.project)
+        self.assertEqual(copied.read_bytes(), evidence.read_bytes())
+        self.assertEqual(copied.stat().st_mode & 0o777, 0o600)
+        self.assertFalse((copied.parent / "unreferenced.json").exists())
+
     def test_development_edits_and_index_are_preserved_and_not_deployed(self):
         code = self.project / "automation/build_pair.py"
         code.write_text("# staged development work\n")

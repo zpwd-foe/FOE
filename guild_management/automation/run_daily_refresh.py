@@ -17,6 +17,10 @@ from typing import Iterator, Sequence
 
 
 DEFAULT_PROJECT_DIR = Path(__file__).resolve().parents[1]
+if str(DEFAULT_PROJECT_DIR) not in sys.path:
+    sys.path.insert(0, str(DEFAULT_PROJECT_DIR))
+from automation.errors import AutomationError
+
 DAILY_EXPORTER_ARGUMENTS = (
     "export_forge_hammer_treasury.py",
     "--close-running-profile",
@@ -28,10 +32,6 @@ ALLOWED_EXACT_PATHS = {
 }
 ALLOWED_PREFIXES = ("dashboard/",)
 TICKET_RE = re.compile(r"^[A-Z][A-Z0-9]*-[1-9][0-9]*$")
-
-
-class AutomationError(RuntimeError):
-    """A safe failure that must not trigger another game attempt."""
 
 
 def parse_args() -> argparse.Namespace:
