@@ -26,7 +26,7 @@ def fetch(
     url: str,
     timeout: float = 60,
     max_bytes: int | None = None,
-    allowed_host: str | None = None,
+    allowed_host: str | tuple[str, ...] | None = None,
 ) -> Response:
     request = urllib.request.Request(
         url,
@@ -105,17 +105,21 @@ def fetch_text_until(
 
 def validate_cdn_url(url: str) -> None:
     parsed = urlparse(url)
-    if parsed.scheme != "https" or parsed.hostname != ALLOWED_DOWNLOAD_HOST:
+    if (parsed.scheme != "https" or parsed.hostname != ALLOWED_DOWNLOAD_HOST
+            or parsed.username or parsed.password or parsed.port not in (None, 443)):
         raise ValueError(f"refusing non-{ALLOWED_DOWNLOAD_HOST} URL: {url}")
 
 
 class _SameHostRedirectHandler(urllib.request.HTTPRedirectHandler):
-    def __init__(self, allowed_host: str) -> None:
+    def __init__(self, allowed_host: str | tuple[str, ...]) -> None:
         super().__init__()
         self.allowed_host = allowed_host
+        self.allowed_hosts = (allowed_host,) if isinstance(allowed_host, str) else allowed_host
 
     def redirect_request(self, request, file_pointer, code, message, headers, new_url):
-        if urlparse(new_url).hostname != self.allowed_host:
+        parsed = urlparse(new_url)
+        if (parsed.scheme != "https" or parsed.hostname not in self.allowed_hosts
+                or parsed.username or parsed.password or parsed.port not in (None, 443)):
             raise RuntimeError(f"refusing redirect away from {self.allowed_host}: {new_url}")
         return super().redirect_request(request, file_pointer, code, message, headers, new_url)
 

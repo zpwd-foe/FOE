@@ -67,7 +67,10 @@ def write_html(
         _building_card(building, "updated") for building in report.updated_buildings
     )
     active_strings = (string_results or {}).get("active_strings", [])
-    if string_results:
+    if metadata.get("source") == "forge_hx":
+        stats = [("Asset references checked", metadata.get("asset_count", 0)),
+                 ("GB bonus descriptions in the client", len(active_strings))]
+    elif string_results:
         publication_dates = len({record.get("last_added_date") for record in active_strings})
         stats = [
             ("Dates with GB bonus updates", publication_dates),
@@ -127,6 +130,15 @@ def write_html(
     else:
         page_eyebrow = "PUBLIC BETA CDN CHANGESET"
         page_context = "Explore the newest published beta report, from artwork to game data."
+
+    if metadata.get("source") == "forge_hx":
+        page_context = (
+            "Great Building icons and bonus text read directly from the beta game client. "
+            "Changes are found by comparing our saved copies."
+        )
+    beta_note = "Beta previews, not confirmed releases. Details may change."
+    if metadata.get("source") == "forge_hx":
+        beta_note += " These scans cover artwork and text; building stats and level costs are not checked."
 
     latest_section = "" if history_results else _latest_report_section(
         report,
@@ -237,6 +249,9 @@ select {{ min-width:160px; cursor:pointer; padding-right:28px }}
 .bonus-card:nth-child(5n+5) {{ --tile-accent:#7DD3FC; --tile-deep:#1B4056 }}
 .bonus-card:hover {{ border-color:var(--tile-accent); transform:translateY(-3px) }}
 .bonus-card:focus-within {{ border-color:var(--accent-primary-hover) }}
+.bonus-card.baseline {{ --tile-accent:#808080; --tile-deep:#242424; --bg-card:#242424; --bg-surface:#171717; --border-default:#3B3B3B; --text-secondary:#A0A0A0; --accent-highlight:#BDBDBD; --accent-primary-hover:#BDBDBD; color:#9C9C9C }}
+.bonus-card.baseline .bonus-art {{ background:radial-gradient(ellipse at 50% 70%,#80808033,transparent 72%),linear-gradient(150deg,var(--tile-deep),#181818) }}
+.bonus-card.baseline .asset-details {{ border-top-color:#343434 }}
 .bonus-art {{ position:relative; display:grid; place-items:center; height:128px; background:radial-gradient(ellipse at 50% 70%,color-mix(in srgb,var(--tile-accent) 20%,transparent),transparent 72%),linear-gradient(150deg,var(--tile-deep),#101C30) }}
 .bonus-art::before {{ content:""; position:absolute; inset:0 0 auto; height:2px; background:var(--tile-accent); opacity:.8 }}
 .bonus-art a {{ display:grid; place-items:center; width:100%; height:100%; border-radius:9px 9px 0 0; outline-offset:-4px }}
@@ -277,6 +292,10 @@ select {{ min-width:160px; cursor:pointer; padding-right:28px }}
 .string-text {{ margin:0; color:#D8E1EE; font-size:15px; line-height:1.8; overflow-wrap:anywhere }}
 .string-text strong {{ color:var(--text-primary); font-weight:550 }}
 .string-text code {{ padding:1px 4px; border-radius:3px; color:var(--accent-highlight); background:#3B82F60F; font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; white-space:nowrap }}
+.string-date-group.baseline {{ filter:grayscale(1) }}
+.string-date-group.baseline .string-rows {{ border-left-color:#606A77; background:var(--bg-surface) }}
+.string-row.baseline .string-text,.string-row.baseline .string-text strong,.string-row.baseline .string-text code,.string-row.baseline .string-prefix {{ color:#9CA3AF }}
+.string-row.baseline .string-text code {{ background:#9CA3AF10 }}
 .audit {{ margin:22px 0 0 139px; padding:12px 0; border-top:1px solid var(--border-default); font-size:13px }}
 .audit summary {{ color:var(--text-secondary) }}
 .audit .strings {{ padding-left:20px; color:var(--text-secondary); line-height:1.8; overflow-wrap:anywhere }}
@@ -424,7 +443,7 @@ pre {{ max-height:260px; overflow:auto; padding:12px; background:var(--bg-app); 
 <div class="hero-clouds" aria-hidden="true"><span class="cloud-layer cloud-layer-high"></span><span class="cloud-layer cloud-layer-mid"></span><span class="cloud-layer cloud-layer-low"></span></div>
 <div class="masthead"><div class="brand"><span class="brand-mark">{_ui_icon("building")}</span>{page_eyebrow}</div><div class="snapshot-stamp" title="Last successful check for new beta data">Data through {checked_stamp}</div></div>
 <div class="hero-body"><div><h1>{html.escape(page_heading)}</h1>
-<p class="intro">{page_context}</p><p class="beta-note">Beta previews, not confirmed releases. Details may change.</p></div>
+<p class="intro">{page_context}</p><p class="beta-note">{beta_note}</p></div>
 <div class="stats stats-{len(stats)}">{stat_html}</div></div>
 </header>
 <nav class="nav" aria-label="Dashboard sections">{bonus_nav}{string_nav}{history_nav}</nav>
@@ -626,12 +645,18 @@ def _latest_report_section(
 
 
 def _great_building_bonus_section(results: dict) -> str:
-    images = _current_great_building_bonus_images(results.get("reports", []))
+    images = _current_great_building_bonus_images(results.get("current_bonus_reports", results.get("reports", [])))
     images.sort(key=lambda record: str(record.get("date", "")), reverse=True)
     cards = "".join(_great_building_bonus_card(image) for image in images)
+    explanation = (
+        "Bonus artwork currently listed in the beta client, with one highest-resolution image per bonus. "
+        "Undated icons were present at our first scan; their release date is unknown."
+        if results.get("source") == "forge_hx" else
+        "Recently added or updated bonus artwork, with one highest-resolution image per bonus. Icons later marked as removed are excluded."
+    )
     return f'''<section class="bonus-gallery-section" id="great-building-bonuses">
 <div class="bonus-gallery-head"><div><div class="eyebrow"><span class="section-number">01</span> A FIRST LOOK</div><h2>Great Building bonus icons</h2></div>
-<p class="meta">Recently added or updated bonus artwork, with one highest-resolution image per bonus. Icons later marked as removed are excluded.</p></div>
+<p class="meta">{explanation}</p></div>
 <div class="bonus-gallery-tools"><div class="search-field">{_ui_icon("search")}<input id="bonus-search" type="search" placeholder="Search bonuses…" aria-label="Search Great Building bonus icons by name or date"></div><select id="bonus-sort" aria-label="Sort bonus icons"><option value="newest">Newest first</option><option value="name">Name: A–Z</option></select></div>
 <div class="result-line"><p class="bonus-result-status" id="bonus-result-status" aria-live="polite">{len(images)} bonus icons</p><span class="gallery-hint">{_ui_icon("external")}Select an icon for the full image</span></div>
 <div class="bonus-grid" id="bonus-grid">{cards or '<p class="meta">No bonus icons in this reporting window.</p>'}</div>
@@ -659,6 +684,7 @@ def _current_great_building_bonus_images(reports: list[dict]) -> list[dict]:
             current_by_path[path_key] = {
                 **record,
                 "date": report.get("date", ""),
+                "source": report.get("source", "legacy"),
             }
 
     by_family: dict[str, list[dict]] = {}
@@ -693,17 +719,23 @@ def _great_building_bonus_card(record: dict) -> str:
     url = record.get("url", "")
     name = url.rsplit("/", 1)[-1]
     title = _bonus_display_name(record.get("family", ""))
-    changed_date = str(record.get("date", ""))
+    changed_date = str(record.get("date") or "")
     variant_count = int(record.get("variant_count", 1))
     search = html.escape(f"{title} {name} {changed_date}".lower())
     variant_text = (
-        f'Highest resolution among {variant_count} versions in these reports.'
+        f'Highest resolution among {variant_count} recorded versions.'
         if variant_count > 1
-        else "Only one version recorded in these reports."
+        else "Only one version recorded."
     )
-    return f'''<article class="bonus-card" data-search="{search}" data-name="{html.escape(title.lower())}" data-date="{html.escape(changed_date)}">
+    date_text = (
+        f'{"Observed change" if record.get("source") == "forge_hx" else "Last changed"} '
+        f'<time datetime="{html.escape(changed_date)}">{html.escape(_date_text(changed_date))}</time>'
+        if changed_date else "Present at first scan"
+    )
+    baseline_class = " baseline" if not changed_date else ""
+    return f'''<article class="bonus-card{baseline_class}" data-search="{search}" data-name="{html.escape(title.lower())}" data-date="{html.escape(changed_date)}">
 <div class="bonus-art"><a href="{html.escape(url)}" target="_blank" rel="noopener" aria-label="Open original {html.escape(title)} icon"><img class="bonus-image" decoding="async" src="{html.escape(url)}" alt="{html.escape(title)}">{_ui_icon("external")}</a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
-<div class="bonus-card-body"><h3>{html.escape(title)}</h3><span class="bonus-date">Last changed <time datetime="{html.escape(changed_date)}">{html.escape(_date_text(changed_date))}</time></span><details class="asset-details"><summary>Image details</summary><code class="bonus-filename">{html.escape(name)}</code><p class="variant-note">{html.escape(variant_text)}</p></details></div></article>'''
+<div class="bonus-card-body"><h3>{html.escape(title)}</h3><span class="bonus-date">{date_text}</span><details class="asset-details"><summary>Image details</summary><code class="bonus-filename">{html.escape(name)}</code><p class="variant-note">{html.escape(variant_text)}</p></details></div></article>'''
 
 
 def _history_section(results: dict) -> str:
@@ -748,9 +780,19 @@ def _history_parts(results: dict) -> tuple[str, str]:
     except ValueError:
         inclusive_days = None
     snapshot_title = f"{inclusive_days}-day beta archive" if inclusive_days else "Beta change archive"
+    report_label = "saved change records" if results.get("source") == "forge_hx" else "published reports"
+    coverage = ""
+    if results.get("source") == "forge_hx":
+        baseline_date = html.escape(_date_text(results.get("baseline_at", "")[:10]))
+        coverage = (
+            f'<p class="meta">Direct comparisons began {baseline_date}. The first scan is a baseline, not a new release. '
+            'Earlier saved reports remain in this archive. Dates on direct changes show when we noticed them; '
+            'changes between scans may be missed. '
+            f'{html.escape(results.get("coverage", ""))}</p>'
+        )
     shell = f'''<details class="archive-shell" id="snapshot"><summary class="archive-summary"><span class="archive-mark">{_ui_icon("history")}</span><span><span class="eyebrow"><span class="section-number">03</span> THE CHANGE ARCHIVE</span><strong>{snapshot_title}</strong>
-<small>{results.get('reports_count', 0)} published reports · {html.escape(_date_text(results.get('since', '')))} — {html.escape(_date_text(until))}</small></span></summary>'''
-    content = f'''<div class="archive-content"><div class="archive-tools"><p class="meta">Browse all recorded beta changes, not just Great Building bonuses. Filter by category or search by name and date. Smaller image variants are grouped; removed files have no links.</p><div class="status-legend" aria-label="Change status legend"><span class="change-added">Added</span><span class="change-updated">Updated</span><span class="change-removed">Removed</span></div></div>
+<small>{results.get('reports_count', 0)} {report_label} · {html.escape(_date_text(results.get('since', '')))} — {html.escape(_date_text(until))}</small></span></summary>'''
+    content = f'''<div class="archive-content">{coverage}<div class="archive-tools"><p class="meta">Browse all recorded beta changes, not just Great Building bonuses. Filter by category or search by name and date. Smaller image variants are grouped; removed files have no links.</p><div class="status-legend" aria-label="Change status legend"><span class="change-added">Added</span><span class="change-updated">Updated</span><span class="change-removed">Removed</span></div></div>
 <div class="history-controls"><div class="toolbar"><div class="search-field">{_ui_icon("search")}<input id="history-search" type="search" placeholder="Search names, dates, or changes…" aria-label="Search the beta change archive"></div></div>
 <div class="type-tabs" role="group" aria-label="Filter change history by type"><button class="type-filter" type="button" data-history-filter="all" aria-pressed="true">All types<small>{all_count:,}</small></button>{type_filters}</div></div>
 <p class="history-result-status" id="history-result-status" aria-live="polite"></p>
@@ -984,17 +1026,19 @@ def _active_string_section(results: dict) -> str:
     records = results.get("active_strings", [])
     records_by_date: dict[str, list[dict]] = {}
     for record in records:
-        records_by_date.setdefault(record.get("last_added_date", "unknown"), []).append(record)
+        records_by_date.setdefault(record.get("last_added_date") or "", []).append(record)
     groups = []
     for index, (added_date, date_records) in enumerate(sorted(records_by_date.items(), reverse=True)):
         try:
             parsed_date = date.fromisoformat(added_date)
             date_label = f"{parsed_date:%b} {parsed_date.day}<small>{parsed_date.year}</small>"
         except ValueError:
-            date_label = html.escape(added_date)
-        latest_label = '<span class="latest-label">Latest update</span>' if index == 0 else ""
+            date_label = html.escape(added_date) if added_date else "Present at first scan"
+        label = "Latest recorded change" if results.get("source") == "forge_hx" else "Latest update"
+        latest_label = f'<span class="latest-label">{label}</span>' if index == 0 and added_date else ""
+        baseline_class = " baseline" if not added_date else ""
         groups.append(
-            f'''<section class="string-date-group"><h3><time datetime="{html.escape(added_date)}" aria-label="{html.escape(added_date)}">{date_label}</time>{latest_label}</h3>
+            f'''<section class="string-date-group{baseline_class}"><h3><time datetime="{html.escape(added_date)}" aria-label="{html.escape(added_date)}">{date_label}</time>{latest_label}</h3>
 <div class="string-rows">{''.join(_active_string_row(record) for record in date_records)}</div></section>'''
         )
     removals = results.get("removal_events", [])
@@ -1003,14 +1047,20 @@ def _active_string_section(results: dict) -> str:
         f'{html.escape(event.get("text", ""))}</li>'
         for event in removals
     )
+    explanation = (
+        "Exact text currently embedded in the beta client. Dates show recorded changes. "
+        "Text present at our first scan has no known release date. %s and similar tokens are filled in by the game."
+        if results.get("source") == "forge_hx" else
+        "Exact beta wording, grouped by the date it was last added. Later removals are excluded. Tokens such as %s are placeholders filled in by the game."
+    )
     return f'''<section id="active-strings">
 <div class="section-head"><div><div class="eyebrow"><span class="section-number">02</span> THE DETAILS SO FAR</div><h2>Latest Great Building bonus descriptions</h2></div>
-<p class="meta">Exact beta wording, grouped by the date it was last added. Later removals are excluded. Tokens such as %s are placeholders filled in by the game.</p></div>
+<p class="meta">{explanation}</p></div>
 <div class="toolbar"><div class="search-field">{_ui_icon("search")}<input id="string-search" type="search" placeholder="Search descriptions or dates…" aria-label="Search Great Building bonus descriptions"></div></div>
 <p class="string-result-status" id="string-result-status" aria-live="polite"></p>
 <div class="string-groups" id="active-string-list">{''.join(groups) or '<p>No Great Building bonus descriptions remain in this reporting window.</p>'}</div>
 <div class="search-empty" id="string-empty" hidden><strong>No matching descriptions</strong><p>Try a bonus name, a phrase, or a date.</p><button type="button" data-clear-search="string-search">Clear search</button></div>
-<details class="audit"><summary>Past removals ({len(removals)})</summary><p>Removal events recorded in beta reports. A description may have been added again later.</p><ul class="strings">{removal_items or '<li>No description removals recorded.</li>'}</ul></details>
+<details class="audit"><summary>Past removals ({len(removals)})</summary><p>Saved removal events. A description may have been added again later.</p><ul class="strings">{removal_items or '<li>No description removals recorded.</li>'}</ul></details>
 </section>'''
 
 
@@ -1025,7 +1075,8 @@ def _active_string_row(record: dict) -> str:
     else:
         formatted = html.escape(text)
     formatted = re.sub(r"%(?:\.\d+)?[sdf]", lambda match: f"<code>{match[0]}</code>", formatted)
-    return f'''<article class="string-row" data-search="{html.escape(search)}">
+    baseline_class = " baseline" if not record.get("last_added_date") else ""
+    return f'''<article class="string-row{baseline_class}" data-search="{html.escape(search)}">
 <span class="string-prefix">{prefix}</span><p class="string-text">{formatted}</p></article>'''
 
 
