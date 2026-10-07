@@ -119,6 +119,25 @@ class DirectParserTests(unittest.TestCase):
 
 
 class RefreshTests(unittest.TestCase):
+    def test_refresh_saves_and_renders_code_linked_non_gbp_text(self):
+        from test_bonuses import bonus_class
+        linked = bonus_class('xyz', 'TestBonus', 'icon_great_building_bonus_test',
+                             'STEL|A linked name', 'STEL|A linked description %s%.')
+        body = client().replace(END.encode(), linked.encode() + END.encode())
+        with TemporaryDirectory() as name:
+            folder = Path(name)
+            run(folder, body)
+            snapshot, state = saved(folder)
+            self.assertEqual(len(state['history_results']['bonus_pairings']), 1)
+            self.assertEqual(state['string_results']['active_count'], 12)
+            direct = json.loads((snapshot / 'direct.json').read_text())
+            self.assertIn('STEL|A linked name', direct['gb_strings'])
+            page = (folder / 'dashboard/index.html').read_text()
+            self.assertIn('<h3>A linked name</h3>', page)
+            self.assertIn('A linked description …%.', page)
+            render_dashboard(snapshot)
+            self.assertEqual((snapshot / 'index.html').read_text(), page)
+
     def test_first_baseline_publishes_current_inventory_without_fake_changes(self):
         with TemporaryDirectory() as name:
             folder = Path(name)

@@ -1,3 +1,4 @@
+import json
 import unittest
 import re
 from pathlib import Path
@@ -332,6 +333,7 @@ class GreatBuildingBonusGalleryTests(unittest.TestCase):
     def test_gallery_keeps_highest_resolution_current_variant(self):
         large = "https://cdn.example/assets/city/gui/great_building_bonus_icons/great_building_bonus_allies_quest_boost-abcdef012.png"
         small = "https://cdn.example/assets/shared/icons/boost_icon_bonus_allies_quest_boost-abcdef012.png"
+        medium = "https://cdn.example/assets/shared/gui/boost/icon_great_building_bonus_allies_quest_boost-abcdef012.png"
         reports = [
             {
                 "date": "2026-08-27",
@@ -339,13 +341,59 @@ class GreatBuildingBonusGalleryTests(unittest.TestCase):
                 "files": [
                     {"kind": "image", "change": "updated", "url": large},
                     {"kind": "image", "change": "updated", "url": small},
+                    {"kind": "image", "change": "updated", "url": medium},
                 ],
             }
         ]
         images = _current_great_building_bonus_images(reports)
         self.assertEqual(len(images), 1)
         self.assertEqual(images[0]["url"], large)
-        self.assertEqual(images[0]["variant_count"], 2)
+        self.assertEqual(images[0]["variant_count"], 3)
+
+    def test_gallery_keeps_all_version_counts_after_path_deduplication(self):
+        paths = ('city/gui/great_building_bonus_icons/great_building_bonus_',
+                 'shared/icons/icon_great_building_bonus_',
+                 'shared/gui/boost/boost_icon_bonus_')
+        current = [{"kind": "image", "change": "current",
+                    "url": f"https://cdn.example/assets/{path}{name}-abcdef012.png"}
+                   for name, count in [('one', 1), ('two', 2), ('three', 3)]
+                   for path in paths[:count]]
+        older = [{**record, "url": record["url"].replace('abcdef012', 'abcdef013')} for record in current]
+        reports = [{"date": "2026-10-06", "files": current}, {"date": "2026-10-05", "files": older}]
+        before = json.dumps(reports, sort_keys=True)
+        images = _current_great_building_bonus_images(reports)
+        self.assertEqual({r['family']: r['variant_count'] for r in images}, {'bonus_one.png': 1, 'bonus_two.png': 2, 'bonus_three.png': 3})
+        page = _great_building_bonus_section({'current_bonus_reports': reports})
+        self.assertIn('<h3>Two</h3>', page)
+        self.assertIn('3 bonus icons', page)
+        self.assertEqual(json.dumps(reports, sort_keys=True), before)
+
+    def test_keen_eye_immunity_is_colored_without_changing_baseline_date(self):
+        prefix = 'https://cdn.example/assets/city/gui/great_building_bonus_icons/great_building_bonus_'
+        for assigned in (False, True):
+            with self.subTest(assigned=assigned):
+                results = {
+                    'source': 'forge_hx',
+                    'current_bonus_reports': [{'date': '', 'files': [
+                        {'kind': 'image', 'url': prefix + 'double_damage_block-abcdef012.png'},
+                        {'kind': 'image', 'url': prefix + 'critical_hit_chance-abcdef012.png'},
+                    ]}],
+                }
+                if assigned:
+                    results['building_assignments'] = {
+                        'local_date': '2026-10-06',
+                        'records': [{'building_id': 'X_Test', 'building_name': 'Test GB',
+                                     'tier': 'gold', 'icon_ids': ['bonus_double_damage_block']}],
+                    }
+                page = _great_building_bonus_section(results)
+                cards = re.findall(r'<article class="bonus-card.*?</article>', page, re.S)
+                keen_eye = next(c for c in cards if 'double_damage_block-' in c)
+                other = next(c for c in cards if 'critical_hit_chance-' in c)
+                self.assertIn('class="bonus-card"', keen_eye)
+                self.assertIn('Present at first scan', keen_eye)
+                self.assertIn('data-date=""', keen_eye)
+                self.assertIn(f'data-assigned="{str(assigned).lower()}"', keen_eye)
+                self.assertIn('class="bonus-card baseline"', other)
 
     def test_gallery_excludes_path_whose_latest_state_is_removed(self):
         image = "https://cdn.example/assets/city/gui/great_building_bonus_icons/great_building_bonus_second_strike-abcdef012.png"

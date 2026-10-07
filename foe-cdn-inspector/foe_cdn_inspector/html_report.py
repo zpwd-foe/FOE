@@ -8,6 +8,7 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
+from .bonuses import plain_text
 from .models import FileRecord, ParsedReport
 
 
@@ -240,7 +241,7 @@ select {{ min-width:160px; cursor:pointer; padding-right:28px }}
 .bonus-result-status,.history-result-status,.string-result-status {{ margin:0; color:var(--text-secondary); font-size:13px; font-variant-numeric:tabular-nums }}
 .gallery-hint {{ display:flex; align-items:center; gap:6px; color:var(--text-secondary); font-size:12px }}
 .gallery-hint .ui-icon {{ width:13px; height:13px }}
-.bonus-grid {{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px }}
+.bonus-grid {{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; align-items:start }}
 .bonus-card {{ --tile-accent:#3B82F6; --tile-deep:#142447; min-width:0; overflow:hidden; border:1px solid color-mix(in srgb,var(--tile-accent) 32%,var(--border-default)); border-radius:var(--radius-md); background:var(--bg-card); transition:border-color .2s,transform .2s }}
 .bonus-card:nth-child(5n+1) {{ --tile-accent:#2563EB; --tile-deep:#172647 }}
 .bonus-card:nth-child(5n+2) {{ --tile-accent:#3B82F6; --tile-deep:#173251 }}
@@ -262,12 +263,30 @@ select {{ min-width:160px; cursor:pointer; padding-right:28px }}
 .bonus-card-body {{ padding:15px 15px 12px; border-top:1px solid color-mix(in srgb,var(--tile-accent) 18%,transparent); background:linear-gradient(140deg,color-mix(in srgb,var(--tile-accent) 8%,var(--bg-card)),var(--bg-surface)) }}
 .bonus-card h3 {{ min-height:38px; margin:0 0 8px; font-size:14px; font-weight:600; line-height:1.45; letter-spacing:-.01em; overflow-wrap:anywhere }}
 .bonus-date {{ display:block; color:var(--text-secondary); font-size:12px; font-variant-numeric:tabular-nums }}
+.bonus-description-details > summary {{ margin-bottom:0 }}
+.bonus-description-details[open] > summary {{ margin-bottom:12px }}
+.bonus-description {{ margin:0 0 12px; color:var(--text-secondary); font-size:13px; line-height:1.65; overflow-wrap:anywhere }}
+.bonus-wording + .bonus-wording {{ margin-top:14px; padding-top:14px; border-top:1px solid var(--border-default) }}
+.bonus-wording h4 {{ margin:0 0 8px; font-size:14px; line-height:1.45; overflow-wrap:anywhere }}
+.bonus-variants {{ margin:0 0 12px; color:var(--text-secondary); font-size:12px }}
+.bonus-variants summary {{ cursor:pointer; line-height:1.5 }}
+.bonus-variants p {{ margin:10px 0 0; line-height:1.65; overflow-wrap:anywhere }}
+.bonus-unpaired {{ font-style:italic }}
+.bonus-pairing-note {{ margin:0 0 18px; font-size:13px; line-height:1.65; color:var(--text-secondary) }}
+.bonus-assignment-status {{ margin:0 0 12px; color:var(--accent-highlight); font-size:12px; line-height:1.5; font-weight:600 }}
+.bonus-buildings {{ margin:14px 0; padding-top:12px; border-top:1px solid var(--border-default) }}
+.bonus-buildings h4 {{ margin:0 0 9px; color:var(--text-secondary); font-size:12px; text-transform:uppercase; letter-spacing:.06em }}
+.bonus-buildings ul {{ list-style:none; margin:0; padding:0 }}
+.bonus-buildings li {{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:4px 8px; margin-top:8px; font-size:12px; line-height:1.5 }}
+.bonus-building-name {{ flex:1 1 120px; overflow-wrap:anywhere }}
+.bonus-tiers {{ display:flex; gap:4px; flex-wrap:wrap }}
+.bonus-tier {{ color:var(--text-secondary); border:1px solid var(--border-default); border-radius:4px; padding:1px 5px; font-size:12px }}
 .asset-details {{ margin-top:11px; padding-top:9px; border-top:1px solid #2A3A5280 }}
-.asset-details summary {{ color:var(--text-secondary); font-size:12px; list-style:none }}
-.asset-details summary::after {{ content:"+"; float:right; color:var(--text-secondary) }}
-.asset-details[open] summary::after {{ content:"−" }}
-.asset-details summary:hover {{ color:var(--accent-highlight) }}
-.asset-details summary::-webkit-details-marker {{ display:none }}
+.asset-details > summary {{ color:var(--text-secondary); font-size:12px; list-style:none }}
+.asset-details > summary::after {{ content:"+"; float:right; color:var(--text-secondary) }}
+.asset-details[open] > summary::after {{ content:"−" }}
+.asset-details > summary:hover {{ color:var(--accent-highlight) }}
+.asset-details > summary::-webkit-details-marker {{ display:none }}
 .bonus-filename {{ display:block; margin-top:9px; color:var(--text-secondary); font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; overflow-wrap:anywhere }}
 .variant-note {{ margin:7px 0 0; color:var(--text-secondary); font-size:12px; line-height:1.6 }}
 .search-empty {{ padding:32px 20px; border:1px dashed var(--border-default); border-radius:var(--radius-md); text-align:center; color:var(--text-secondary) }}
@@ -379,7 +398,7 @@ select {{ min-width:160px; cursor:pointer; padding-right:28px }}
 pre {{ max-height:260px; overflow:auto; padding:12px; background:var(--bg-app); border-radius:var(--radius-sm); white-space:pre-wrap; overflow-wrap:anywhere }}
 @media (max-width:1100px) {{
   .hero-body {{ gap:22px; max-width:610px }} .stats {{ gap:22px }}
-  .bonus-grid {{ grid-template-columns:repeat(4,minmax(0,1fr)) }}
+  .bonus-grid {{ grid-template-columns:repeat(3,minmax(0,1fr)) }}
   .section-head {{ display:block }} .section-head p {{ margin-top:12px; max-width:600px }}
 }}
 @media (max-width:800px) {{
@@ -387,7 +406,7 @@ pre {{ max-height:260px; overflow:auto; padding:12px; background:var(--bg-app); 
   .stats {{ display:flex; max-width:none; gap:28px }} .stat {{ display:flex; align-items:center; gap:11px; padding-left:0; border:0 }} .stat + .stat {{ padding-left:22px; border-left:1px solid var(--border-default) }}
   .stat strong {{ font-size:24px }} .stat span {{ max-width:110px; margin:0; font-size:12px }}
   .bonus-gallery-head {{ align-items:start; gap:24px }} .bonus-gallery-head p {{ max-width:300px; font-size:13px }}
-  .bonus-grid {{ grid-template-columns:repeat(3,minmax(0,1fr)) }}
+  .bonus-grid {{ grid-template-columns:repeat(2,minmax(0,1fr)) }}
   .string-date-group {{ grid-template-columns:90px minmax(0,1fr); gap:16px }} .audit {{ margin-left:106px }}
   .archive-tools {{ flex-direction:column; align-items:start; gap:12px }}
 }}
@@ -406,9 +425,9 @@ pre {{ max-height:260px; overflow:auto; padding:12px; background:var(--bg-app); 
   .bonus-gallery-tools {{ gap:8px }} input,select {{ min-height:46px }} input {{ font-size:16px }} select {{ font-size:14px; min-width:140px; width:140px; padding-left:10px; padding-right:22px }}
   .search-field input {{ padding-left:35px; padding-right:22px }} .search-field > .ui-icon {{ left:11px; width:15px; height:15px }}
   .result-line {{ margin-bottom:12px; gap:8px }} .bonus-result-status {{ font-size:12px }} .gallery-hint {{ font-size:12px }} .gallery-hint .ui-icon {{ display:none }}
-  .bonus-grid {{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px }}
+  .bonus-grid {{ grid-template-columns:1fr; gap:16px }}
   .bonus-art {{ height:108px }} .bonus-image {{ max-width:74px; max-height:74px }}
-  .bonus-card-body {{ padding:12px 12px 10px }} .bonus-card h3 {{ min-height:37px; font-size:13px }} .bonus-date {{ font-size:12px }} .asset-details {{ margin-top:9px; padding-top:8px }} .asset-details summary {{ font-size:12px }}
+  .bonus-card-body {{ padding:16px }} .bonus-card h3 {{ min-height:0; font-size:16px }} .bonus-description {{ font-size:14px }} .bonus-date {{ font-size:12px }} .asset-details {{ margin-top:9px; padding-top:8px }} .asset-details > summary {{ font-size:12px }}
   #active-strings {{ margin-top:40px; padding-top:27px }} .string-groups {{ gap:25px }}
   .string-date-group {{ display:block }} .string-date-group h3 {{ position:static; display:flex; align-items:baseline; gap:8px; padding:0; margin-bottom:10px; font-size:16px }}
   .string-date-group h3 time {{ display:flex; align-items:baseline; gap:8px }} .string-date-group h3 small {{ margin:0; font-size:12px }} .latest-label {{ margin:0 0 0 auto; font-size:12px }}
@@ -513,7 +532,7 @@ function filterBonuses(){{if(!bq)return;const value=bq.value.trim().toLowerCase(
 if(bq){{bq.addEventListener('input',filterBonuses);filterBonuses()}}
 const bonusSort=document.querySelector('#bonus-sort');
 if(bonusSort)bonusSort.addEventListener('change',()=>{{
-  const ordered=[...bonusCards].sort((a,b)=>(bonusSort.value==='newest'?b.dataset.date.localeCompare(a.dataset.date):0)||a.dataset.name.localeCompare(b.dataset.name));
+  const ordered=[...bonusCards].sort((a,b)=>Number(a.dataset.group)-Number(b.dataset.group)||(bonusSort.value==='newest'?b.dataset.date.localeCompare(a.dataset.date):0)||a.dataset.name.localeCompare(b.dataset.name));
   document.querySelector('#bonus-grid').append(...ordered);
 }});
 for(const button of document.querySelectorAll('[data-clear-search]'))button.addEventListener('click',()=>{{const input=document.getElementById(button.dataset.clearSearch);input.value='';input.dispatchEvent(new Event('input'));input.focus()}});
@@ -646,21 +665,51 @@ def _latest_report_section(
 
 def _great_building_bonus_section(results: dict) -> str:
     images = _current_great_building_bonus_images(results.get("current_bonus_reports", results.get("reports", [])))
+    by_family = {}
+    for pairing in results.get("bonus_pairings", []):
+        families = {_image_family_key(icon if icon.endswith('.png') else icon + '.png')
+                    for icon in pairing.get("icon_ids", [])}
+        for family in families:
+            by_family.setdefault(family, []).append(pairing)
+    assignments = results.get("building_assignments", {})
+    buildings_by_family = {}
+    for assignment in assignments.get("records", []):
+        families = {_image_family_key(icon if icon.endswith('.png') else icon + '.png')
+                    for icon in assignment["icon_ids"]}
+        for family in families:
+            buildings_by_family.setdefault(family, []).append(assignment)
+    for record in images:
+        record["pairings"] = by_family.get(record["family"], [])
+        record["buildings"] = _group_building_assignments(buildings_by_family.get(record["family"], []))
+        record["assignment_checked"] = bool(assignments)
+    images.sort(key=lambda record: _bonus_card_title(record).lower())
     images.sort(key=lambda record: str(record.get("date", "")), reverse=True)
+    images.sort(key=_bonus_card_group)
+    paired_count = sum(bool(image["pairings"]) for image in images)
+    assigned_count = sum(bool(image["buildings"]) for image in images)
     cards = "".join(_great_building_bonus_card(image) for image in images)
     explanation = (
-        "Bonus artwork currently listed in the beta client, with one highest-resolution image per bonus. "
-        "Undated icons were present at our first scan; their release date is unknown."
+        "Gray cards were present at our first scan; colored cards have a recorded change date. "
+        "Keen Eye Immunity follows the other colored cards. Gray cards with GB assignments come next; "
+        "unassigned gray cards are last."
         if results.get("source") == "forge_hx" else
         "Recently added or updated bonus artwork, with one highest-resolution image per bonus. Icons later marked as removed are excluded."
     )
+    if assignments:
+        assignment_note = (f'{len(images) - assigned_count} without a confirmed GB assignment · {assigned_count} assigned. '
+                           f'GB links use metadata from {html.escape(_date_text(assignments["local_date"]))}. ')
+        if not assignments.get("client_matches_capture", True):
+            assignment_note += 'The client has changed since that metadata was captured. '
+    else:
+        assignment_note = 'GB metadata has not been loaded for this snapshot. '
     return f'''<section class="bonus-gallery-section" id="great-building-bonuses">
 <div class="bonus-gallery-head"><div><div class="eyebrow"><span class="section-number">01</span> A FIRST LOOK</div><h2>Great Building bonus icons</h2></div>
 <p class="meta">{explanation}</p></div>
-<div class="bonus-gallery-tools"><div class="search-field">{_ui_icon("search")}<input id="bonus-search" type="search" placeholder="Search bonuses…" aria-label="Search Great Building bonus icons by name or date"></div><select id="bonus-sort" aria-label="Sort bonus icons"><option value="newest">Newest first</option><option value="name">Name: A–Z</option></select></div>
+<div class="bonus-gallery-tools"><div class="search-field">{_ui_icon("search")}<input id="bonus-search" type="search" placeholder="Search bonuses, GBs or tiers…" aria-label="Search bonus icons by bonus, Great Building, tier or date"></div><select id="bonus-sort" aria-label="Sort within card groups"><option value="newest">Newest first</option><option value="name">Name: A–Z</option></select></div>
 <div class="result-line"><p class="bonus-result-status" id="bonus-result-status" aria-live="polite">{len(images)} bonus icons</p><span class="gallery-hint">{_ui_icon("external")}Select an icon for the full image</span></div>
+<p class="bonus-pairing-note">{assignment_note}Both sort options keep colored cards first, followed by gray cards with GB assignments, then unassigned gray cards. {paired_count} of {len(images)} icons have linked text. “…” marks an amount or detail supplied by the game. Some icons share several bonuses or have different wording depending on game settings.</p>
 <div class="bonus-grid" id="bonus-grid">{cards or '<p class="meta">No bonus icons in this reporting window.</p>'}</div>
-<div class="search-empty" id="bonus-empty" hidden><strong>No matching bonus icons</strong><p>Try a bonus name or update date.</p><button type="button" data-clear-search="bonus-search">Clear search</button></div>
+<div class="search-empty" id="bonus-empty" hidden><strong>No matching bonus icons</strong><p>Try a bonus, Great Building, tier or date.</p><button type="button" data-clear-search="bonus-search">Clear search</button></div>
 </section>'''
 
 
@@ -715,13 +764,81 @@ def _bonus_display_name(family: str) -> str:
     return stem.replace("_", " ").title()
 
 
+def _bonus_card_title(record: dict) -> str:
+    names = list(dict.fromkeys(plain_text(pairing["names"][0])
+                 for pairing in record.get("pairings", []) if pairing.get("names")))
+    return " / ".join(names) or _bonus_display_name(record.get("family", ""))
+
+
+def _group_building_assignments(records: list[dict]) -> list[dict]:
+    by_id = {}
+    for record in records:
+        building = by_id.setdefault(record["building_id"], {"id": record["building_id"],
+                                   "name": record["building_name"], "tiers": set()})
+        building["tiers"].add(record["tier"])
+    tier_order = {"copper": 0, "silver": 1, "gold": 2}
+    return [{**building, "tiers": sorted(building["tiers"], key=lambda tier: tier_order[tier])}
+            for building in sorted(by_id.values(), key=lambda building: building["name"].casefold())]
+
+
+def _bonus_buildings(record: dict) -> str:
+    buildings = record.get("buildings", [])
+    if not buildings:
+        label = 'No confirmed GB assignment' if record.get('assignment_checked') else 'GB metadata not loaded'
+        return f'<p class="bonus-assignment-status">{label}</p>'
+    rows = []
+    for building in buildings:
+        tiers = ''.join(f'<span class="bonus-tier">{html.escape(tier.title())}</span>' for tier in building['tiers'])
+        rows.append(f'<li data-building-id="{html.escape(building["id"])}"><span class="bonus-building-name">{html.escape(building["name"])}</span><span class="bonus-tiers">{tiers}</span></li>')
+    return '<div class="bonus-buildings"><h4>Great Buildings &amp; tiers</h4><ul>' + ''.join(rows) + '</ul></div>'
+
+
+def _bonus_wording(pairing: dict, show_title: bool) -> str:
+    names = list(dict.fromkeys(plain_text(name) for name in pairing.get("names", [])))
+    descriptions = list(dict.fromkeys(plain_text(text) for text in pairing.get("descriptions", [])))
+
+    def readable(text):
+        for name in names:
+            if text.startswith(name + ':'):
+                text = text[len(name) + 1:].lstrip()
+                break
+        return html.escape(re.sub(r'%(?:\.\d+)?[sdf]', '…', text))
+
+    heading = f'<h4>{html.escape(names[0])}</h4>' if show_title and names else ''
+    description = readable(descriptions[0]) if descriptions else 'The description could not be linked in this client.'
+    alternatives = ''
+    if len(names) > 1 or len(descriptions) > 1:
+        other_names = ('<p>Other name: ' + html.escape(' / '.join(names[1:])) + '</p>') if len(names) > 1 else ''
+        alternatives = ('<details class="bonus-variants"><summary>More wording in this client</summary>'
+                        + other_names + ''.join(f'<p>{readable(text)}</p>' for text in descriptions[1:]) + '</details>')
+    return f'<div class="bonus-wording">{heading}<p class="bonus-description">{description}</p>{alternatives}</div>'
+
+
+def _bonus_card_group(record: dict) -> int:
+    if record.get("family") == "bonus_double_damage_block.png":
+        return 1
+    if record.get("date"):
+        return 0
+    return 2 if record.get("buildings") else 3
+
+
 def _great_building_bonus_card(record: dict) -> str:
     url = record.get("url", "")
     name = url.rsplit("/", 1)[-1]
-    title = _bonus_display_name(record.get("family", ""))
+    title = _bonus_card_title(record)
+    pairings = record.get("pairings", [])
+    buildings = record.get("buildings", [])
+    assignments_html = _bonus_buildings(record)
+    description = ''.join(_bonus_wording(pairing, len(pairings) > 1) for pairing in pairings)
+    if not pairings:
+        description = '<p class="bonus-description bonus-unpaired">Pairing unconfirmed. The name above comes from the image filename; no linked description was found.</p>'
+    description = f'<details class="asset-details bonus-description-details"><summary>Description</summary>{description}</details>'
     changed_date = str(record.get("date") or "")
     variant_count = int(record.get("variant_count", 1))
-    search = html.escape(f"{title} {name} {changed_date}".lower())
+    paired_text = ' '.join(text for pairing in pairings for field in ('names', 'descriptions', 'raw_texts')
+                           for text in pairing.get(field, []))
+    building_text = ' '.join(building['name'] + ' ' + ' '.join(building['tiers']) for building in buildings)
+    search = html.escape(f"{title} {name} {changed_date} {paired_text} {building_text}".lower())
     variant_text = (
         f'Highest resolution among {variant_count} recorded versions.'
         if variant_count > 1
@@ -732,10 +849,11 @@ def _great_building_bonus_card(record: dict) -> str:
         f'<time datetime="{html.escape(changed_date)}">{html.escape(_date_text(changed_date))}</time>'
         if changed_date else "Present at first scan"
     )
-    baseline_class = " baseline" if not changed_date else ""
-    return f'''<article class="bonus-card{baseline_class}" data-search="{search}" data-name="{html.escape(title.lower())}" data-date="{html.escape(changed_date)}">
+    group = _bonus_card_group(record)
+    baseline_class = " baseline" if group >= 2 else ""
+    return f'''<article class="bonus-card{baseline_class}" data-paired="{str(bool(pairings)).lower()}" data-assigned="{str(bool(buildings)).lower()}" data-group="{group}" data-search="{search}" data-name="{html.escape(title.lower())}" data-date="{html.escape(changed_date)}">
 <div class="bonus-art"><a href="{html.escape(url)}" target="_blank" rel="noopener" aria-label="Open original {html.escape(title)} icon"><img class="bonus-image" decoding="async" src="{html.escape(url)}" alt="{html.escape(title)}">{_ui_icon("external")}</a><span class="bonus-image-placeholder" hidden>Preview unavailable</span></div>
-<div class="bonus-card-body"><h3>{html.escape(title)}</h3><span class="bonus-date">{date_text}</span><details class="asset-details"><summary>Image details</summary><code class="bonus-filename">{html.escape(name)}</code><p class="variant-note">{html.escape(variant_text)}</p></details></div></article>'''
+<div class="bonus-card-body"><h3>{html.escape(title)}</h3>{assignments_html}<span class="bonus-date">{date_text}</span>{description}<details class="asset-details"><summary>Image details</summary><code class="bonus-filename">{html.escape(name)}</code><p class="variant-note">{html.escape(variant_text)}</p></details></div></article>'''
 
 
 def _history_section(results: dict) -> str:
@@ -1067,7 +1185,8 @@ def _active_string_section(results: dict) -> str:
 def _active_string_row(record: dict) -> str:
     search = f"{record.get('last_added_date', '')} {record.get('text', '')}".lower()
     text = record.get("text", "")
-    prefix = "GBP|" if text.startswith("GBP|") else ""
+    match = re.match(r'^[A-Z][A-Z0-9]*(?:#\d+)?\|', text)
+    prefix = match.group() if match else ""
     text = text[len(prefix):]
     title, separator, description = text.partition(":")
     if separator and len(title) < 90:

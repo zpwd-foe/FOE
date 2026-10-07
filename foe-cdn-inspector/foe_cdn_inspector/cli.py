@@ -25,6 +25,8 @@ def build_parser() -> argparse.ArgumentParser:
     refresh.add_argument("--results", type=Path, default=Path("results"))
     refresh.add_argument("--cache", type=Path, default=Path(".cache/forge-hx"))
     refresh.add_argument("--dashboard-dir", type=Path, default=Path("dashboard"))
+    refresh.add_argument("--building-metadata", type=Path,
+                         help="saved beta metadata capture directory; retains its own capture date")
     refresh.add_argument("--timeout", type=float, default=60)
     refresh.add_argument("--dry-run", action="store_true", help="download, parse and compare without writing files")
     return parser

@@ -8,6 +8,7 @@ from html.parser import HTMLParser
 from pathlib import PurePosixPath
 from urllib.parse import quote, urljoin, urlparse
 
+from .bonuses import extract_bonus_pairings
 from .models import FileRecord, ParsedReport
 from .network import validate_cdn_url
 from .tracker import classify_url
@@ -82,6 +83,8 @@ def parse_forge(body: bytes, source_url: str) -> dict:
     gbp = [value for value in strings if value.startswith("GBP|")]
     if len(strings) < 1000 or len(gbp) < 10:
         raise ValueError("ForgeHX text extraction is unexpectedly small; dashboard was not updated")
+    pairings = extract_bonus_pairings(source)
+    gb_strings = sorted(set(gbp) | {text for pairing in pairings for text in pairing["raw_texts"]})
     return {
         "schema_version": 1,
         "source_url": source_url,
@@ -90,6 +93,8 @@ def parse_forge(body: bytes, source_url: str) -> dict:
         "assets": assets,
         "strings": strings,
         "gbp_strings": gbp,
+        "gb_strings": gb_strings,
+        "bonus_pairings": pairings,
         "metadata_references": sorted(set(re.findall(r'_staticDataLoader\.load\("([a-z_]+)"', source))),
     }
 

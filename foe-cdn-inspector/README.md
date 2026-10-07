@@ -20,7 +20,7 @@ Every refresh:
 1. Verifies that the public beta bootstrap identifies market `zz`.
 2. Downloads the supplied ForgeHX file directly from InnoGames, following only HTTPS redirects on the same host.
 3. Reads its embedded asset map without executing JavaScript. Each asset path and fingerprint yields its exact public CDN URL.
-4. Extracts literal `gettext` text, all `GBP|` bonus text literals, and names of referenced metadata groups.
+4. Extracts literal `gettext` text, all `GBP|` bonus text literals, and names of referenced metadata groups. It also follows GB bonus classes and icon factories to pair icons with their names and current-level descriptions, regardless of translation prefix (including `STEL|`, `GE|`, and `TOM|`).
 5. Compares asset paths and hashes, text additions/removals, and the complete client file's SHA-256 against our previous successful scan.
 6. Saves the source client and parsed inventory, then rebuilds the dashboard and its rolling 60-day archive.
 
@@ -32,16 +32,24 @@ The old `strings`, `history`, and report-selection CLI commands have been retire
 
 ## What this discovers
 
-The complete asset map is retained, not just files with GB-related names. The GB dashboard selects bonus icons and `GBP|` descriptions from the current inventory. The change archive includes asset-reference and extracted text changes across the client, as well as a link to each changed client script. Raw client copies are saved for further code inspection. A script hash change alone does not identify a gameplay change.
+The complete asset map is retained, not just files with GB-related names. Each GB icon card shows the name linked by the client's bonus code, with an expandable **Description** section that starts collapsed, like **Image details**. Combat variants follow the client's bonus-name, description, battle-mode, and multiplier maps. Translation prefixes alone do not establish a pairing. Shared icons can show several bonuses; conditional wording is retained under **More wording in this client**, without assuming which game settings are active. Numeric and other runtime placeholders appear as **…**, since building-specific values are not part of this scan.
 
-**Building values, FP costs, rewards, and server rules are separate data.** ForgeHX references metadata groups such as `building_entity_lookup` and `great_building_tiers`, but the current client does not contain their full data URLs or values. Direct scans mark that coverage as **not checked**. The archive can still show building/metadata changes from older saved reports; zero new rows in those categories does not mean those values are unchanged. A future metadata collector should use actual URLs returned by the beta game's `StaticDataService.getMetadata` response, not guessed filenames.
+Icons with no confirmed code relationship remain visible with **Pairing unconfirmed** and a filename-derived label. Do not guess a relationship from similar words or assign the bonus to a particular Great Building without building metadata. Cards appear in this order: colored cards with recorded changes, Keen Eye Immunity, gray cards assigned to GBs, then unassigned gray cards. Both sort options preserve these groups and sort within them. Card color follows the recorded history regardless of GB assignment: cards labeled **Present at first scan** are gray, and cards with a recorded change date are colored. **Keen Eye Immunity** is the sole exception and always has a colored card; its original date label is preserved. Icons themselves remain in full color. Assigned cards list every linked GB and the tier where its bonus is recorded. Shared icons list all matching buildings and tiers. Search includes bonus text, GB names, and tiers.
+
+To attach a saved beta metadata capture, add `--building-metadata /path/to/capture-directory` to a refresh. The directory must contain `capture-manifest.json` and its original `great_building_metadata/*.json` files. The importer verifies the beta market, complete building count, and each building's SHA-256, then stores only assignment fields and provenance in the snapshot. The join uses the exact bonus type, combat mode, and multiplier flag. The displayed tier comes from the bonus's tier group, not the building's maximum tier.
+
+Later client scans retain that saved metadata and recompute icon links from the newly parsed client. They do not advance its capture date or imply that building metadata was fetched again. The gallery shows the metadata date and flags a client-version mismatch. Import a newly captured metadata bundle to update those assignments. A missing link means **No confirmed GB assignment**, which also covers artwork whose text pairing is still unresolved.
+
+The text section contains code-linked GB names/descriptions as well as `GBP|` strings. Recognizing an existing string with a better parser does not make it a newly released string. The change archive includes asset-reference and extracted text changes across the client, as well as a link to each changed client script. Raw client copies are saved for further code inspection. A script hash change alone does not identify a gameplay change.
+
+**Building values, FP costs, rewards, and server rules are separate data.** ForgeHX references metadata groups such as `building_entity_lookup` and `great_building_tiers`, but the current client does not contain their full data URLs or values. A client scan does not check those values; importing saved metadata adds GB/tier assignments only. The archive can still show building/metadata changes from older saved reports; zero new rows in those categories does not mean those values are unchanged. Metadata captures must use the actual URLs supplied to the beta game by `StaticDataService.getMetadata`, as observed in its response or the resulting network requests, not guessed filenames.
 
 An asset or text appearing in the client does not by itself confirm that a feature is enabled or released.
 
 ## Saved files
 
 - `snapshots/latest.txt`: the most recent successful direct snapshot ID.
-- `snapshots/<id>/direct.json`: complete asset map, extracted text, source URL/hash, metadata references, first-observed dates, and retained change records. Baseline assets can be resolved with `direct.asset_url(path, fingerprint)`.
+- `snapshots/<id>/direct.json`: complete asset map, extracted text, code-derived `bonus_pairings` (including class and source line), `gb_strings`, imported `building_metadata` when available, source URL/hash, metadata references, first-observed dates, and retained change records. `gbp_strings` remains the prefix-only subset for compatibility. Baseline assets can be resolved with `direct.asset_url(path, fingerprint)`.
 - `snapshots/<id>/inventory.json` and `inventory.csv`: the last observed changeset, empty for the baseline.
 - `snapshots/<id>/dashboard-state.json`: current text, icon inventory, archive window, and check time used to render the page.
 - `.cache/forge-hx/ForgeHX-<sha256>.js`: exact downloaded client source.

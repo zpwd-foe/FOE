@@ -9,6 +9,7 @@ import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from .assignments import building_assignments, load_building_metadata
 from .direct import asset_record, compare, discover_forge_url, history_entry, parse_forge, validate_forge_url
 from .history import write_history_results
 from .html_report import _current_great_building_bonus_images, write_html
@@ -48,12 +49,14 @@ def previous_snapshot(root: Path) -> tuple[str | None, dict, dict | None]:
 def current_strings(current: dict, previous: dict | None, old_state: dict, checked_at: str, report_id: str) -> dict:
     old = old_state.get("string_results", {})
     by_text = {item["text"]: item for item in old.get("active_strings", [])}
-    before = set(previous["gbp_strings"]) if previous else set()
+    before = set(previous.get("gb_strings", previous["gbp_strings"])) if previous else set()
+    current_texts = current.get("gb_strings", current["gbp_strings"])
+    previous_embedded = set(previous["strings"]) if previous else set()
     records = []
-    for value in current["gbp_strings"]:
+    for value in current_texts:
         if value in by_text:
             record = {**by_text[value]}
-        elif previous and value not in before:
+        elif previous and value not in previous_embedded and current['sha256'] != previous['sha256']:
             record = {"text": value, "first_added_date": checked_at[:10], "last_added_date": checked_at[:10],
                       "first_added_report": report_id, "last_added_report": report_id,
                       "addition_reports": [report_id], "source": "forge_hx", "report_url": current["source_url"]}
@@ -64,11 +67,11 @@ def current_strings(current: dict, previous: dict | None, old_state: dict, check
         records.append(record)
     removals = list(old.get("removal_events", []))
     if previous:
-        for value in sorted(before - set(current["gbp_strings"])):
+        for value in sorted(before - set(current_texts)):
             removals.append({"text": value, "removed_date": checked_at[:10], "removed_report": report_id,
                              "source": "forge_hx", "report_url": current["source_url"]})
     return {"source": "forge_hx", "active_strings": records, "active_count": len(records),
-            "prefix": "GBP|", "removal_events": removals, "failures": [], "generated_at": checked_at}
+            "prefix": "", "scope": "GB bonus text linked by client code, plus GBP strings", "removal_events": removals, "failures": [], "generated_at": checked_at}
 
 
 def bonus_reports(current: dict, previous: dict | None, old_history: list[dict], checked_at: str) -> list[dict]:
@@ -104,6 +107,8 @@ def run_refresh(args) -> int:
         raise ValueError("--window-days and --timeout must be positive")
     explicit_url = validate_forge_url(args.forge_hx_url) if args.forge_hx_url else None
     previous_id, old_state, previous = previous_snapshot(args.output)
+    saved_buildings = (load_building_metadata(args.building_metadata) if args.building_metadata
+                      else (previous or {}).get("building_metadata"))
     print(f"Verifying beta market: {BETA}")
     landing = fetch(BETA, timeout=args.timeout, max_bytes=2_000_000,
                     allowed_host=("zz1.forgeofempires.com", "zz0.forgeofempires.com",
@@ -118,6 +123,9 @@ def run_refresh(args) -> int:
     if response.content_length is not None and response.content_length != len(response.body):
         raise ValueError("incomplete ForgeHX download; dashboard was not updated")
     current = parse_forge(response.body, response.final_url)
+    if saved_buildings:
+        current["building_metadata"] = saved_buildings
+    assignments = building_assignments(current["bonus_pairings"], saved_buildings, current["sha256"])
     now = datetime.now(timezone.utc)
     checked_at = now.isoformat()
     changed = previous is None or previous["sha256"] != current["sha256"]
@@ -138,7 +146,7 @@ def run_refresh(args) -> int:
             "checked_at": checked_at, "source_url": current["source_url"], "source_sha256": current["sha256"],
             "snapshot_id": report_id, "previous_snapshot": previous_id,
             "asset_references": len(current["assets"]), "embedded_texts": len(current["strings"]),
-            "bonus_descriptions": len(current["gbp_strings"]), "bonus_icons": len(_current_great_building_bonus_images(gallery)),
+            "bonus_descriptions": len(current.get("gb_strings", current["gbp_strings"])), "bonus_icons": len(_current_great_building_bonus_images(gallery)),
             "asset_changes": len([f for f in report.files if f.url != current["source_url"]]),
             "texts_added": len(report.added_strings), "texts_removed": len(report.removed_strings),
             "history_since": since.isoformat(), "history_until": now.date().isoformat(), "coverage": COVERAGE}
@@ -157,7 +165,8 @@ def run_refresh(args) -> int:
         history_path = write_history_results(window, [], staged / "history", since, now.date(), full_details=False)
         history_data = read_json(history_path)
         history_data.update({"source": "forge_hx", "current_bonus_reports": gallery, "coverage": COVERAGE,
-                             "baseline_at": current["baseline_at"]})
+                             "baseline_at": current["baseline_at"], "bonus_pairings": current["bonus_pairings"],
+                             "building_assignments": assignments})
         write_json(history_path, history_data)
         write_json(staged / "direct.json", current)
         write_json(staged / "gbp-current.json", string_data)
