@@ -689,11 +689,8 @@ def _great_building_bonus_section(results: dict) -> str:
     assigned_count = sum(bool(image["buildings"]) for image in images)
     cards = "".join(_great_building_bonus_card(image) for image in images)
     explanation = (
-        "Gray cards were present at our first scan; colored cards have a recorded change date. "
-        "Keen Eye Immunity follows the other colored cards. Gray cards with GB assignments come next; "
-        "unassigned gray cards are last."
-        if results.get("source") == "forge_hx" else
-        "Recently added or updated bonus artwork, with one highest-resolution image per bonus. Icons later marked as removed are excluded."
+        "" if results.get("source") == "forge_hx" else
+        '<p class="meta">Recently added or updated bonus artwork, with one highest-resolution image per bonus. Icons later marked as removed are excluded.</p>'
     )
     if assignments:
         assignment_note = (f'{len(images) - assigned_count} without a confirmed GB assignment · {assigned_count} assigned. '
@@ -704,10 +701,10 @@ def _great_building_bonus_section(results: dict) -> str:
         assignment_note = 'GB metadata has not been loaded for this snapshot. '
     return f'''<section class="bonus-gallery-section" id="great-building-bonuses">
 <div class="bonus-gallery-head"><div><div class="eyebrow"><span class="section-number">01</span> A FIRST LOOK</div><h2>Great Building bonus icons</h2></div>
-<p class="meta">{explanation}</p></div>
+{explanation}</div>
 <div class="bonus-gallery-tools"><div class="search-field">{_ui_icon("search")}<input id="bonus-search" type="search" placeholder="Search bonuses, GBs or tiers…" aria-label="Search bonus icons by bonus, Great Building, tier or date"></div><select id="bonus-sort" aria-label="Sort within card groups"><option value="newest">Newest first</option><option value="name">Name: A–Z</option></select></div>
 <div class="result-line"><p class="bonus-result-status" id="bonus-result-status" aria-live="polite">{len(images)} bonus icons</p><span class="gallery-hint">{_ui_icon("external")}Select an icon for the full image</span></div>
-<p class="bonus-pairing-note">{assignment_note}Both sort options keep colored cards first, followed by gray cards with GB assignments, then unassigned gray cards. {paired_count} of {len(images)} icons have linked text. “…” marks an amount or detail supplied by the game. Some icons share several bonuses or have different wording depending on game settings.</p>
+<p class="bonus-pairing-note">{assignment_note}Both sort options keep colored cards first, which are recently updated GB boost icons, followed by gray cards with GB assignments, then unassigned gray cards. {paired_count} of {len(images)} icons have linked text. “…” marks an amount or detail supplied by the game. Some icons share several bonuses or have different wording depending on game settings.</p>
 <div class="bonus-grid" id="bonus-grid">{cards or '<p class="meta">No bonus icons in this reporting window.</p>'}</div>
 <div class="search-empty" id="bonus-empty" hidden><strong>No matching bonus icons</strong><p>Try a bonus, Great Building, tier or date.</p><button type="button" data-clear-search="bonus-search">Clear search</button></div>
 </section>'''
