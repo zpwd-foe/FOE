@@ -1,0 +1,15 @@
+# Stable pages revalidate so ordinary reloads discover the latest asset URLs.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/404
+  Cache-Control: no-cache
+/404.html
+  Cache-Control: no-cache
+/asset-manifest.json
+  Cache-Control: no-cache
+
+# The build places only content-fingerprinted files under assets/.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

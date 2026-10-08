@@ -45,6 +45,10 @@ To run the formula and static-build tests:
 npm test
 ```
 
+The separate [GB Prestige boost preview](future-updates/gb-prestige/README.txt)
+has its own build and deployable `future-updates/gb-prestige/dist/` directory.
+Its README contains the Cloudflare Pages settings and local preview commands.
+
 ## Data provenance and boundaries
 
 The implementation was derived from the locally installed FoE Helper 4.8.1.0 extension (the current Forge Hammer source lineage):

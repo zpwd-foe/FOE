@@ -1,0 +1,12 @@
+{
+  "name": "foe-gb-prestige",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node scripts/build_static.mjs",
+    "test": "npm run build && node --test tests/*.test.mjs && python3 -B test_data.py",
+    "serve": "npm run build && python3 -B scripts/serve_static.py --directory dist --port 8014"
+  }
+}

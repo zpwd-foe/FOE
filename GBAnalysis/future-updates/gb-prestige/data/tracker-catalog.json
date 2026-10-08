@@ -1,0 +1,1612 @@
+{
+  "snapshot": "2026-10-07_15-08-08-409193-2b6cb628",
+  "checked_at": "2026-10-07T15:08:08.409193+00:00",
+  "snapshot_sha256": "37787bd60123111b6929797a413a5d8bb703492e3815d8143981a1edd92a8b3a",
+  "building_assignments_date": "2026-10-06",
+  "use": "Icon meanings only. Old GB/tier assignments are not reused.",
+  "boosts": [
+    {
+      "id": 0,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.AgeReservesBonus",
+      "source_line": 42230,
+      "bonus_types": [
+        "age_reserves"
+      ],
+      "icon_ids": [
+        "great_building_bonus_age_reserves.png",
+        "icon_great_building_bonus_age_reserves"
+      ],
+      "names": [
+        "Goods Reserve"
+      ],
+      "descriptions": [
+        "GBP|Goods Reserve: Produces %s goods every 24 hours, randomly chosen from any type of Goods buildings placed in your city."
+      ],
+      "raw_texts": [
+        "Goods Reserve",
+        "GBP|Goods Reserve: Produces %s goods every 24 hours, randomly chosen from any type of Goods buildings placed in your city."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_age_reserves.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_age_reserves-1a3b79684.png",
+      "family": "bonus_age_reserves.png"
+    },
+    {
+      "id": 1,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.AidBoostBonus",
+      "source_line": 42232,
+      "bonus_types": [
+        "aid_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_aid_blueprints.png",
+        "icon_great_building_bonus_aid_blueprints"
+      ],
+      "names": [
+        "GBP|Aid Copper Blueprints",
+        "FUT|Aid Blueprints"
+      ],
+      "descriptions": [
+        "GBP|Aid Copper Blueprints: +%f% increased chance of finding a Copper Blueprint from the normal chance when you aid another player.",
+        "FUT|Aid Blueprints: +%f% increased chance of finding a blueprint from the normal chance when you aid another player."
+      ],
+      "raw_texts": [
+        "GBP|Aid Copper Blueprints",
+        "FUT|Aid Blueprints",
+        "GBP|Aid Copper Blueprints: +%f% increased chance of finding a Copper Blueprint from the normal chance when you aid another player.",
+        "FUT|Aid Blueprints: +%f% increased chance of finding a blueprint from the normal chance when you aid another player."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_aid_blueprints.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_aid_blueprints-976a33e85.png",
+      "family": "bonus_aid_blueprints.png"
+    },
+    {
+      "id": 2,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.AidGoodsBonus",
+      "source_line": 42235,
+      "bonus_types": [
+        "aid_goods"
+      ],
+      "icon_ids": [
+        "great_building_bonus_aid_goods.png",
+        "icon_great_building_bonus_aid_goods"
+      ],
+      "names": [
+        "TOM| Aid Goods"
+      ],
+      "descriptions": [
+        "TOM|Aid Goods: The first %s you aid a building you get a random good of that building's age. Refreshes with the next collection from this building."
+      ],
+      "raw_texts": [
+        "TOM| Aid Goods",
+        "TOM|Aid Goods: The first %s you aid a building you get a random good of that building's age. Refreshes with the next collection from this building."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_aid_goods.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_aid_goods-324838a67.png",
+      "family": "bonus_aid_goods.png"
+    },
+    {
+      "id": 3,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.AlgorithmicCoreBonus",
+      "source_line": 42238,
+      "bonus_types": [
+        "algorithmic_core"
+      ],
+      "icon_ids": [
+        "icon_great_building_bonus_algorithmic_core"
+      ],
+      "names": [
+        "SAJM|Algorithmic Core"
+      ],
+      "descriptions": [
+        "SAJM|For the first %d collections in your main city containing special goods you collect %d% more special goods after reaching Arctic Future. This only applies to the Arctic Harbor, the Oceanic Terminal, the Special Goods Synthesizers and event buildings that give special goods.",
+        "SAJM|For the first %d collections in your main city containing supplies you collect %d% more supplies before reaching Arctic Future. This only applies to placeable buildings that are not Great Buildings."
+      ],
+      "raw_texts": [
+        "SAJM|Algorithmic Core",
+        "SAJM|For the first %d collections in your main city containing special goods you collect %d% more special goods after reaching Arctic Future. This only applies to the Arctic Harbor, the Oceanic Terminal, the Special Goods Synthesizers and event buildings that give special goods.",
+        "SAJM|For the first %d collections in your main city containing supplies you collect %d% more supplies before reaching Arctic Future. This only applies to placeable buildings that are not Great Buildings."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_algorithmic_core.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_algorithmic_core-d60331dc1.png",
+      "family": "bonus_algorithmic_core.png"
+    },
+    {
+      "id": 4,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.AllUnitsCriticalHitBonus",
+      "source_line": 42242,
+      "bonus_types": [
+        "all_units_critical_hit_chance"
+      ],
+      "icon_ids": [
+        "great_building_bonus_all_units_critical_hit_chance.png",
+        "icon_great_building_bonus_all_units_critical_hit_chance"
+      ],
+      "names": [
+        "GBP|Enhanced Critical Hit"
+      ],
+      "descriptions": [
+        "GBP|Enhanced Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit's age. Does not apply in PvP Arena battles. Does not apply to Rogues.",
+        "GBP|Enhanced Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit's age. Does not apply to Rogues."
+      ],
+      "raw_texts": [
+        "GBP|Enhanced Critical Hit",
+        "GBP|Enhanced Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit's age. Does not apply in PvP Arena battles. Does not apply to Rogues.",
+        "GBP|Enhanced Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from any age except your unit's age. Does not apply to Rogues."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_all_units_critical_hit_chance.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_all_units_critical_hit_chance-832a2093a.png",
+      "family": "bonus_all_units_critical_hit_chance.png"
+    },
+    {
+      "id": 5,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.AlliesQuestBoostBonus",
+      "source_line": 42244,
+      "bonus_types": [
+        "allies_quest_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_scroll.png"
+      ],
+      "names": [
+        "HA|Heroic Taverne quest reward boost"
+      ],
+      "descriptions": [
+        "HA|Heroic Taverne quest reward boost: When you get rewards from Heroic Taverne quests, you receive an additional %d% at the current level."
+      ],
+      "raw_texts": [
+        "HA|Heroic Taverne quest reward boost",
+        "HA|Heroic Taverne quest reward boost: When you get rewards from Heroic Taverne quests, you receive an additional %d% at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_scroll.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_scroll-1498290cc.png",
+      "family": "bonus_scroll.png"
+    },
+    {
+      "id": 6,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.ClanGoodsBonus",
+      "source_line": 42247,
+      "bonus_types": [
+        "clan_goods"
+      ],
+      "icon_ids": [
+        "great_building_bonus_guild_goods.png"
+      ],
+      "names": [
+        "Guild Goods"
+      ],
+      "descriptions": [
+        "At the current level, it produces %s of each current good for your guild treasury."
+      ],
+      "raw_texts": [
+        "Guild Goods",
+        "At the current level, it produces %s of each current good for your guild treasury."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_guild_goods.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods-4eb589605.png",
+      "family": "bonus_guild_goods.png"
+    },
+    {
+      "id": 7,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.ClanGoodsExtendedBonus",
+      "source_line": 42249,
+      "bonus_types": [
+        "clan_goods_extended"
+      ],
+      "icon_ids": [
+        "great_building_bonus_guild_goods_adjacent_era.png",
+        "icon_great_building_bonus_guild_goods_adjacent_era"
+      ],
+      "names": [
+        "GBP|Guild Goods - Adjacent Eras"
+      ],
+      "descriptions": [
+        "GBP|At the current level, it produces %s of each Previous Era, Current Era, and Next Era Goods for your Guild Treasury."
+      ],
+      "raw_texts": [
+        "GBP|Guild Goods - Adjacent Eras",
+        "GBP|At the current level, it produces %s of each Previous Era, Current Era, and Next Era Goods for your Guild Treasury."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_guild_goods_adjacent_era.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_goods_adjacent_era-59ab3586e.png",
+      "family": "bonus_guild_goods_adjacent_era.png"
+    },
+    {
+      "id": 8,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.ContributionBoostBonus",
+      "source_line": 42252,
+      "bonus_types": [
+        "contribution_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_contribution_boost.png",
+        "icon_great_building_bonus_contribution_boost"
+      ],
+      "names": [
+        "GBP|Basic Contribution Boost",
+        "FUT|Contribution Boost"
+      ],
+      "descriptions": [
+        "Basic Contribution Boost: Contribution rewards you get are increased by %f%. This only applies for contributions within the first 200 Great Building levels.",
+        "FUT|Contribution boost: Contribution rewards you get are increased by %f%."
+      ],
+      "raw_texts": [
+        "GBP|Basic Contribution Boost",
+        "FUT|Contribution Boost",
+        "Basic Contribution Boost: Contribution rewards you get are increased by %f%. This only applies for contributions within the first 200 Great Building levels.",
+        "FUT|Contribution boost: Contribution rewards you get are increased by %f%."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_contribution_boost.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_contribution_boost-9fa454b6c.png",
+      "family": "bonus_contribution_boost.png"
+    },
+    {
+      "id": 9,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.ContributionBoostGoldBonus",
+      "source_line": 42255,
+      "bonus_types": [
+        "contribution_boost_gold"
+      ],
+      "icon_ids": [
+        "great_building_bonus_contribution_boost_gold.png",
+        "icon_great_building_bonus_contribution_boost_gold"
+      ],
+      "names": [
+        "STEL|Enhanced Contribution Boost"
+      ],
+      "descriptions": [
+        "STEL|Enhanced Contribution Boost: Contribution rewards from Great Buildings in Gold Tier you get are increased by %f%."
+      ],
+      "raw_texts": [
+        "STEL|Enhanced Contribution Boost",
+        "STEL|Enhanced Contribution Boost: Contribution rewards from Great Buildings in Gold Tier you get are increased by %f%."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_contribution_boost_gold.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_contribution_boost_gold-a430fbeaf.png",
+      "family": "bonus_contribution_boost_gold.png"
+    },
+    {
+      "id": 10,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.CriticalHitBonus",
+      "source_line": 42257,
+      "bonus_types": [
+        "critical_hit_chance"
+      ],
+      "icon_ids": [
+        "great_building_bonus_critical_hit_chance.png",
+        "icon_great_building_bonus_critical_hit_chance"
+      ],
+      "names": [
+        "Critical Hit"
+      ],
+      "descriptions": [
+        "FFAA|Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from the same age as your units. Does not apply in PvP Arena battles.",
+        "FFAA|Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from the same age as your units."
+      ],
+      "raw_texts": [
+        "Critical Hit",
+        "FFAA|Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from the same age as your units. Does not apply in PvP Arena battles.",
+        "FFAA|Critical Hit: Grants a %.2f% chance to deal 150% damage against enemy units from the same age as your units."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_critical_hit_chance.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_critical_hit_chance-8c7301533.png",
+      "family": "bonus_critical_hit_chance.png"
+    },
+    {
+      "id": 11,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.DiplomaticGiftsBonus",
+      "source_line": 42260,
+      "bonus_types": [
+        "diplomatic_gifts"
+      ],
+      "icon_ids": [
+        "great_building_bonus_diplomatic_gifts.png",
+        "icon_great_building_bonus_diplomatic_gifts"
+      ],
+      "names": [
+        "SAAB|Diplomatic Gifts"
+      ],
+      "descriptions": [
+        "SAAB|Diplomatic Gifts: The first %d victorious negotiation games have a chance of %f% to provide you with a random reward. Refreshes with each collection."
+      ],
+      "raw_texts": [
+        "SAAB|Diplomatic Gifts",
+        "SAAB|Diplomatic Gifts: The first %d victorious negotiation games have a chance of %f% to provide you with a random reward. Refreshes with each collection."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_diplomatic_gifts.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_diplomatic_gifts-611c82a18.png",
+      "family": "bonus_diplomatic_gifts.png"
+    },
+    {
+      "id": 12,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.DoubleCollectionBonus",
+      "source_line": 42262,
+      "bonus_types": [
+        "double_collection"
+      ],
+      "icon_ids": [
+        "great_building_bonus_double_collect",
+        "great_building_bonus_double_collect.png"
+      ],
+      "names": [
+        "Double Collection"
+      ],
+      "descriptions": [
+        "Double Collection: For the first %s buildings collected, there is a %s% chance the resources collected are doubled. Excludes Town Hall and Great Buildings. Refreshes with each collection of this building."
+      ],
+      "raw_texts": [
+        "Double Collection",
+        "Double Collection: For the first %s buildings collected, there is a %s% chance the resources collected are doubled. Excludes Town Hall and Great Buildings. Refreshes with each collection of this building."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_double_collect.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_double_collect-6f26f743e.png",
+      "family": "bonus_double_collect.png"
+    },
+    {
+      "id": 14,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.FirstStrikeBonus",
+      "source_line": 42267,
+      "bonus_types": [
+        "first_strike"
+      ],
+      "icon_ids": [
+        "great_building_bonus_first_strike.png",
+        "icon_great_building_bonus_first_strike"
+      ],
+      "names": [
+        "First Strike"
+      ],
+      "descriptions": [
+        "First Strike: For the first %s battles, there is an %s% chance to kill one enemy unit at the start of battle. For two-wave battles, the skill applies only to the first wave. Refreshes with each collection of this building.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "raw_texts": [
+        "First Strike",
+        "First Strike: For the first %s battles, there is an %s% chance to kill one enemy unit at the start of battle. For two-wave battles, the skill applies only to the first wave. Refreshes with each collection of this building.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_first_strike.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_first_strike-1426295b2.png",
+      "family": "bonus_first_strike.png"
+    },
+    {
+      "id": 15,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.GoodsProductionBoostBonus",
+      "source_line": 42270,
+      "bonus_types": [
+        "goods_production_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_goods_production_boost.png",
+        "icon_great_building_bonus_goods_production_boost"
+      ],
+      "names": [
+        "GBP|Goods Production Boost"
+      ],
+      "descriptions": [
+        "GBP|Goods Production Boost: Goods produced by buildings in your city are increased by %s%."
+      ],
+      "raw_texts": [
+        "GBP|Goods Production Boost",
+        "GBP|Goods Production Boost: Goods produced by buildings in your city are increased by %s%."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_goods_production_boost.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_goods_production_boost-bc72246bb.png",
+      "family": "bonus_goods_production_boost.png"
+    },
+    {
+      "id": 16,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.GuildRaidsDoubleCollectionBonus",
+      "source_line": 42279,
+      "bonus_types": [
+        "guild_raids_double_collection"
+      ],
+      "icon_ids": [
+        "great_building_bonus_guild_raids_double_collection.png",
+        "icon_great_building_bonus_guild_raids_double_collection"
+      ],
+      "names": [
+        "GBP|QI Settlement Double Collection"
+      ],
+      "descriptions": [
+        "GBP|QI Settlement Double Collection: For the first %s buildings collected in your active QI Settlement, there is a %s% chance the resources collected are doubled. This effect excludes Townhall and refreshes with each collection of this building."
+      ],
+      "raw_texts": [
+        "GBP|QI Settlement Double Collection",
+        "GBP|QI Settlement Double Collection: For the first %s buildings collected in your active QI Settlement, there is a %s% chance the resources collected are doubled. This effect excludes Townhall and refreshes with each collection of this building."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_guild_raids_double_collection.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_guild_raids_double_collection-d7222f6fa.png",
+      "family": "bonus_guild_raids_double_collection.png"
+    },
+    {
+      "id": 17,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.HappinessBonus",
+      "source_line": 42281,
+      "bonus_types": [
+        "happiness"
+      ],
+      "icon_ids": [
+        "great_building_bonus_happy.png"
+      ],
+      "names": [
+        "Happiness"
+      ],
+      "descriptions": [
+        "Happiness: Provides %s happiness at the current level."
+      ],
+      "raw_texts": [
+        "Happiness",
+        "Happiness: Provides %s happiness at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_happy.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_happy-dbf8f16ad.png",
+      "family": "bonus_happy.png"
+    },
+    {
+      "id": 18,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.HelpingHandsBonus",
+      "source_line": 42283,
+      "bonus_types": [
+        "helping_hands"
+      ],
+      "icon_ids": [
+        "great_building_bonus_helping_hands.png",
+        "icon_great_building_bonus_helping_hands"
+      ],
+      "names": [
+        "FFAA|Helping Hands"
+      ],
+      "descriptions": [
+        "FFAA|Helping Hands gives a %f% chance of getting something extra by aiding other players"
+      ],
+      "raw_texts": [
+        "FFAA|Helping Hands",
+        "FFAA|Helping Hands gives a %f% chance of getting something extra by aiding other players"
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_helping_hands.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_helping_hands-865580cc8.png",
+      "family": "bonus_helping_hands.png"
+    },
+    {
+      "id": 19,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.HelpingHandsBoostedBonus",
+      "source_line": 42285,
+      "bonus_types": [
+        "helping_hands_boosted"
+      ],
+      "icon_ids": [
+        "great_building_bonus_helping_hands_boosted.png",
+        "icon_great_building_bonus_helping_hands_boosted"
+      ],
+      "names": [
+        "GBP|Improved Helping Hands"
+      ],
+      "descriptions": [
+        "GBP|Improved Helping Hands gives a %f% chance of getting a better reward by aiding other players."
+      ],
+      "raw_texts": [
+        "GBP|Improved Helping Hands",
+        "GBP|Improved Helping Hands gives a %f% chance of getting a better reward by aiding other players."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_helping_hands_boosted.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_helping_hands_boosted-2523e35ea.png",
+      "family": "bonus_helping_hands_boosted.png"
+    },
+    {
+      "id": 20,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MedalsBonus",
+      "source_line": 42288,
+      "bonus_types": [
+        "medals"
+      ],
+      "icon_ids": [
+        "great_building_bonus_medals.png"
+      ],
+      "names": [
+        "Medal production"
+      ],
+      "descriptions": [
+        "Medal production: Produces %s medals in 24 hours at the current level."
+      ],
+      "raw_texts": [
+        "Medal production",
+        "Medal production: Produces %s medals in 24 hours at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_medals.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_medals-d253ac007.png",
+      "family": "bonus_medals.png"
+    },
+    {
+      "id": 21,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryAllyBoostBonus",
+      "source_line": 42290,
+      "bonus_types": [
+        "military_ally_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_military_ally_boost.png",
+        "icon_great_building_bonus_military_ally_boost"
+      ],
+      "names": [
+        "GBP|Military Ally Boost"
+      ],
+      "descriptions": [
+        "GBP|Military Ally Boost: Military Historical Allies placed in your city gain %s bonus levels."
+      ],
+      "raw_texts": [
+        "GBP|Military Ally Boost",
+        "GBP|Military Ally Boost: Military Historical Allies placed in your city gain %s bonus levels."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_military_ally_boost.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_military_ally_boost-1b35e55f5.png",
+      "family": "bonus_military_ally_boost.png"
+    },
+    {
+      "id": 26,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "military_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_all"
+      ],
+      "names": [
+        "Attackers - Attack & Defense"
+      ],
+      "descriptions": [
+        "Attacking units have their attack and defense values boosted by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Attack & Defense",
+        "GBP|Attacking units have their attack and defense values boosted by +%d%."
+      ],
+      "target": "all",
+      "multiplier": false,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_all.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_all-aaaa2daa8.png",
+      "family": "bonus_attacking_all.png"
+    },
+    {
+      "id": 30,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "advanced_tactics"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_defending_all"
+      ],
+      "names": [
+        "Attackers & Defenders - Attack & Defense"
+      ],
+      "descriptions": [
+        "Both attacking and defending units have their attack and defense values boosted by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers & Defenders - Attack & Defense",
+        "GBP|Both attacking and defending units have their attack and defense values boosted by +%d%."
+      ],
+      "target": "all",
+      "multiplier": false,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_defending_all.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_defending_all-26c45509a.png",
+      "family": "bonus_attacking_defending_all.png"
+    },
+    {
+      "id": 31,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "advanced_tactics"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_defending_all_gbg"
+      ],
+      "names": [
+        "Guild Battlegrounds Attackers & Defenders - Attack & Defense"
+      ],
+      "descriptions": [
+        "Both attacking and defending units in Guild Battlegrounds have their attack and defense values boosted by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers & Defenders - Attack & Defense",
+        "GBP|Both attacking and defending units in %s have their attack and defense values boosted by +%d%.",
+        "GBP|Guild Battlegrounds"
+      ],
+      "target": "battleground",
+      "multiplier": false,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_defending_all_gbg.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_defending_all_gbg-e67440693.png",
+      "family": "bonus_attacking_defending_all_gbg.png"
+    },
+    {
+      "id": 34,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "fierce_resistance"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_all"
+      ],
+      "names": [
+        "Defenders - Attack & Defense"
+      ],
+      "descriptions": [
+        "Defending units have their attack and defense values boosted by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Attack & Defense",
+        "GBP|Defending units have their attack and defense values boosted by +%d%."
+      ],
+      "target": "all",
+      "multiplier": false,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_all.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_all-e01b87cd6.png",
+      "family": "bonus_defending_all.png"
+    },
+    {
+      "id": 38,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "attack_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_attack"
+      ],
+      "names": [
+        "Attackers - Attack"
+      ],
+      "descriptions": [
+        "Attacking units have their attack values boosted by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Attack",
+        "GBP|Attacking units have their attack values boosted by +%d%."
+      ],
+      "target": "all",
+      "multiplier": false,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_attack.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_attack-67dd4f02d.png",
+      "family": "bonus_attacking_attack.png"
+    },
+    {
+      "id": 51,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "defense_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_defense_gbg_multiplier"
+      ],
+      "names": [
+        "Guild Battlegrounds Defenders - Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Defense for Defending Army baseline in Guild Battlegrounds by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Shield",
+        "GBP|This multiplies and adds your total Defense for Defending Army baseline in %s by +%d%.",
+        "GBP|Guild Battlegrounds"
+      ],
+      "target": "battleground",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_defense_gbg_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_defense_gbg_multiplier-76471a87b.png",
+      "family": "bonus_defending_defense_gbg_multiplier.png"
+    },
+    {
+      "id": 52,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "defense_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_defense_gex_multiplier"
+      ],
+      "names": [
+        "Guild Expedition Defenders - Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Defense for Defending Army baseline in Guild Expedition by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Shield",
+        "GBP|This multiplies and adds your total Defense for Defending Army baseline in %s by +%d%.",
+        "GBP|Guild Expedition"
+      ],
+      "target": "guild_expedition",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_defense_gex_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_defense_gex_multiplier-9ea6b4855.png",
+      "family": "bonus_defending_defense_gex_multiplier.png"
+    },
+    {
+      "id": 55,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "military_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_all_gbg_multiplier"
+      ],
+      "names": [
+        "Guild Battlegrounds Attackers - Sword & Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack and Defense for Attacking Army baseline in Guild Battlegrounds by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Sword & Shield",
+        "GBP|This multiplies and adds your total Attack and Defense for Attacking Army baseline in %s by +%d%.",
+        "GBP|Guild Battlegrounds"
+      ],
+      "target": "battleground",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_all_gbg_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_all_gbg_multiplier-962b4e77c.png",
+      "family": "bonus_attacking_all_gbg_multiplier.png"
+    },
+    {
+      "id": 56,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "military_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_all_gex_multiplier"
+      ],
+      "names": [
+        "Guild Expedition Attackers - Sword & Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack and Defense for Attacking Army baseline in Guild Expedition by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Sword & Shield",
+        "GBP|This multiplies and adds your total Attack and Defense for Attacking Army baseline in %s by +%d%.",
+        "GBP|Guild Expedition"
+      ],
+      "target": "guild_expedition",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_all_gex_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_all_gex_multiplier-f51a277ad.png",
+      "family": "bonus_attacking_all_gex_multiplier.png"
+    },
+    {
+      "id": 58,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "advanced_tactics"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_defending_all_multiplier"
+      ],
+      "names": [
+        "Attackers & Defenders - Sword & Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack and Defense for both Attacking and Defending Army baselines by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers & Defenders - Sword & Shield",
+        "GBP|This multiplies and adds your total Attack and Defense for both Attacking and Defending Army baselines by +%d%."
+      ],
+      "target": "all",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_defending_all_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_defending_all_multiplier-61928d5a8.png",
+      "family": "bonus_attacking_defending_all_multiplier.png"
+    },
+    {
+      "id": 63,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "fierce_resistance"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_all_gbg_multiplier"
+      ],
+      "names": [
+        "Guild Battlegrounds Defenders - Sword & Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack and Defense for Defending Army baseline in Guild Battlegrounds by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Sword & Shield",
+        "GBP|This multiplies and adds your total Attack and Defense for Defending Army baseline in %s by +%d%.",
+        "GBP|Guild Battlegrounds"
+      ],
+      "target": "battleground",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_all_gbg_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_all_gbg_multiplier-90d762b42.png",
+      "family": "bonus_defending_all_gbg_multiplier.png"
+    },
+    {
+      "id": 64,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "fierce_resistance"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_all_gex_multiplier"
+      ],
+      "names": [
+        "Guild Expedition Defenders - Sword & Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack and Defense for Defending Army baseline in Guild Expedition by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Sword & Shield",
+        "GBP|This multiplies and adds your total Attack and Defense for Defending Army baseline in %s by +%d%.",
+        "GBP|Guild Expedition"
+      ],
+      "target": "guild_expedition",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_all_gex_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_all_gex_multiplier-56a8a3f49.png",
+      "family": "bonus_defending_all_gex_multiplier.png"
+    },
+    {
+      "id": 67,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "attack_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_attack_gbg_multiplier"
+      ],
+      "names": [
+        "Guild Battlegrounds Attackers - Sword"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack for Attacking Army baseline in Guild Battlegrounds by +%d%"
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Sword",
+        "GBP|This multiplies and adds your total Attack for Attacking Army baseline in %s by +%d%",
+        "GBP|Guild Battlegrounds"
+      ],
+      "target": "battleground",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_attack_gbg_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_attack_gbg_multiplier-8246a9309.png",
+      "family": "bonus_attacking_attack_gbg_multiplier.png"
+    },
+    {
+      "id": 69,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "attack_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_attack_gr_multiplier"
+      ],
+      "names": [
+        "Quantum Incursion Attackers - Sword"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack for Attacking Army baseline in Quantum Incursion by +%d%"
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Sword",
+        "GBP|This multiplies and adds your total Attack for Attacking Army baseline in %s by +%d%",
+        "GBP|Quantum Incursion"
+      ],
+      "target": "guild_raids",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_attack_gr_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_attack_gr_multiplier-12ef13263.png",
+      "family": "bonus_attacking_attack_gr_multiplier.png"
+    },
+    {
+      "id": 73,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "attacker_defense_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_attacking_defense_gr_multiplier"
+      ],
+      "names": [
+        "Quantum Incursion Attackers - Shield"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Defense for Attacking Army baseline in Quantum Incursion by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Attackers - Shield",
+        "GBP|This multiplies and adds your total Defense for Attacking Army baseline in %s by +%d%.",
+        "GBP|Quantum Incursion"
+      ],
+      "target": "guild_raids",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_attacking_defense_gr_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_attacking_defense_gr_multiplier-2e007a50e.png",
+      "family": "bonus_attacking_defense_gr_multiplier.png"
+    },
+    {
+      "id": 77,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "defender_attack_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_attack_gr_multiplier"
+      ],
+      "names": [
+        "Quantum Incursion Defenders - Sword"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack for Defending Army baseline in Quantum Incursion by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Sword",
+        "GBP|This multiplies and adds your total Attack for Defending Army baseline in %s by +%d%.",
+        "GBP|Quantum Incursion"
+      ],
+      "target": "guild_raids",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_attack_gr_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_attack_gr_multiplier-65f1a1655.png",
+      "family": "bonus_defending_attack_gr_multiplier.png"
+    },
+    {
+      "id": 78,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MissileLaunchBonus",
+      "source_line": 42296,
+      "bonus_types": [
+        "missile_launch"
+      ],
+      "icon_ids": [
+        "great_building_bonus_missile_launch.png",
+        "icon_great_building_bonus_missile_launch"
+      ],
+      "names": [
+        "SAM|Missile Launch"
+      ],
+      "descriptions": [
+        "SAM|Missile Launch: For the first %s battles, there is a %s% chance of killing half the enemy units at the start of the battle. For two-wave battles, the skill applies only to the first wave. Cannot be used against players. Refreshes with each collection.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "raw_texts": [
+        "SAM|Missile Launch",
+        "SAM|Missile Launch: For the first %s battles, there is a %s% chance of killing half the enemy units at the start of the battle. For two-wave battles, the skill applies only to the first wave. Cannot be used against players. Refreshes with each collection.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_missile_launch.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_missile_launch-80acaad12.png",
+      "family": "bonus_missile_launch.png"
+    },
+    {
+      "id": 79,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MissileLaunchWave2Bonus",
+      "source_line": 42299,
+      "bonus_types": [
+        "missile_launch_wave_2"
+      ],
+      "icon_ids": [
+        "great_building_bonus_missile_launch_wave_2.png",
+        "icon_great_building_bonus_missile_launch_wave_2"
+      ],
+      "names": [
+        "Missile Launch - Second Wave"
+      ],
+      "descriptions": [
+        "GBP|Missile Launch - Second Wave: For the first %s battles, there is a %s% chance of killing half the enemy units at the start of the second wave. Cannot be used against players. Refreshes with each collection.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "raw_texts": [
+        "Missile Launch - Second Wave",
+        "GBP|Missile Launch - Second Wave: For the first %s battles, there is a %s% chance of killing half the enemy units at the start of the second wave. Cannot be used against players. Refreshes with each collection.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_missile_launch_wave_2.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_missile_launch_wave_2-5de43f7cb.png",
+      "family": "bonus_missile_launch_wave_2.png"
+    },
+    {
+      "id": 80,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MoneyBonus",
+      "source_line": 42302,
+      "bonus_types": [
+        "money"
+      ],
+      "icon_ids": [
+        "great_building_bonus_coins.png"
+      ],
+      "names": [
+        "Coin production"
+      ],
+      "descriptions": [
+        "Coin production: Produces %s coins in 24 hours at the current level."
+      ],
+      "raw_texts": [
+        "Coin production",
+        "Coin production: Produces %s coins in 24 hours at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_coins.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_coins-5046af738.png",
+      "family": "bonus_coins.png"
+    },
+    {
+      "id": 81,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MoneyBoostBonus",
+      "source_line": 42304,
+      "bonus_types": [
+        "money_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_coins.png"
+      ],
+      "names": [
+        "Coin boost"
+      ],
+      "descriptions": [
+        "Coin boost: The first %d coin collections are increased by %d% at the current level. Refreshes with next collection from this building."
+      ],
+      "raw_texts": [
+        "Coin boost",
+        "Coin boost: The first %d coin collections are increased by %d% at the current level. Refreshes with next collection from this building."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_coins.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_coins-5046af738.png",
+      "family": "bonus_coins.png"
+    },
+    {
+      "id": 82,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MysteriousShardsBonus",
+      "source_line": 42306,
+      "bonus_types": [
+        "mysterious_shards"
+      ],
+      "icon_ids": [
+        "great_building_bonus_mysterious_shards.png",
+        "icon_great_building_bonus_mysterious_shards"
+      ],
+      "names": [
+        "SAV|Mysterious Shards"
+      ],
+      "descriptions": [
+        "SAV|Mysterious Shards: %.2f% chance to spawn a mysterious Shard reward hidden in the Settlement wilderness of your active Settlement. The chance that this Shard is common is %.2f%, uncommon %.2f% and rare %.2f%."
+      ],
+      "raw_texts": [
+        "SAV|Mysterious Shards",
+        "SAV|Mysterious Shards: %.2f% chance to spawn a mysterious Shard reward hidden in the Settlement wilderness of your active Settlement. The chance that this Shard is common is %.2f%, uncommon %.2f% and rare %.2f%."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_mysterious_shards.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_mysterious_shards-fb5b8cd6b.png",
+      "family": "bonus_mysterious_shards.png"
+    },
+    {
+      "id": 83,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.PenalUnitBonus",
+      "source_line": 42309,
+      "bonus_types": [
+        "penal_unit"
+      ],
+      "icon_ids": [
+        "great_building_bonus_penal_unit.png"
+      ],
+      "names": [
+        "Penal Unit"
+      ],
+      "descriptions": [
+        "Produces %s every 24 hours, randomly chosen from any type you can produce in your city, excluding Legendary units"
+      ],
+      "raw_texts": [
+        "Penal Unit",
+        "Produces %s every 24 hours, randomly chosen from any type you can produce in your city, excluding Legendary units"
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_penal_unit.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_penal_unit-befaa25ad.png",
+      "family": "bonus_penal_unit.png"
+    },
+    {
+      "id": 84,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.PlunderAndPillageBonus",
+      "source_line": 42312,
+      "bonus_types": [
+        "plunder_and_pillage"
+      ],
+      "icon_ids": [
+        "great_building_bonus_plunder_and_pillage.png",
+        "icon_great_building_bonus_double_plunder_goods"
+      ],
+      "names": [
+        "OF|Plunder and Pillage"
+      ],
+      "descriptions": [
+        "OF|Plunder and Pillage: %s% chance to double what you plunder."
+      ],
+      "raw_texts": [
+        "OF|Plunder and Pillage",
+        "OF|Plunder and Pillage: %s% chance to double what you plunder."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_double_plunder_goods.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_double_plunder_goods-0f61acb84.png",
+      "family": "bonus_double_plunder_goods.png"
+    },
+    {
+      "id": 85,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.PlunderGoodsBonus",
+      "source_line": 42314,
+      "bonus_types": [
+        "plunder_goods"
+      ],
+      "icon_ids": [
+        "great_building_bonus_plunder_goods.png",
+        "icon_great_building_bonus_plunder_goods"
+      ],
+      "names": [
+        "TOM| Plunder Goods"
+      ],
+      "descriptions": [
+        "TOM|Plunder Goods: The first %s you plunder a building you get %s of that building's age."
+      ],
+      "raw_texts": [
+        "TOM| Plunder Goods",
+        "TOM|Plunder Goods: The first %s you plunder a building you get %s of that building's age."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_plunder_goods.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_plunder_goods-c955a885d.png",
+      "family": "bonus_plunder_goods.png"
+    },
+    {
+      "id": 86,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.PlunderRepelBonus",
+      "source_line": 42317,
+      "bonus_types": [
+        "plunder_repel"
+      ],
+      "icon_ids": [
+        "great_building_bonus_plunder_repel.png",
+        "icon_great_building_bonus_plunder_repel"
+      ],
+      "names": [
+        "PI| Plunder repel"
+      ],
+      "descriptions": [
+        "PI|Plunder repel: For the first %s you are plundered, there is a %s% chance that the plunder attempt will be repelled and the attacker will gain nothing. Refreshes with each collection of this building."
+      ],
+      "raw_texts": [
+        "PI| Plunder repel",
+        "PI|Plunder repel: For the first %s you are plundered, there is a %s% chance that the plunder attempt will be repelled and the attacker will gain nothing. Refreshes with each collection of this building."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_plunder_repel.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_plunder_repel-1c50adb24.png",
+      "family": "bonus_plunder_repel.png"
+    },
+    {
+      "id": 87,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.PopulationBonus",
+      "source_line": 42319,
+      "bonus_types": [
+        "population"
+      ],
+      "icon_ids": [
+        "great_building_bonus_population.png"
+      ],
+      "names": [
+        "Population"
+      ],
+      "descriptions": [
+        "Population: Provides %s population at the current level."
+      ],
+      "raw_texts": [
+        "Population",
+        "Population: Provides %s population at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_population.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_population-a8f1b0e2d.png",
+      "family": "bonus_population.png"
+    },
+    {
+      "id": 88,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.PreviousEraGoodsBonus",
+      "source_line": 42321,
+      "bonus_types": [
+        "previous_era_goods"
+      ],
+      "icon_ids": [
+        "great_building_bonus_previous_era_good_production.png",
+        "icon_great_building_bonus_previous_era_good_production"
+      ],
+      "names": [
+        "Previous Era Goods Production"
+      ],
+      "descriptions": [
+        "Previous Era Goods Production: Usually produces %s goods of the previous era. Since you are in Bronze Age, it will produce %s goods of the current era instead.",
+        "Previous Era Goods Production: Produces %s goods of the previous era."
+      ],
+      "raw_texts": [
+        "Previous Era Goods Production",
+        "Previous Era Goods Production: Usually produces %s goods of the previous era. Since you are in Bronze Age, it will produce %s goods of the current era instead.",
+        "Previous Era Goods Production: Produces %s goods of the previous era."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_previous_era_good_production.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_previous_era_good_production-618eb1352.png",
+      "family": "bonus_previous_era_good_production.png"
+    },
+    {
+      "id": 89,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.QuestBoostBonus",
+      "source_line": 42325,
+      "bonus_types": [
+        "quest_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_scroll.png"
+      ],
+      "names": [
+        "Quest reward boost"
+      ],
+      "descriptions": [
+        "Quest reward boost: When you get coins, supplies, goods, Diamonds or medals as rewards from quests, you receive an additional %d% at the current level."
+      ],
+      "raw_texts": [
+        "Quest reward boost",
+        "Quest reward boost: When you get coins, supplies, goods, Diamonds or medals as rewards from quests, you receive an additional %d% at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_scroll.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_scroll-1498290cc.png",
+      "family": "bonus_scroll.png"
+    },
+    {
+      "id": 90,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.RandomGoodsBonus",
+      "source_line": 42327,
+      "bonus_types": [
+        "random_goods"
+      ],
+      "icon_ids": [
+        "great_building_bonus_goods.png"
+      ],
+      "names": [
+        "Good production"
+      ],
+      "descriptions": [
+        "Good production: Produces %s goods at the current level.",
+        "Good production: Produces %d unrefined goods at the current level. They are needed to produce current goods.",
+        "Good production: Produces %s current goods at the current level. From Modern Era on, produces %s unrefined goods instead."
+      ],
+      "raw_texts": [
+        "Good production",
+        "Good production: Produces %s goods at the current level.",
+        "Good production: Produces %d unrefined goods at the current level. They are needed to produce current goods.",
+        "Good production: Produces %s current goods at the current level. From Modern Era on, produces %s unrefined goods instead."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_goods.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_goods-7840df679.png",
+      "family": "bonus_goods.png"
+    },
+    {
+      "id": 91,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.RelicHuntBonus",
+      "source_line": 42332,
+      "bonus_types": [
+        "totem_drop"
+      ],
+      "icon_ids": [
+        "great_building_bonus_relic_hunt.png",
+        "icon_great_building_bonus_relic_hunt"
+      ],
+      "names": [
+        "GE|Relic Hunt"
+      ],
+      "descriptions": [
+        "GE|Relic Hunt: %.2f% chance to spawn a hidden Relic reward on the Guild Expedition Map after solving an encounter. The chance that this Relic is common is %.2f%, uncommon %.2f% and rare %.2f%."
+      ],
+      "raw_texts": [
+        "GE|Relic Hunt",
+        "GE|Relic Hunt: %.2f% chance to spawn a hidden Relic reward on the Guild Expedition Map after solving an encounter. The chance that this Relic is common is %.2f%, uncommon %.2f% and rare %.2f%."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_relic_hunt.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_relic_hunt-af4e18acd.png",
+      "family": "bonus_relic_hunt.png"
+    },
+    {
+      "id": 92,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.ScienceAllyBoostBonus",
+      "source_line": 42335,
+      "bonus_types": [
+        "science_ally_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_science_ally_boost.png",
+        "icon_great_building_bonus_science_ally_boost"
+      ],
+      "names": [
+        "GBP|Science Ally Boost"
+      ],
+      "descriptions": [
+        "GBP|Science Ally Boost: Science Historical Allies placed in your city gain %s bonus levels."
+      ],
+      "raw_texts": [
+        "GBP|Science Ally Boost",
+        "GBP|Science Ally Boost: Science Historical Allies placed in your city gain %s bonus levels."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_science_ally_boost.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_science_ally_boost-4cc92e34a.png",
+      "family": "bonus_science_ally_boost.png"
+    },
+    {
+      "id": 93,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SecondStrikeBonus",
+      "source_line": 42337,
+      "bonus_types": [
+        "second_strike"
+      ],
+      "icon_ids": [
+        "great_building_bonus_second_strike.png",
+        "icon_great_building_bonus_second_strike"
+      ],
+      "names": [
+        "GBP|Second Strike"
+      ],
+      "descriptions": [
+        "GBP|Second Strike: For the first %s battles, there is a %s% chance to kill one enemy unit at the start of the second wave. Refreshes with each collection of this building.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "raw_texts": [
+        "GBP|Second Strike",
+        "GBP|Second Strike: For the first %s battles, there is a %s% chance to kill one enemy unit at the start of the second wave. Refreshes with each collection of this building.",
+        " This ability does not apply to the PvP Arena battles."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_second_strike.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_second_strike-b6010bc1a.png",
+      "family": "bonus_second_strike.png"
+    },
+    {
+      "id": 94,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SpecialGoodsBonus",
+      "source_line": 42340,
+      "bonus_types": [
+        "special_goods"
+      ],
+      "icon_ids": [
+        "great_building_bonus_special_goods.png",
+        "icon_great_building_bonus_special_goods"
+      ],
+      "names": [
+        "Orbital Tranfer"
+      ],
+      "descriptions": [
+        "Produces %d special resources every 24 hours after reaching Arctic Future. The chances and types of special resources vary in the eras after Arctic Future.",
+        "Produces %d medals every 24 hours before Arctic Future. Produces special resources in later ages."
+      ],
+      "raw_texts": [
+        "Orbital Tranfer",
+        "Produces %d special resources every 24 hours after reaching Arctic Future. The chances and types of special resources vary in the eras after Arctic Future.",
+        "Produces %d medals every 24 hours before Arctic Future. Produces special resources in later ages."
+      ],
+      "conditional": true,
+      "icon": "assets/icons/bonus_special_goods.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_special_goods-74d8d70b1.png",
+      "family": "bonus_special_goods.png"
+    },
+    {
+      "id": 95,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SpecialGoodsProductionBoostBonus",
+      "source_line": 42343,
+      "bonus_types": [
+        "special_goods_production_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_special_goods_production_boost.png",
+        "icon_great_building_bonus_special_goods_production_boost"
+      ],
+      "names": [
+        "GBP|Special Goods Production Boost"
+      ],
+      "descriptions": [
+        "GBP|Special Goods Production Boost: Special goods produced by buildings in your city are increased by %s%."
+      ],
+      "raw_texts": [
+        "GBP|Special Goods Production Boost",
+        "GBP|Special Goods Production Boost: Special goods produced by buildings in your city are increased by %s%."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_special_goods_production_boost.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_special_goods_production_boost-183ed0d6f.png",
+      "family": "bonus_special_goods_production_boost.png"
+    },
+    {
+      "id": 96,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SpoilsOfWarBonus",
+      "source_line": 42346,
+      "bonus_types": [
+        "spoils_of_war"
+      ],
+      "icon_ids": [
+        "great_building_bonus_spoils_of_war.png",
+        "icon_great_building_bonus_spoils_of_war"
+      ],
+      "names": [
+        "VF3|Spoils of War"
+      ],
+      "descriptions": [
+        "VF3|Spoils of War: The first %d victorious main city battles have a chance of %f% to provide you with a random reward. Refreshes with each collection."
+      ],
+      "raw_texts": [
+        "VF3|Spoils of War",
+        "VF3|Spoils of War: The first %d victorious main city battles have a chance of %f% to provide you with a random reward. Refreshes with each collection."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_spoils_of_war.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_spoils_of_war-188577c8b.png",
+      "family": "bonus_spoils_of_war.png"
+    },
+    {
+      "id": 97,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SpoilsOfWarEnhancedBonus",
+      "source_line": 42348,
+      "bonus_types": [
+        "spoils_of_war_enhanced"
+      ],
+      "icon_ids": [
+        "great_building_bonus_spoils_of_war_enhanced.png",
+        "icon_great_building_bonus_spoils_of_war_enhanced"
+      ],
+      "names": [
+        "GBP|Enhanced Spoils of War"
+      ],
+      "descriptions": [
+        "GBP|Enhanced Spoils of War: The first %d victorious main city battles have a %f% chance to provide you with a random reward. Refreshes with each collection."
+      ],
+      "raw_texts": [
+        "GBP|Enhanced Spoils of War",
+        "GBP|Enhanced Spoils of War: The first %d victorious main city battles have a %f% chance to provide you with a random reward. Refreshes with each collection."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_spoils_of_war_enhanced.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_spoils_of_war_enhanced-9ec983c47.png",
+      "family": "bonus_spoils_of_war_enhanced.png"
+    },
+    {
+      "id": 98,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.StrategyPointsBonus",
+      "source_line": 42350,
+      "bonus_types": [
+        "strategy_points"
+      ],
+      "icon_ids": [
+        "great_building_bonus_forgepoints.png"
+      ],
+      "names": [
+        "Research"
+      ],
+      "descriptions": [
+        "Research: Produces %d %s in 24 hours at the current level."
+      ],
+      "raw_texts": [
+        "Research",
+        "Research: Produces %d %s in 24 hours at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_forgepoints.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_forgepoints-461236101.png",
+      "family": "bonus_forgepoints.png"
+    },
+    {
+      "id": 99,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SuppliesBonus",
+      "source_line": 42353,
+      "bonus_types": [
+        "supplies"
+      ],
+      "icon_ids": [
+        "great_building_bonus_supplies.png"
+      ],
+      "names": [
+        "Supply production"
+      ],
+      "descriptions": [
+        "Supply production: Produces %s supplies in 24 hours at the current level."
+      ],
+      "raw_texts": [
+        "Supply production",
+        "Supply production: Produces %s supplies in 24 hours at the current level."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_supplies.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_supplies-1ff4d07a8.png",
+      "family": "bonus_supplies.png"
+    },
+    {
+      "id": 100,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.SuppliesBoostBonus",
+      "source_line": 42355,
+      "bonus_types": [
+        "supplies_boost"
+      ],
+      "icon_ids": [
+        "great_building_bonus_supplies.png"
+      ],
+      "names": [
+        "Supply boost"
+      ],
+      "descriptions": [
+        "Supply boost: The first %d supply collections are increased by %d% at the current level. Refreshes with next collection from this building."
+      ],
+      "raw_texts": [
+        "Supply boost",
+        "Supply boost: The first %d supply collections are increased by %d% at the current level. Refreshes with next collection from this building."
+      ],
+      "conditional": false,
+      "icon": "assets/icons/bonus_supplies.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_supplies-1ff4d07a8.png",
+      "family": "bonus_supplies.png"
+    }
+  ]
+}

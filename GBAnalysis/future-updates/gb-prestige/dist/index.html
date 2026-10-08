@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Compare boosts, tiers and upgrade options for 49 Great Buildings in the October 8 beta update.">
+  <title>GB Prestige Update - Boost Preview</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.5d09588ec69a.png">
+  <script>
+    (() => {
+      try {
+        const savedTheme = localStorage.getItem('gb-analysis-theme');
+        document.documentElement.dataset.theme = savedTheme === 'dark' || savedTheme === 'light'
+          ? savedTheme : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch { document.documentElement.dataset.theme = 'light'; }
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/planner-theme.d591a87fa296.css">
+  <link rel="stylesheet" href="assets/styles.f0e4c4416459.css">
+  <script defer src="assets/guide-data.bd3442f84cf0.js"></script><script defer src="assets/app.90c2e9241cbb.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#explorer">Skip to building comparison</a>
+<header class="topbar"><a class="brand" href="#"><img class="brand-mark" src="assets/gb-icon.dc6249826920.png" width="40" height="40" alt=""><span>GB Prestige Update - Boost Preview<small>Forge of Empires</small></span></a><div class="header-actions"><span class="edition"><i></i> BETA · 08 OCT 2026</span><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch color mode"><span id="theme-toggle-icon" class="theme-toggle-icon" aria-hidden="true">☾</span><span id="theme-toggle-label">Dark</span></button></div></header>
+<main>
+  <section id="explorer" class="explorer" aria-labelledby="explorer-heading">
+    <div class="page-intro"><div><h1 id="explorer-heading">Compare Great Buildings</h1><p>Recommendations are based on level 201 for Gold and level 101 for Copper-only.</p></div></div>
+    <details id="tiers" class="quick-guide">
+      <summary><span class="guide-heading"><span class="guide-mark" aria-hidden="true"></span>How tiers and boosts work</span></summary>
+      <div class="guide-body">
+        <section class="level-guide" aria-labelledby="overlap-title">
+          <h3 id="overlap-title">When boosts grow</h3>
+          <div class="level-timeline" role="img" aria-label="Copper boosts grow from level 1 to 200, then stay. Gold boosts grow mainly from 101 to 500. Both grow between 101 and 200.">
+            <div class="timeline-axis"><span>Level</span><div><span style="--at:0%">1</span><span style="--at:20%">101</span><span style="--at:40%">200</span><span style="--at:60%">301</span><span style="--at:80%">401</span><span style="--at:100%">500</span></div></div>
+            <div class="timeline-row"><strong class="timeline-name copper-name">Copper</strong><div class="timeline-track"><span class="growth copper-growth">1–200</span><span class="retained-bonus">Boosts stay →</span></div></div>
+            <div class="timeline-row"><strong class="timeline-name gold-name">Gold</strong><div class="timeline-track"><span class="growth gold-growth">101–500</span></div></div>
+          </div>
+          <p class="overlap-key"><span aria-hidden="true"></span><span>Both tiers grow at levels <strong>101–200</strong>.</span></p>
+          <p class="guide-fine">Copper-only buildings stop at 200. Gold can continue past 500 with smaller gains. <a href="https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6992/Great-Buildings-Prestige-redesigned-the-feature-overview" target="_blank" rel="noopener">Official tier rules ↗</a></p>
+        </section>
+        <section class="boost-guide" aria-labelledby="boost-guide-title">
+          <h3 id="boost-guide-title">What the numbers mean</h3>
+          <div class="bonus-example"><strong>Flat boost or multiplier</strong><p>With a 5,000% starting boost:</p><div class="example-pair"><span>+10% boost <b>5,010%</b></span><span>10% multiplier <b>5,500%</b></span></div></div>
+          <div class="chance-example"><strong>25% ×82/24h</strong><span>A 25% chance on each of 82 daily attempts.</span></div>
+          <p class="guide-fine">K = thousand · M = million. More levels help only when you use the boost.</p>
+        </section>
+      </div>
+    </details>
+    <div class="filter-panel">
+      <label class="search-field"><span class="sr-only">Search buildings or boosts</span><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search buildings, boosts or modes…"></label>
+      <div class="filter-selects"><label>Tier<select id="tier-filter"><option value="all">All tiers</option><option value="gold">Gold available</option><option value="copper">Copper only</option></select></label><label>Recommendation<select id="priority-filter"><option value="all">All ratings</option><option>Strong candidate</option><option>Situational</option><option>Lower priority</option></select></label><label>Sort by<select id="sort"><option value="name">Name A–Z</option><option value="priority">Recommendation</option><option value="checkpoint">Review level</option></select></label></div>
+      <div id="focus-filters" class="focus-filters" aria-label="Filter by your goal"></div>
+    </div>
+    <div class="results-line"><p id="result-count" role="status" aria-live="polite">Loading buildings…</p><button id="reset" class="text-button" type="button">Reset filters</button></div>
+    <div id="building-grid"></div><div id="empty" class="empty" hidden><h3>No matches yet</h3><p>Try another search or reset the filters.</p><button id="empty-reset" class="secondary" type="button">Reset filters</button></div>
+  </section>
+</main>
+<footer id="dashboard-signature"><span>Another zpwd dashboard</span></footer>
+<div id="compare-tray" class="compare-tray" hidden><span id="compare-count">0 selected</span><button id="open-compare" class="primary" type="button">Compare selected</button><button id="clear-compare" class="text-button" type="button">Clear selection</button></div>
+<dialog id="compare-dialog" aria-labelledby="compare-title"><div class="dialog-head"><div><h2 id="compare-title">Your shortlist</h2></div><button id="close-compare" class="icon-button" type="button" aria-label="Close comparison">×</button></div><p class="dialog-note">Choose a level for each building to compare its boosts.</p><div id="comparison-content"></div></dialog>
+<noscript><p class="empty">Enable JavaScript to view the buildings and compare their boosts.</p></noscript>
+</body></html>
