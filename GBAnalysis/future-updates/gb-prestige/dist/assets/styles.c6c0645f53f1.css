@@ -165,7 +165,6 @@ thead .review-column { background:color-mix(in srgb,var(--green) 22%,var(--surfa
 .delta-list>p { font-size:.875rem; color:var(--muted); }
 .source-details { margin-top:18px; font-size:1rem; line-height:1.65; }
 .source-details summary { color:var(--green); padding:7px 0; }
-.source-details img.source-image { display:block; width:100%; height:auto; margin-top:10px; }
 .source-details a { font-size:.875rem; }
 .boost-explanation { border-top:1px solid var(--line); padding:12px 0; }
 .boost-explanation p { margin:5px 0; color:var(--muted); }

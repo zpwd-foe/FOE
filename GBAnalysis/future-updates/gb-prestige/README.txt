@@ -4,7 +4,7 @@ Quick source preview from the GBAnalysis directory:
   python3 -m http.server 8013 --bind 127.0.0.1 --directory future-updates/gb-prestige
   Open http://127.0.0.1:8013/
 
-The standalone guide includes all 49 source screenshots, 121 boost rows,
+The standalone guide covers all 49 Great Buildings, 121 boost rows,
 shown level values, tier explanations, review levels (Gold 201 / Copper-only 101), goal filters,
 level-to-level gains, and comparison of up to three buildings.
 All images and runtime data are local. The source preview needs no build.
@@ -56,7 +56,8 @@ Sources and editing:
   data/guidance.py: editorial suggestions based on benefits and play style.
   data/tracker-catalog.json: frozen October 7 tracker icon/text cross-reference.
   data/source-manifest.json: original image URLs and hashes.
-  screenshots/: all 49 original screenshots.
+  screenshots/: all 49 original screenshots, retained for reference and data
+    verification; screenshot sections are not shown on the building cards.
 
 Rebuild after editing the source data:
   python3 -B future-updates/gb-prestige/build_data.py
