@@ -20,6 +20,7 @@
     "850173136": ["🌹", "💗", "🌿"], // anitarose228
     "854199299": ["⚡", "🐞", "🪩"], // Arcadius2 ElectricBugalu
     "852925920": ["🥩", "🔥", "🥢"], // Bulgoki
+    "13635543": ["🏴‍☠️", "⚔️", "🌊"], // Captain Thorpe
     "853996216": ["⛵", "✂️", "🌊"], // Clipper
     "856372577": ["5️⃣", "🎲", "⭐"], // david5555
     "13880455": ["🐸", "🫎", "🧞"], // Fergus Ferguson
@@ -53,7 +54,7 @@
     "851889177": ["🐒", "🐵", "🙈", "🙉", "🙊"], // WMonkey the Fuzzy
     "855340115": ["😊"], // zpwd
   };
-  const digitEmojis = ["0️⃣", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"];
+  const defaultCelebration = ["🎉", "✨", "🎊"];
   const sessionUnlockKey = "goe-contribution-unlocked-members-v2";
   const detailCache = new Map();
   const unlockedMembers = (() => {
@@ -106,7 +107,7 @@
   function updateLeaderEasterEgg(leader) {
     const card = $("#leading-producer-card");
     activeLeaderCelebration = leader
-      ? memberCelebrations[String(leader.id)] || ["🎉", "✨", ...String(leader.id).split("").map((digit) => digitEmojis[Number(digit)]).filter(Boolean)]
+      ? memberCelebrations[String(leader.id)] || defaultCelebration
       : null;
     if (activeLeaderCelebration) {
       card.setAttribute("role", "button");
