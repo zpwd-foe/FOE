@@ -193,7 +193,8 @@ Use `--dry-run` to validate the Chrome profile, Forge Hammer installation,
 existing CSVs, and calculated contribution cutoff without opening the browser
 or writing state. Browser paths, the profile directory, download directory, and
 timeout can be overridden with the optional settings documented in
-`.env.foe.example`.
+`.env.foe.example`. Each requested CSV download has a 20-minute timeout by
+default; `FOE_FORGE_HAMMER_TIMEOUT_SECONDS` accepts 30 through 1200 seconds.
 
 ### Daily automatic refresh and deployment
 

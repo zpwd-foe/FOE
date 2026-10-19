@@ -188,11 +188,11 @@ def load_browser_config(args: argparse.Namespace) -> BrowserConfig:
             "FOE_WORLD_NAME is required when the configured world has no known display name."
         )
     try:
-        timeout = float(_setting(values, "FOE_FORGE_HAMMER_TIMEOUT_SECONDS", "600"))
+        timeout = float(_setting(values, "FOE_FORGE_HAMMER_TIMEOUT_SECONDS", "1200"))
     except ValueError as error:
         raise BrowserExportError("FOE_FORGE_HAMMER_TIMEOUT_SECONDS must be numeric.") from error
-    if not 30 <= timeout <= 600:
-        raise BrowserExportError("FOE_FORGE_HAMMER_TIMEOUT_SECONDS must be between 30 and 600.")
+    if not 30 <= timeout <= 1200:
+        raise BrowserExportError("FOE_FORGE_HAMMER_TIMEOUT_SECONDS must be between 30 and 1200.")
 
     return BrowserConfig(
         world=world,
