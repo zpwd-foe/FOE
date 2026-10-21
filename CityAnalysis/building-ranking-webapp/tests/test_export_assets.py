@@ -85,6 +85,46 @@ class ExportAssetTests(unittest.TestCase):
         self.assertEqual(match.group(1), export_data.data_version())
         self.assertNotIn("ranking-data", index)
 
+    def test_event_upgrade_categories_survive_every_age_export(self) -> None:
+        cases = json.loads(
+            (WEBAPP_ROOT / "config" / "event-category-reviews.json").read_text(encoding="utf-8")
+        )
+        expected = {
+            upgrade["entityId"]: {**upgrade, "category": case["category"]}
+            for case in cases
+            for upgrade in case["upgrades"]
+        }
+        originals = {
+            original["entityId"]: original
+            for case in cases
+            for original in case["originals"]
+        }
+        data_dir = WEBAPP_ROOT / "data"
+        core = json.loads((data_dir / "ranking-core.json").read_text(encoding="utf-8"))
+        for case in cases:
+            self.assertIn(case["category"], core["categories"])
+        for age in (item["key"] for item in core["ages"]):
+            for directory in ("ages", "city-ages"):
+                payload = json.loads((data_dir / directory / f"{age}.json").read_text(encoding="utf-8"))
+                records = {record["entityId"]: record for record in payload["records"]}
+                # These platinum and ascended variants must remain independently rankable.
+                required = (
+                    {**expected, **originals}
+                    if directory == "city-ages"
+                    else {key: expected[key] for key in (
+                        "W_MultiAge_HAL24A11", "W_MultiAge_HAL24A12",
+                        "W_MultiAge_FELL24A11", "W_MultiAge_FELL24A12",
+                    )}
+                )
+                with self.subTest(age=age, directory=directory):
+                    self.assertTrue(set(required).issubset(records))
+                for entity_id, case in {**expected, **originals}.items():
+                    if entity_id not in records:
+                        continue
+                    with self.subTest(age=age, directory=directory, entity_id=entity_id):
+                        self.assertEqual(records[entity_id]["name"], case["name"])
+                        self.assertEqual(records[entity_id]["category"], case["category"])
+
     def test_unit_details_match_exported_ranking_attributes(self) -> None:
         data_dir = WEBAPP_ROOT / "data"
         core = json.loads((data_dir / "ranking-core.json").read_text(encoding="utf-8"))

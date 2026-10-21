@@ -26,6 +26,9 @@ DATA_PREFIX = "window.FOE_BUILDING_RANKING_DATA = "
 # Increment when the serialized website payload shape or semantics change.
 EXPORT_SCHEMA_VERSION = 8
 BROTLI_QUALITY = 11
+EVENT_CATEGORY_REVIEWS_FILE = os.path.join(
+    PROJECT_ROOT, "building-ranking-webapp", "config", "event-category-reviews.json"
+)
 
 
 def file_sha256(path: str) -> str:
@@ -133,6 +136,7 @@ def export_fingerprint(reference_file: str) -> Dict[str, Any]:
         "modelVersion": model.WORKBOOK_VERSION,
         "modelSha256": file_sha256(os.path.abspath(model.__file__)),
         "exporterSha256": file_sha256(os.path.abspath(__file__)),
+        "eventCategoryReviewsSha256": file_sha256(EVENT_CATEGORY_REVIEWS_FILE),
         "source": os.path.relpath(reference_file, PROJECT_ROOT),
         "sourceSha256": file_sha256(reference_file),
     }
@@ -429,8 +433,94 @@ def write_data_files(data: Dict[str, Any]) -> None:
     )
 
 
+def validate_event_category_changes(
+    current_records: List[Dict[str, Any]],
+    previous_records: List[Dict[str, Any]],
+    reviews: List[Dict[str, Any]],
+) -> int:
+    """Require sourced, exact-version reviews before event identities change."""
+    approved = set()
+    for review in reviews:
+        if not re.match(r"^https?://[^/\s]+/", str(review.get("source", ""))):
+            raise ValueError("Each event category review must include a supporting source URL.")
+        for entry in review.get("upgrades", []):
+            approved.add((entry["entityId"], entry["name"], review["category"]))
+        for entry in review.get("originals", []):
+            approved.add((entry["entityId"], entry["name"], entry["category"]))
+
+    previous = {record["entityId"]: record for record in previous_records}
+    problems = []
+    reviewed_count = 0
+    for record in current_records:
+        entity_id, name, category = record["entityId"], record["name"], record["category"]
+        old = previous.get(entity_id, {})
+        raw_event = model.event_reward_category_label(entity_id)
+        is_event_id = bool(
+            raw_event
+            and not raw_event.startswith("COP ")
+            and not entity_id.startswith((
+                model.GBG_REWARD_PREFIX, model.QI_REWARD_PREFIX, *model.GE_REWARD_PREFIXES,
+            ))
+        )
+        if not is_event_id and not any(
+            str(value).endswith(" Event Rewards") for value in (category, old.get("category"))
+        ):
+            continue
+        if old.get("name") == name and old.get("category") == category:
+            continue
+        if (entity_id, name, category) not in approved:
+            before = f"{old['name']} [{old['category']}]" if old else "new entity"
+            problems.append(f"  {entity_id}: {before} -> {name} [{category}]")
+        else:
+            reviewed_count += 1
+    if problems:
+        raise ValueError(
+            "Event category review required before export:\n" + "\n".join(problems)
+            + "\nVerify each version's introducing event/year, update exact-name model overrides "
+            "if needed, and record its ID/name/category and source URL in "
+            "config/event-category-reviews.json. Preserve original versions' events."
+        )
+    return reviewed_count
+
+
+def check_event_categories(category_records: List[Dict[str, Any]]) -> None:
+    previous_records = []
+    for age in model.AGE_ORDER:
+        path = city_age_data_paths(age)["json"]
+        if not os.path.exists(path):
+            raise ValueError(
+                f"Event review baseline missing: {path}. Restore the previous exported "
+                "city-age assets before refreshing; do not create an empty baseline."
+            )
+        with open(path, "r", encoding="utf-8") as handle:
+            previous_records.extend(json.load(handle)["records"])
+    with open(EVENT_CATEGORY_REVIEWS_FILE, "r", encoding="utf-8") as handle:
+        reviews = json.load(handle)
+    current_records = [
+        {
+            "entityId": record["entity_id"],
+            "name": record["name"],
+            "category": model.building_category_label(record["entity_id"], record["name"]),
+        }
+        for record in category_records
+    ]
+    count = validate_event_category_changes(current_records, previous_records, reviews)
+    print(f"Event category audit passed: {count} changed versions have sourced reviews.")
+
+
 def compress_existing_data() -> None:
     paths = data_paths()
+    fingerprint = export_fingerprint(os.path.abspath(model.DEFAULT_REFERENCE))
+    try:
+        with open(paths["state"], "r", encoding="utf-8") as handle:
+            previous_state = json.load(handle)
+    except (OSError, ValueError):
+        previous_state = {}
+    if any(previous_state.get(key) != value for key, value in fingerprint.items()):
+        raise SystemExit(
+            "Source, model, exporter, or event reviews have changed. Run the full export "
+            "with its event category audit before using --compress-existing."
+        )
     if os.path.exists(paths["legacyScript"]):
         _, data = read_wrapped_data(paths["legacyScript"])
         write_data_files(data)
@@ -459,10 +549,10 @@ def compress_existing_data() -> None:
     print("Rebuilt Brotli and gzip core, ranking-age, and city-age assets from JSON.")
 
 
-def main() -> None:
+def main(check_only: bool = False) -> None:
     reference_file = os.path.abspath(model.DEFAULT_REFERENCE)
     fingerprint = export_fingerprint(reference_file)
-    if matching_export_state(fingerprint):
+    if not check_only and matching_export_state(fingerprint):
         print("Input, model, schema, and output hashes are unchanged; export skipped.")
         return
     payload = model.load_payload(reference_file)
@@ -491,6 +581,10 @@ def main() -> None:
             if entity_id not in seen_entity_ids:
                 category_records.append(record)
                 seen_entity_ids.add(entity_id)
+
+    check_event_categories(category_records)
+    if check_only:
+        return
 
     data = {
         "metadata": {
@@ -564,13 +658,19 @@ def main() -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export the building-ranking dashboard data.")
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--compress-existing",
         action="store_true",
         help="Migrate legacy data or rebuild compressed core and age assets without rebuilding the model.",
+    )
+    mode.add_argument(
+        "--check-event-categories",
+        action="store_true",
+        help="Audit event versions against previous exports without writing any assets.",
     )
     args = parser.parse_args()
     if args.compress_existing:
         compress_existing_data()
     else:
-        main()
+        main(check_only=args.check_event_categories)

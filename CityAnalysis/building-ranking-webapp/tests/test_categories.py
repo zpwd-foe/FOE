@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -10,6 +11,11 @@ SCRIPT_DIR = PROJECT_ROOT / "script"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 import building_ranking_model as model  # noqa: E402
+
+
+EVENT_UPGRADE_CASES = json.loads(
+    (Path(__file__).parents[1] / "config" / "event-category-reviews.json").read_text(encoding="utf-8")
+)
 
 
 class BuildingCategoryTests(unittest.TestCase):
@@ -40,6 +46,12 @@ class BuildingCategoryTests(unittest.TestCase):
             "The Evergreen Limited Express",
             "The Sleighride Limited Express",
         ]
+        names.extend(
+            upgrade["name"]
+            for case in EVENT_UPGRADE_CASES
+            for upgrade in case["upgrades"]
+            if upgrade["name"] not in names
+        )
         return {
             f"legacy-{index}": {"id": f"legacy-{index}", "name": name}
             for index, name in enumerate(names, start=1)
@@ -133,6 +145,24 @@ class BuildingCategoryTests(unittest.TestCase):
 
     def test_category_correction_validation_accepts_normalized_whitespace(self) -> None:
         model.validate_building_category_corrections(self.correction_entities())
+
+    def test_upgrades_use_the_event_that_introduced_each_version(self) -> None:
+        for case in EVENT_UPGRADE_CASES:
+            for upgrade in case["upgrades"]:
+                with self.subTest(name=upgrade["name"]):
+                    self.assertEqual(
+                        model.building_category_label(upgrade["entityId"], upgrade["name"]),
+                        case["category"],
+                    )
+
+    def test_original_versions_keep_their_original_events(self) -> None:
+        for case in EVENT_UPGRADE_CASES:
+            for original in case["originals"]:
+                with self.subTest(name=original["name"]):
+                    self.assertEqual(
+                        model.building_category_label(original["entityId"], original["name"]),
+                        original["category"],
+                    )
 
     def test_category_correction_validation_rejects_missing_buildings(self) -> None:
         entities = self.correction_entities()

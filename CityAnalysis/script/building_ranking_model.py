@@ -92,7 +92,7 @@ XLSX_MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 XLSX_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 # Increment this version before each pushed code change to this workbook generator.
-WORKBOOK_VERSION = "1.0.59"
+WORKBOOK_VERSION = "1.0.60"
 DEFAULT_ESTIMATED_FP_PRODUCTION = 30000.0
 DEFAULT_ESTIMATED_GOODS_PRODUCTION = 20000.0
 DEFAULT_ESTIMATED_SPECIAL_GOODS_PRODUCTION = 120.0
@@ -125,31 +125,67 @@ ALL_BUILDING_CATEGORIES = "All Building Categories"
 CULTURAL_SETTLEMENT_REWARDS = "Cultural Settlement Rewards"
 CARE_2026_EVENT_REWARDS = "CARE 2026 Event Rewards"
 FALL_2026_EVENT_REWARDS = "FALL 2026 Event Rewards"
+# Upgrades can retain the original building's event/year in their entity IDs.
+# Match individual names so earlier levels keep their original event. Sources
+# and regression cases live in building-ranking-webapp/config/event-category-reviews.json.
 BUILDING_CATEGORY_CORRECTIONS = {
+    "ascended eerie delirium coaster": ("Ascended Eerie Delirium Coaster", "HAL 2026 Event Rewards"),
     "ascended elysian whisperwood watermill": ("Ascended Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
     "ascended golden crops feast": ("Ascended Golden Crops Feast", FALL_2026_EVENT_REWARDS),
+    "astral airship": ("Astral Airship", "ANNI 2025 Event Rewards"),
     "azalea windmill": ("Azalea Windmill", CARE_2026_EVENT_REWARDS),
     "bougainvillea windmill": ("Bougainvillea Windmill", CARE_2026_EVENT_REWARDS),
+    "celestial airship": ("Celestial Airship", "ANNI 2025 Event Rewards"),
+    "eerie abandoned asylum": ("Eerie Abandoned Asylum", "HAL 2024 Event Rewards"),
+    "eerie delirium coaster": ("Eerie Delirium Coaster", "HAL 2026 Event Rewards"),
     "elysian whisperwood watermill": ("Elysian Whisperwood Watermill", "FELL 2026 Event Rewards"),
+    "enchanted celtic farmstead": ("Enchanted Celtic Farmstead", "PAT 2025 Event Rewards"),
     "everblossom fiore village": ("Everblossom Fiore Village", "FELL 2025 Event Rewards"),
+    "everbloom fiore village": ("Everbloom Fiore Village", "FELL 2025 Event Rewards"),
+    "evergreen fiore village": ("Evergreen Fiore Village", "FELL 2025 Event Rewards"),
     "flower trail": ("Flower Trail", CARE_2026_EVENT_REWARDS),
+    "forgotten druid temple": ("Forgotten Druid Temple", "PAT 2026 Event Rewards"),
     "golden crops feast": ("Golden Crops Feast", FALL_2026_EVENT_REWARDS),
+    "golden crops harvest": ("Golden Crops Harvest", FALL_2026_EVENT_REWARDS),
     "harmonious animal crossing": ("Harmonious Animal Crossing", "WILD 2026 Event Rewards"),
     "harmonious world expo": ("Harmonious World Expo", "ANNI 2026 Event Rewards"),
+    "heritage cider mill": ("Heritage Cider Mill", "FALL 2025 Event Rewards"),
+    "hopeful world expo": ("Hopeful World Expo", "ANNI 2026 Event Rewards"),
+    "joyful nutcracker guardhouse": ("Joyful Nutcracker Guardhouse", "WIN 2023 Event Rewards"),
+    "ketebo candy delights": ("Ketebo Candy Delights", "WIN 2023 Event Rewards"),
+    "lost druid temple": ("Lost Druid Temple", "PAT 2026 Event Rewards"),
+    "mad scientist’s den": ("Mad Scientist’s Den", "HAL 2025 Event Rewards"),
     "mad scientist’s dominion": ("Mad Scientist’s Dominion", "HAL 2025 Event Rewards"),
+    "mad scientist’s lair": ("Mad Scientist’s Lair", "HAL 2025 Event Rewards"),
     "majestic animal crossing": ("Majestic Animal Crossing", "WILD 2026 Event Rewards"),
+    "majestic autumn vineyard": ("Majestic Autumn Vineyard", "FALL 2024 Event Rewards"),
+    "mystic celtic farmstead": ("Mystic Celtic Farmstead", "PAT 2025 Event Rewards"),
+    "mythical manor": ("Mythical Manor", "FELL 2024 Event Rewards"),
+    "noble cider mill": ("Noble Cider Mill", "FALL 2025 Event Rewards"),
     "olive trail": ("Olive Trail", CARE_2026_EVENT_REWARDS),
+    "phantom abandoned asylum": ("Phantom Abandoned Asylum", "HAL 2024 Event Rewards"),
     "pirate king's conquest villa": ("Pirate King's Conquest Villa", "SUM 2025 Event Rewards"),
+    "pristine sunflower oil press": ("Pristine Sunflower Oil Press", "FALL 2024 Event Rewards"),
     "radiant flamingo paradise": ("Radiant Flamingo Paradise", "WILD 2026 Event Rewards"),
+    "regal cider mill": ("Regal Cider Mill", "FALL 2025 Event Rewards"),
     "rocky trail": ("Rocky Trail", CARE_2026_EVENT_REWARDS),
+    "sacred celtic farmstead": ("Sacred Celtic Farmstead", "PAT 2025 Event Rewards"),
     "serene bear mountain": ("Serene Bear Mountain", "WILD 2025 Event Rewards"),
     "serene eagle mountain": ("Serene Eagle Mountain", "WILD 2025 Event Rewards"),
     "serene moose mountain": ("Serene Moose Mountain", "WILD 2025 Event Rewards"),
+    "supreme cider mill": ("Supreme Cider Mill", "FALL 2025 Event Rewards"),
+    "ted's blissful choc": ("Ted's Blissful Choc", "WIN 2023 Event Rewards"),
     "the charcoal limited express": ("The Charcoal Limited Express", "WIN 2025 Event Rewards"),
     "the evergreen limited express": ("The Evergreen Limited Express", "WIN 2025 Event Rewards"),
     "the sleighride limited express": ("The Sleighride Limited Express", "WIN 2025 Event Rewards"),
     "united world expo": ("United World Expo", "ANNI 2026 Event Rewards"),
+    "valiant knights pavilion": ("Valiant Knights Pavilion", "FELL 2024 Event Rewards"),
+    "vintage cider mill": ("Vintage Cider Mill", "FALL 2025 Event Rewards"),
     "wheat trail": ("Wheat Trail", CARE_2026_EVENT_REWARDS),
+    "world expo": ("World Expo", "ANNI 2026 Event Rewards"),
+    "yukitomo imperial": ("Yukitomo Imperial", "WIN 2025 Event Rewards"),
+    "yukitomo imperial sky residence": ("Yukitomo Imperial Sky Residence", "WIN 2025 Event Rewards"),
+    "zephyr airship": ("Zephyr Airship", "ANNI 2025 Event Rewards"),
 }
 QI_FIGHTER_ROLE_CELL = "$B$10"
 FIGHTING_GBG_GE_FOCUS_CELL = "$B$13"

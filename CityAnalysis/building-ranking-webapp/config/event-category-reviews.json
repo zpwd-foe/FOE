@@ -1,0 +1,381 @@
+[
+  {
+    "category": "HAL 2026 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6984/Halloween-Event-2026-Rewards",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_HAL24A11",
+        "name": "Eerie Delirium Coaster"
+      },
+      {
+        "entityId": "W_MultiAge_HAL24A12",
+        "name": "Ascended Eerie Delirium Coaster"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_HAL24A10",
+        "name": "Eerie Nightmare Coaster",
+        "category": "HAL 2024 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "FELL 2026 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6966/Fellowship-Event-2026-Rewards",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_FELL24A11",
+        "name": "Elysian Whisperwood Watermill"
+      },
+      {
+        "entityId": "W_MultiAge_FELL24A12",
+        "name": "Ascended Elysian Whisperwood Watermill"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_FELL24A10",
+        "name": "Arcadian Whisperwood Watermill",
+        "category": "FELL 2024 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "FALL 2026 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6938/Fall-Event-2026-Rewards",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_FALL21A10",
+        "name": "Golden Crops Harvest"
+      },
+      {
+        "entityId": "W_MultiAge_FALL21A11",
+        "name": "Golden Crops Feast"
+      },
+      {
+        "entityId": "W_MultiAge_FALL21A12",
+        "name": "Ascended Golden Crops Feast"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_FallBonus21i",
+        "name": "Golden Crops - Lv. 9",
+        "category": "FALLBONUS 2021 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "PAT 2026 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/5962",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_PAT21A11",
+        "name": "Forgotten Druid Temple"
+      },
+      {
+        "entityId": "W_MultiAge_PAT21A12",
+        "name": "Lost Druid Temple"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_PAT21A10",
+        "name": "Druid Temple - Lv. 10",
+        "category": "PAT 2021 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "ANNI 2026 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/5980",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_ARCH19A11",
+        "name": "World Expo"
+      },
+      {
+        "entityId": "W_MultiAge_ARCH19A12",
+        "name": "Hopeful World Expo"
+      },
+      {
+        "entityId": "W_MultiAge_ARCH19A13",
+        "name": "Harmonious World Expo"
+      },
+      {
+        "entityId": "W_MultiAge_ARCH19A14",
+        "name": "United World Expo"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_ARCH19A10",
+        "name": "World's Fair - Lv. 10",
+        "category": "ARCH 2019 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "ANNI 2025 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/4605",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_ARCH20A12",
+        "name": "Zephyr Airship"
+      },
+      {
+        "entityId": "W_MultiAge_ARCH20A13",
+        "name": "Celestial Airship"
+      },
+      {
+        "entityId": "W_MultiAge_ARCH20A14",
+        "name": "Astral Airship"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_ARCH20A11",
+        "name": "Airship - Lv. 11",
+        "category": "ARCH 2020 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "PAT 2025 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/4563",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_PAT22A11",
+        "name": "Enchanted Celtic Farmstead"
+      },
+      {
+        "entityId": "W_MultiAge_PAT22A12",
+        "name": "Mystic Celtic Farmstead"
+      },
+      {
+        "entityId": "W_MultiAge_PAT22A13",
+        "name": "Sacred Celtic Farmstead"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_PAT22A10",
+        "name": "Celtic Farmstead - Lv. 10",
+        "category": "PAT 2022 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "FELL 2025 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/5549",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_BOWL22A11",
+        "name": "Evergreen Fiore Village"
+      },
+      {
+        "entityId": "W_MultiAge_BOWL22A12",
+        "name": "Everbloom Fiore Village"
+      },
+      {
+        "entityId": "W_MultiAge_BOWL22A13",
+        "name": "Everblossom Fiore Village"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_BOWL22A10",
+        "name": "Fiore Village - Lv. 10",
+        "category": "BOWL 2022 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "HAL 2025 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/5900",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_HAL15A2",
+        "name": "Mad Scientist’s Den"
+      },
+      {
+        "entityId": "W_MultiAge_HAL15A3",
+        "name": "Mad Scientist’s Lair"
+      },
+      {
+        "entityId": "W_MultiAge_HAL15A4",
+        "name": "Mad Scientist’s Dominion"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_HAL15A1",
+        "name": "Mad Scientist's Lab",
+        "category": "HAL 2015 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "WIN 2025 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/5864",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_WIN24A13",
+        "name": "Yukitomo Imperial"
+      },
+      {
+        "entityId": "W_MultiAge_WIN24A14",
+        "name": "Yukitomo Imperial Sky Residence"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_WIN24A12",
+        "name": "Yukitomo Empire",
+        "category": "WIN 2024 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "FALL 2025 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/5603",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_FALL16A7",
+        "name": "Vintage Cider Mill"
+      },
+      {
+        "entityId": "W_MultiAge_FALL16A8",
+        "name": "Heritage Cider Mill"
+      },
+      {
+        "entityId": "W_MultiAge_FALL16A9",
+        "name": "Noble Cider Mill"
+      },
+      {
+        "entityId": "W_MultiAge_FALL16A10",
+        "name": "Regal Cider Mill"
+      },
+      {
+        "entityId": "W_MultiAge_FALL16A11",
+        "name": "Supreme Cider Mill"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_FALL16A6",
+        "name": "Flourishing Cider Mill",
+        "category": "FALL 2016 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "FALL 2024 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/4014",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_FALL23A12",
+        "name": "Majestic Autumn Vineyard"
+      },
+      {
+        "entityId": "W_MultiAge_FALL22A11",
+        "name": "Pristine Sunflower Oil Press"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_FALL23A11",
+        "name": "Vibrant Autumn Vineyard",
+        "category": "FALL 2023 Event Rewards"
+      },
+      {
+        "entityId": "W_MultiAge_FALL22A9",
+        "name": "Sunflower Oil Press - Lv. 9",
+        "category": "FALL 2022 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "FELL 2024 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/4034",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_FELL22A12",
+        "name": "Mythical Manor"
+      },
+      {
+        "entityId": "W_MultiAge_FELL22B2",
+        "name": "Valiant Knights Pavilion"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_FELL22A10",
+        "name": "Heroes Tavern - Lv. 10",
+        "category": "FELL 2022 Event Rewards"
+      },
+      {
+        "entityId": "W_MultiAge_FELL22B1",
+        "name": "Knights Pavilion",
+        "category": "FELL 2022 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "HAL 2024 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/4238",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_HAL19A10",
+        "name": "Eerie Abandoned Asylum"
+      },
+      {
+        "entityId": "W_MultiAge_HAL19A11",
+        "name": "Phantom Abandoned Asylum"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_HAL19A9",
+        "name": "Abandoned Asylum - Lv. 9",
+        "category": "HAL 2019 Event Rewards"
+      }
+    ]
+  },
+  {
+    "category": "WIN 2023 Event Rewards",
+    "source": "https://support.innogames.com/kb/ForgeOfEmpires/en_DK/2475/Winter-Event-2023",
+    "upgrades": [
+      {
+        "entityId": "W_MultiAge_WIN22A12a",
+        "name": "Ted's Blissful Choc"
+      },
+      {
+        "entityId": "W_MultiAge_WIN22A12b",
+        "name": "Ketebo Candy Delights"
+      },
+      {
+        "entityId": "W_MultiAge_WIN22B2",
+        "name": "Joyful Nutcracker Guardhouse"
+      }
+    ],
+    "originals": [
+      {
+        "entityId": "W_MultiAge_WIN22A11a",
+        "name": "Ted's Choc",
+        "category": "WIN 2022 Event Rewards"
+      },
+      {
+        "entityId": "W_MultiAge_WIN22A11b",
+        "name": "Ketebo Candy",
+        "category": "WIN 2022 Event Rewards"
+      },
+      {
+        "entityId": "W_MultiAge_WIN22B1",
+        "name": "Nutcracker Guardhouse",
+        "category": "WIN 2022 Event Rewards"
+      }
+    ]
+  }
+]
