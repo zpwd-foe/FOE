@@ -978,6 +978,34 @@
       "family": "bonus_attacking_defense_gr_multiplier.png"
     },
     {
+      "id": 75,
+      "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
+      "source_line": 42292,
+      "bonus_types": [
+        "defender_attack_boost"
+      ],
+      "icon_ids": [
+        "boost_icon_bonus_defending_attack_gbg_multiplier"
+      ],
+      "names": [
+        "Guild Battlegrounds Defenders - Sword"
+      ],
+      "descriptions": [
+        "This multiplies and adds your total Attack for Defending Army baseline in Guild Battlegrounds by +%d%."
+      ],
+      "raw_texts": [
+        "GBP|Defenders - Sword",
+        "GBP|This multiplies and adds your total Attack for Defending Army baseline in %s by +%d%.",
+        "GBP|Guild Battlegrounds"
+      ],
+      "target": "battleground",
+      "multiplier": true,
+      "conditional": false,
+      "icon": "assets/icons/bonus_defending_attack_gbg_multiplier.png",
+      "icon_url": "https://foezz.innogamescdn.com/assets/city/gui/great_building_bonus_icons/great_building_bonus_defending_attack_gbg_multiplier-1510f4286.png",
+      "family": "bonus_defending_attack_gbg_multiplier.png"
+    },
+    {
       "id": 77,
       "class_name": "de.innogames.strategycity.util.greatbuilding.MilitaryBoostBonus",
       "source_line": 42292,

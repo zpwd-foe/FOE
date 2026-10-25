@@ -1,81 +1,105 @@
-GB Prestige Update - Boost Preview · October 8, 2026
+GB Prestige Update — Ubernerd workbook edition
 
-Quick source preview from the GBAnalysis directory:
-  python3 -m http.server 8013 --bind 127.0.0.1 --directory future-updates/gb-prestige
-  Open http://127.0.0.1:8013/
+The dashboard covers 49 buildings and 123 boost series. Interactive plots show
+every supplied level, including separate attempt-limit graphs. Click/tap a graph
+or enter any current/target level to update boost gains and upgrade planning.
+Comparisons default to level 50 → 150. The shortlist supports arbitrary levels
+for up to three buildings. The Multiplicative goal finds buildings with multiplier
+effects; their charts list clickable step levels. Each chart title has an info
+button for its boost description and multiplier example.
+Boosts show multipliers first, then other Gold boosts, followed by Copper boosts.
+Graph ticks mark 100-level boundaries at 1, 101, 201 and 301 (201 for Copper-only).
 
-The standalone guide covers all 49 Great Buildings, 121 boost rows,
-shown level values, tier explanations, review levels (Gold 201 / Copper-only 101), goal filters,
-level-to-level gains, and comparison of up to three buildings.
-All images and runtime data are local. The source preview needs no build.
-The tier guide starts open above 750px and collapsed on mobile. A direct
-#tiers link opens the guide at any screen size; visitors can toggle it.
+Unlocking details include blueprint sets, coins, supplies, medals, goods and
+base contributor FP rewards. The sidebar shows total upgrade FP and compares the
+same level range on the live server, using the workbook's pre-update costs. Detailed source
+coverage and full level tables are kept in the data, outside the dashboard UI.
+Existing boost names, icons, red/blue army terminology and Planner themes remain.
 
-Deployment preparation (same prebuilt dist approach as the GB Planner):
-  cd future-updates/gb-prestige
-  npm run build
+Data refresh, from this directory:
+  python3 -B build_data.py
   npm test
+
+The read-only source is ../../input/GB Update - Ubernerd.xlsx. The importer uses
+saved values from the XLSX ZIP/XML, without recalculating formulas or modifying
+the workbook. The source SHA-256 is recorded in data/guide-data.json.
+
+Authoring files:
+  import_workbook.py: workbook reader, cost reconciliation and source coverage.
+  data/workbook_mapping.py: reviewed boost columns, units, attempt limits and
+    qualitative play-style advice.
+  build_data.py: established building/icon metadata plus the workbook import.
+  data/tracker-catalog.json: existing icon and mechanic definitions.
+  data/guide-data.json and .js: generated runtime data, schema version 2.
+  core.js: missing-data-safe upgrade calculations.
+  charts.js: local SVG rendering, preserving all points and gaps.
+
+The historical transcription, guidance, source manifest and screenshots remain
+as authoring references. Their numerical checkpoints do not enter the runtime
+dataset. Screenshots are no longer included in the published dist directory.
+
+Source interpretation:
+  - Detail sheets take priority over overview ranges. Gold buildings have rows
+    through 300 and Copper-only buildings through 200. Some boosts end earlier.
+    These are source coverage limits, not new game caps.
+  - Gold effects are locked below 101, including zero placeholders in the source.
+    After unlock, a blank remains Not supplied. No interpolation, carry-forward,
+    or old screenshot value is used to fill missing observations.
+  - Percent fractions are scaled by 100. CF Gold values are already whole
+    percentages. TT Aid Goods uses the displayed number from its percent-formatted
+    detail column as a count, consistent with Main (New)!D83.
+  - Fixed collection limits are taken from Main (New)!D23, D38, D56 and D86.
+    Other attempt limits come from explicit per-level columns. Daily refresh
+    rates are not inferred. Rare percentages remain separate from trigger rates.
+  - Per-level FP and cumulative totals are reconciled against the post-update
+    Costs sheet for every building and level. Upgrade sums exclude the completed
+    current level and include the target. They are before contributor funding.
+  - The Coins / Supplies column is the amount required of each resource.
+    Goods are shown per type.
+    Supplied Copper-level unlock resources are included, including SHS goods
+    from level 11. Gold blueprint rows appear only for Gold-capable buildings
+    when the selected upgrade reaches level 101 or higher.
+    Missing required resource cells make that resource total unavailable.
+    CENTAURUS, HYDRA, PEGASUS, Cosmic Catalyst and Stellar Warship have
+    unpublished resource costs. Their missing coins, supplies, medals and goods
+    totals show TBA from level 11, as listed in the official Prestige overview:
+    https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6992/Great-Buildings-Prestige-redesigned-the-feature-overview
+    Confirmed values (including zero) take precedence; old live costs are not used.
+    Tests reconcile all five unlocking-resource fields for every building and
+    level against the source, then check individual costs and upgrade ranges.
+  - Multiplier step levels include the known starting/unlock value and increases
+    confirmed by consecutive supplied levels. Missing spans are never bridged.
+  - P1–P7 values are base FP rewards, not assumed donations or secure amounts.
+    Personal contribution boosts are not applied.
+  - Himeji Castle's Gold scope is user-confirmed as the blue attack multiplier
+    in GBG (pairing 75). Its corrected icon and wording are separate from Seed
+    Vault's attack-and-defense multiplier (pairing 63).
+    Qualitative ratings are not calculated efficiency/payback rankings.
+
+Build and preview:
+  npm run build
   npm run serve
-  Open http://127.0.0.1:8014/ for the packaged preview.
+  Open http://127.0.0.1:8014/
 
-Node 20+ builds the site using built-in modules; no npm installation, network,
-or Python data rebuild is needed for deployment. Python 3 serves the local
-preview and runs the source-data checks. Commit source and regenerated dist/
-together, as in GBAnalysis. The hosting build packages the checked-in data.
+Node 20+ builds with built-in modules and local assets; no npm installation or
+network is needed. Deployment uses checked-in generated data, so the original
+XLSX and Python data rebuild are not required for hosting. npm test checks source
+coverage, workbook fidelity when the XLSX is present, upgrade calculations,
+missing-data boundaries, image integrity, cache invalidation and reproducibility.
+Commit source and regenerated dist together, as in GBAnalysis.
 
-Cloudflare Pages settings, using the existing GitHub connection:
+Only dist is published. It contains HTML, cache rules, the asset manifest,
+fingerprinted scripts/styles, generated data and local icons. Raw workbooks,
+tests and authoring files stay outside it. All content hashes use SHA-256 with
+12 hexadecimal characters; HTML revalidates and assets cache immutably.
+
+Cloudflare Pages configuration:
   Repository: zpwd-foe/FOE
   Production branch: main
-  Suggested project name: foe-gb-prestige
-  Root directory: GBAnalysis/future-updates/gb-prestige
-  Framework preset: None
-  Build command: leave blank (deploy the prepared dist/)
-  Build output directory: dist
+  Root: GBAnalysis/future-updates/gb-prestige
+  Framework: None
+  Build command: leave blank for prepared dist, or npm run build
+  Output directory: dist
 
-Optional: set the build command to npm run build to regenerate dist/ on Pages.
-Project creation and custom-domain assignment are separate hosting steps;
-this preparation does not create or publish a Cloudflare project.
-
-Only dist/ is published. It includes the page, custom 404 page, cache rules,
-asset manifest, styles, scripts, icons and 49 source screenshots. Authoring
-scripts, tests, the raw tracker catalog and source manifests stay outside it.
-The build uses the Planner's SHA-256 filenames (12 hex characters). Images
-are fingerprinted first, then their URLs are written into the runtime data.
-HTML revalidates on reload; assets can be cached for a year. Changing an icon
-or screenshot also changes the dependent data URL, preventing stale images.
-The tests check published files, image integrity, data completeness, cache
-policies, reproducible output and this cache-invalidation chain.
-
-Cloudflare reference:
-  https://developers.cloudflare.com/pages/configuration/build-configuration/
-  https://developers.cloudflare.com/pages/configuration/headers/
-  https://developers.cloudflare.com/pages/configuration/serving-pages/
-
-Sources and editing:
-  data/transcription.py: reviewed screenshot values and icon pairing IDs.
-  data/guidance.py: editorial suggestions based on benefits and play style.
-  data/tracker-catalog.json: frozen October 7 tracker icon/text cross-reference.
-  data/source-manifest.json: original image URLs and hashes.
-  screenshots/: all 49 original screenshots, retained for reference and data
-    verification; screenshot sections are not shown on the building cards.
-
-Rebuild after editing the source data:
-  python3 -B future-updates/gb-prestige/build_data.py
-
-Validate the data:
-  python3 -B future-updates/gb-prestige/test_data.py
-
-The October 8 redesign has 21 Gold buildings and 28 Copper-only buildings.
-Gold starts at 101; Copper growth ends at 200. Gold screenshot checkpoints
-are 1, 101, 201, 301, 401 and 500. These values must not be relabeled as
-observations of intermediate levels. Gold can continue beyond 500.
-
-Himeji Castle's GBG icon conflicts with the official boost description;
-the guide flags the scope as uncertain. Old tracker building/tier assignments
-are not reused. Cost or payback rankings are not inferred from these images.
-
-This directory is separate from the existing live GB planner and its data.
-
-Styling matches the FoE GB Planner. assets/planner-theme.css contains its
-light/dark palette; favicon.png and gb-icon.png are exact copies of the
-Planner assets. The theme toggle uses the same gb-analysis-theme preference.
+This dashboard is separate from the main GB planner and its data. Styling uses
+assets/planner-theme.css, including the shared gb-analysis-theme preference.

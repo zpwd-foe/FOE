@@ -78,7 +78,6 @@ test('packaged data preserves all 49 buildings and points to exact source images
   const source = JSON.parse(await read('data/guide-data.json', ROOT));
   assert.deepEqual(runtimeData(await read('data/guide-data.js', ROOT)), source);
   const expected = structuredClone(source);
-  for (const building of expected.buildings) building.screenshot = manifest.assets[building.screenshot];
   for (const boost of Object.values(expected.boosts)) boost.icon = manifest.assets[boost.icon];
   assert.deepEqual(built, expected);
   for (const [sourceFile, publicFile] of Object.entries(manifest.assets).filter(([file]) => file.endsWith('.png'))) {

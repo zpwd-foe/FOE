@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the future-update guide from reviewed screenshots and frozen icon text."""
+"""Build the workbook-backed guide, preserving established metadata and icons."""
 from pathlib import Path
 from decimal import Decimal
 import hashlib
@@ -111,9 +111,8 @@ def build():
             data_rows.append({'id':f'{n:02d}-{j+1}','boost':key,'tier':'Gold' if values[0]=='—' else 'Copper','values':[parse_cell(v,row['pairing']) for v in values],'match':'Screenshot icon + tracker client pairing'})
         note=[]
         if n==16:
-            note.append('Scope conflict: the screenshot’s GBG icon matches the tracker’s defending-army attack-and-defense multiplier. The October 8 announcement calls it defense only. Values are transcribed, but verify the in-game tooltip before counting an attack benefit.')
-            data_rows[-1]['match']='Scope conflict — screenshot + tracker differ from announcement'
-            data_rows[-1]['uncertain']=True
+            data_rows[-1]['boost']='75'
+            data_rows[-1]['match']='User-confirmed scope: blue attack multiplier in GBG'
         if n==22:
             note.append('The image shows a percentage and collection count, without /24h. No daily refresh rate has been inferred from the image.')
         if n in (6,19):
@@ -122,7 +121,13 @@ def build():
     assert len(records)==49 and len({b['id'] for b in records})==49
     assert sum(b['gold'] for b in records)==21
     data={'schemaVersion':1,'date':'2026-10-08','title':'GB Prestige Update - Boost Preview','sourceArticle':sources['source_url'],'officialRules':OFFICIAL,'trackerSnapshot':tracker['snapshot'],'trackerCheckedAt':tracker['checked_at'],'trackerAssignmentDate':tracker['building_assignments_date'],'tiers':{'copper':{'starts':1,'growthEnds':200},'gold':{'starts':101,'mainGrowthEnds':500,'hardCap':False},'silverRemoved':True},'buildings':records,'boosts':boosts,'methodology':{'values':'Manually read and verified against all 49 original screenshots. K/M rounding and charge counts are preserved.','icons':'Screenshot artwork is matched to the frozen GB tracker client icon/text pairings. Historical GB/tier assignments are not reused.','recommendations':'Gold buildings are reviewed at 201; Copper-only buildings at 101. Guidance considers benefits for the stated play style, not cost, efficiency or payback.','costs':'No October 6 beta costs or live costs are mixed into this October 8 benefit guide.','footprints':'Footprints come from the existing GBAnalysis building metadata, not these screenshots.','gaps':'Only the shown levels are transcribed. Gold screenshots show 201, while the official Copper growth cap is 200. No intermediate values are interpolated.'}}
-    out=ROOT/'data/guide-data.json';out.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+    from import_workbook import apply_workbook
+    data = apply_workbook(data)
+    formatted = json.dumps(data, ensure_ascii=False, indent=2)
+    # Keep numeric series and each per-level record on one line for reviewable diffs.
+    formatted = re.sub(r'\[\n\s+(?:-?\d+(?:\.\d+)?|null)(?:,\n\s+(?:-?\d+(?:\.\d+)?|null))*\n\s*\]',
+                       lambda match: re.sub(r'\s+', '', match.group()), formatted)
+    out=ROOT/'data/guide-data.json';out.write_text(formatted+'\n')
     (ROOT/'data/guide-data.js').write_text('window.GB_PRESTIGE_DATA = '+json.dumps(data,ensure_ascii=False,separators=(',',':')).replace('</',r'<\/')+';\n')
     print(f'Built {len(records)} buildings, {sum(len(b["rows"]) for b in records)} boost rows, {sum(len(r["values"]) for b in records for r in b["rows"])} cells and {len(boosts)} icon meanings.')
 

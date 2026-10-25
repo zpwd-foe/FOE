@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const PROJECT_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const STATIC_ASSETS = [
   'assets/favicon.png', 'assets/gb-icon.png',
-  'assets/planner-theme.css', 'styles.css', 'app.js',
+  'assets/planner-theme.css', 'styles.css', 'core.js', 'charts.js', 'app.js',
 ];
 
 function fingerprint(file, contents) {
@@ -40,7 +40,6 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
   const dataset = JSON.parse(await readFile(path.join(root, 'data/guide-data.json'), 'utf8'));
   const { version } = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
   const images = [...new Set([
-    ...dataset.buildings.map(building => building.screenshot),
     ...Object.values(dataset.boosts).map(boost => boost.icon),
   ])].sort();
   const assets = {}, output = new Map();
@@ -63,7 +62,6 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
   }
 
   // Image changes also change the dataset URL and the page that loads it.
-  for (const building of dataset.buildings) building.screenshot = assets[building.screenshot];
   for (const boost of Object.values(dataset.boosts)) boost.icon = assets[boost.icon];
   const runtime = `window.GB_PRESTIGE_DATA = ${JSON.stringify(dataset).replaceAll('</', '<\\/')};\n`;
   addAsset('data/guide-data.js', Buffer.from(runtime));
