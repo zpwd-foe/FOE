@@ -6813,13 +6813,21 @@
           "boost": "58",
           "tier": "Copper",
           "unit": "percent",
-          "values": [1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+          "values": [1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
           "source": {
             "sheet": "SHS",
             "column": "E",
-            "scale": 100
+            "scale": 100,
+            "confirmedRanges": [
+              {
+                "fromLevel": 102,
+                "toLevel": 108,
+                "value": 4,
+                "reason": "User confirmed the Copper fighting multiplier stays at 4% through level 108."
+              }
+            ]
           },
-          "coverage": 101
+          "coverage": 108
         },
         {
           "id": "19-2",
@@ -17188,12 +17196,12 @@
     }
   },
   "methodology": {
-    "values": "All supplied level-by-level values from the Ubernerd workbook. Detail sheets take priority over summary ranges. Percent fractions are converted to displayed percentages. No missing values are interpolated or filled from screenshots.",
+    "values": "All supplied level-by-level values from the Ubernerd workbook, with explicitly recorded user confirmations. Detail sheets take priority over summary ranges. Percent fractions are converted to displayed percentages. Raw missing values remain null; display-time retention is marked with a warning.",
     "costs": "Per-level FP is reconciled against the post-update Costs sheet. Upgrade totals sum levels after the current level through the target, before contributor funding. The combined Coins / Supplies column is the amount of each resource.",
     "rewards": "Contributor FP rewards are the workbook’s saved P1–P7 values, before personal contribution boosts. No contribution boost or funding assumption is applied.",
     "icons": "Dashboard boost names, icons and army terminology follow the tracker pairings, with reviewed building-specific scope corrections. Himeji Castle Gold uses the user-confirmed blue attack multiplier in GBG.",
     "recommendations": "Play-style guidance is editorial; ratings are not calculated cost, efficiency or payback rankings.",
-    "gaps": "Gold is locked below 101. Other blank cells are Not supplied. The workbook has detail rows through 300 for Gold buildings and 200 for Copper-only buildings; these are source limits, not new game caps."
+    "gaps": "Gold is locked below 101. Beyond the last supplied boost or attempt-limit level, retain its last known value with a warning and the originating level. Internal gaps stay Not supplied. Costs and rewards are never carried forward. Detail rows end at 300 for Gold buildings and 200 for Copper-only buildings; these are source limits, not new game caps."
   },
   "levelFields": [
     "fp",

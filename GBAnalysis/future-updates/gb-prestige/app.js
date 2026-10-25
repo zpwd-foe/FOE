@@ -10,6 +10,8 @@
   const number=v=>new Intl.NumberFormat('en-US',{maximumFractionDigits:2}).format(v);
   const amount=(v,missing='Not supplied')=>core.finite(v)?number(v):missing;
   const factor=v=>`×${number(1+v/100)}`;
+  const retainedNote=observation=>observation.kind==='retained'?` ⚠ from Lv ${observation.sourceLevel}`:'';
+  const chargeText=(row,level)=>{const observation=core.sample(row,level,'charges');return observation.kind==='locked'?'Not unlocked':`${amount(observation.value)} attempts / collections${retainedNote(observation)}`;};
   const normalize=v=>String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const boost=row=>data.boosts[row.boost];
   const lookup=new Map(data.buildings.map(b=>[b.id,b]));
@@ -30,28 +32,31 @@
     return `<div class="row-label"><img src="${escape(info.icon)}" alt="" loading="lazy"><span><strong>${armyText(label)}${infoId?` <button type="button" class="boost-info-button" data-boost-info="${infoId}" aria-controls="${infoId}" aria-expanded="false" aria-label="About ${escape(armyWords(label))}"><span aria-hidden="true">i</span></button>`:''}</strong><small class="${row.tier==='Gold'?'gold-text':''}">${row.tier}${context?` · ${armyText(context)}`:''}</small></span></div>`;
   }
   function valueText(row,level){
-    const state=core.status(row,level);
-    if(state!=='available')return state==='locked'?'Not unlocked':'Not supplied';
-    let result=number(row.values[level-1])+(row.unit==='percent'?'%':row.unit==='levels'?' ally levels':'');
-    if(row.charges)result+=core.finite(row.charges[level-1])?` ×${number(row.charges[level-1])}`:' · limit not supplied';
+    const observation=core.sample(row,level);
+    if(!core.finite(observation.value))return observation.kind==='locked'?'Not unlocked':'Not supplied';
+    let result=number(observation.value)+(row.unit==='percent'?'%':row.unit==='levels'?' ally levels':'')+retainedNote(observation);
+    if(row.charges){const charges=core.sample(row,level,'charges');result+=core.finite(charges.value)?` ×${number(charges.value)}${retainedNote(charges)}`:' · limit not supplied';}
     return result;
   }
   function deltaText(row,from,to){
     const d=core.difference(row,from,to),info=boost(row);
+    const warning=d.retainedLevels?.length?` ⚠ uses Lv ${d.retainedLevels.join(', ')} values`:'';
     if(d.kind==='invalid')return 'Choose a higher target';
-    if(d.kind==='missing'||d.kind==='missing-start')return 'Change not supplied';
+    if(d.kind==='missing'||d.kind==='missing-start')return 'Change not supplied'+warning;
     if(d.kind==='locked')return 'Not unlocked';
     if(d.kind==='unlock')return `Unlock: ${valueText(row,to)}${info.multiplier?` (${factor(d.value)})`:''}`;
     let text=info.multiplier?`${factor(d.start)} → ${factor(d.value)}`:d.delta===0?'No boost change':`${d.delta>0?'+':''}${number(d.delta)}${row.unit==='percent'?' percentage points':row.unit==='levels'?' ally levels':''}`;
     if(d.charges)text+=`; ${d.charges>0?'+':''}${number(d.charges)} attempts`;
-    return text;
+    return text+warning;
   }
   function explanation(row,level){
-    const info=boost(row),v=row.values[level-1];
+    const info=boost(row),observation=core.sample(row,level),v=observation.value,charges=core.sample(row,level,'charges');
     let result=armyText(info.description);
     if(info.multiplier&&core.finite(v))result+=` Adding ${number(v)}% of the baseline gives a <strong>${factor(v)}</strong> result for this effect. Example per stat: 5,000% → ${number(5000*(1+v/100))}% (+${number(50*v)} percentage points).`;
     const expected=core.expected(row,level,info);
-    if(expected!==null)result+=` ${number(expected)} average successes if all ${number(row.charges[level-1])} attempts are used. A daily refresh rate is not specified for this limit.`;
+    if(expected!==null)result+=` ${number(expected)} average successes if all ${number(charges.value)} attempts are used. A daily refresh rate is not specified for this limit.`;
+    if(observation.kind==='retained')result+=` <span class="retained-warning">⚠ Boost retained from level ${observation.sourceLevel}; the actual boost at level ${level} is unconfirmed.</span>`;
+    if(charges.kind==='retained')result+=` <span class="retained-warning">⚠ Attempt limit retained from level ${charges.sourceLevel}.</span>`;
     return result;
   }
   function seriesFor(b){
@@ -102,8 +107,8 @@
   const tooltip=$('#chart-tooltip');
   const hideTooltip=()=>{tooltip.hidden=true;};
   function showTooltip(event,b,series,level){
-    const row=series.row,s=selection(b),value=series.charges?`${amount(row.charges[level-1])} attempts / collections`:valueText(row,level);
-    tooltip.innerHTML=`<strong class="tooltip-level">Level ${level}</strong>${labelMarkup(row)}<p class="tooltip-value">${escape(value)}${boost(row).multiplier&&core.status(row,level)==='available'?` · ${factor(row.values[level-1])}`:''}</p><div class="tooltip-cost"><span>FP for this level</span><b>${amount(b.levelData[level-1][0])}</b></div>${level>s.from?`<div class="tooltip-cost"><span>FP from ${s.from} → ${level}</span><b>${amount(core.rangeSum(b,0,s.from,level))}</b></div>`:''}`;
+    const row=series.row,s=selection(b),value=series.charges?chargeText(row,level):valueText(row,level);
+    tooltip.innerHTML=`<strong class="tooltip-level">Level ${level}</strong>${labelMarkup(row)}<p class="tooltip-value">${escape(value)}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</p><div class="tooltip-cost"><span>FP for this level</span><b>${amount(b.levelData[level-1][0])}</b></div>${level>s.from?`<div class="tooltip-cost"><span>FP from ${s.from} → ${level}</span><b>${amount(core.rangeSum(b,0,s.from,level))}</b></div>`:''}`;
     tooltip.hidden=false;
     const width=tooltip.offsetWidth,height=tooltip.offsetHeight;
     tooltip.style.left=`${Math.max(8,Math.min(innerWidth-width-8,event.clientX+16))}px`;
@@ -117,7 +122,7 @@
     card.querySelector('[data-plan]').innerHTML=summaryMarkup(b);
     card.querySelector('[data-costs]').innerHTML=costsMarkup(b);
     card.querySelector('[data-rewards]').innerHTML=rewardsMarkup(b);
-    b.rows.forEach(row=>{card.querySelector(`[data-plot-value="${row.id}"]`).innerHTML=`Level ${s.to}: <strong>${escape(valueText(row,s.to))}</strong>${boost(row).multiplier&&core.status(row,s.to)==='available'?` · ${factor(row.values[s.to-1])}`:''}`;card.querySelector(`[data-info-row="${row.id}"]`).innerHTML=infoMarkup(b,row);});
+    b.rows.forEach(row=>{card.querySelector(`[data-plot-value="${row.id}"]`).innerHTML=`Level ${s.to}: <strong>${escape(valueText(row,s.to))}</strong>${boost(row).multiplier&&core.finite(core.sample(row,s.to).value)?` · ${factor(core.sample(row,s.to).value)}`:''}`;card.querySelector(`[data-info-row="${row.id}"]`).innerHTML=infoMarkup(b,row);});
     card.querySelectorAll('[data-step-level]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.stepLevel)===s.to)));
     mounted.get(b.id)?.update(s);
   }
@@ -138,7 +143,7 @@
   function reset(){$('#search').value='';$('#tier-filter').value='all';$('#priority-filter').value='all';$('#sort').value='name';focus='All goals';renderFocus();render();}
   function syncTray(){$('#compare-tray').hidden=selected.size===0;$('#compare-count').textContent=`${selected.size} of 3 selected`;$('#open-compare').disabled=selected.size<2;}
   function renderComparison(){
-    $('#comparison-content').innerHTML=`<div class="comparison-grid" style="--columns:${selected.size}">${[...selected].map(id=>{const b=lookup.get(id),level=comparisonLevels.get(id)??selection(b).to;return `<article class="comparison-card"><span class="tier-label ${b.gold?'':'copper-label'}">${b.gold?'COPPER + GOLD':'COPPER ONLY'}</span><h3>${escape(b.name)}</h3><p class="compare-target">${armyText(b.audience)}<br>${b.footprint.tiles} tiles</p><label class="pick-level">At level <input type="number" min="1" max="${b.levels.length}" value="${level}" data-comparison-level="${id}" aria-label="Comparison level for ${escape(b.name)}"></label>${b.rows.map(row=>`<div class="compare-boost">${labelMarkup(row)}<div class="compare-value">${escape(valueText(row,level))}${boost(row).multiplier&&core.status(row,level)==='available'?` · ${factor(row.values[level-1])}`:''}</div></div>`).join('')}<p class="footnote">FP for this level: ${amount(b.levelData[level-1][0])}<br>Total FP from level 0: ${amount(b.levelData[level-1][1])}</p>${b.notes.map(note=>`<p class="footnote">${armyText(note)}</p>`).join('')}</article>`;}).join('')}</div>`;
+    $('#comparison-content').innerHTML=`<div class="comparison-grid" style="--columns:${selected.size}">${[...selected].map(id=>{const b=lookup.get(id),level=comparisonLevels.get(id)??selection(b).to;return `<article class="comparison-card"><span class="tier-label ${b.gold?'':'copper-label'}">${b.gold?'COPPER + GOLD':'COPPER ONLY'}</span><h3>${escape(b.name)}</h3><p class="compare-target">${armyText(b.audience)}<br>${b.footprint.tiles} tiles</p><label class="pick-level">At level <input type="number" min="1" max="${b.levels.length}" value="${level}" data-comparison-level="${id}" aria-label="Comparison level for ${escape(b.name)}"></label>${b.rows.map(row=>`<div class="compare-boost">${labelMarkup(row)}<div class="compare-value">${escape(valueText(row,level))}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</div></div>`).join('')}<p class="footnote">FP for this level: ${amount(b.levelData[level-1][0])}<br>Total FP from level 0: ${amount(b.levelData[level-1][1])}</p>${b.notes.map(note=>`<p class="footnote">${armyText(note)}</p>`).join('')}</article>`;}).join('')}</div>`;
   }
   $('#focus-filters').addEventListener('click',event=>{const button=event.target.closest('[data-focus]');if(button){focus=button.dataset.focus;renderFocus();render();}});
   let searchTimer;$('#search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(render,100);});

@@ -16,6 +16,29 @@ same level range on the live server, using the workbook's pre-update costs. Deta
 coverage and full level tables are kept in the data, outside the dashboard UI.
 Existing boost names, icons, red/blue army terminology and Planner themes remain.
 
+Hidden feature: simple dude's view
+  Click or tap the site icon seven times within three seconds. The view has no
+  public navigation link or URL shortcut, and reloading requires the gesture
+  again. Back to dashboard restores the explorer and its previous scroll position.
+  Defaults: regular base 10,000%, GBG 20,000%, GE 20,000%, target level 150.
+  Dropdown (all levels 1–300) and slider target controls stay in sync.
+  Mode priority keeps regular weight at 1 and splits 1 between GBG and GE.
+  Stat priority splits 2 between attack and defense. Army priority splits 2
+  between red and blue; effects benefiting both armies use both weights.
+  Defaults: GBG ×0.75, GE ×0.25, attack ×1.5, defense ×0.5, red ×1 and blue ×1.
+  All three priority sliders use five stops (0/25/50/75/100%). Attack/defense
+  and red/blue use individual weights of 0, 0.5, 1, 1.5 or 2.
+  Rank by weighted percentage points per building tile; mode
+  totals and boost breakdowns use the same weights. Zero-weight bonuses do not
+  block scores or trigger warnings. Retained values have a prominent rank badge.
+  Count each affected red/blue stat and each listed
+  effect once; all-mode effects use the regular base without being repeated in
+  GBG/GE. Multipliers use the entered mode base independently (no compounding).
+  QI and special battle mechanics, including critical-hit chances, are excluded.
+  Copper-only targets cap at 200. Trailing missing boosts retain the last known
+  value with a warning in scores and breakdowns. Internal gaps make a building
+  unranked. Gold effects below 101 contribute zero.
+
 Data refresh, from this directory:
   python3 -B build_data.py
   npm test
@@ -33,6 +56,8 @@ Authoring files:
   data/guide-data.json and .js: generated runtime data, schema version 2.
   core.js: missing-data-safe upgrade calculations.
   charts.js: local SVG rendering, preserving all points and gaps.
+  combat-ranking.js: combat scope, multiplier estimates, ranking and icon gesture.
+  simple-view.js: hidden leaderboard controls and building breakdowns.
 
 The historical transcription, guidance, source manifest and screenshots remain
 as authoring references. Their numerical checkpoints do not enter the runtime
@@ -43,8 +68,13 @@ Source interpretation:
     through 300 and Copper-only buildings through 200. Some boosts end earlier.
     These are source coverage limits, not new game caps.
   - Gold effects are locked below 101, including zero placeholders in the source.
-    After unlock, a blank remains Not supplied. No interpolation, carry-forward,
-    or old screenshot value is used to fill missing observations.
+    Above a series' highest known level, its last known boost or attempt limit
+    is retained for display and calculations, with a warning and originating
+    level. Charts distinguish this with dashed lines. Internal gaps remain
+    Not supplied. Costs and contributor rewards are never carried forward.
+    Raw observations remain unchanged except explicit user confirmations:
+    SHS's Copper fighting multiplier is confirmed as 4% through level 108.
+    Levels 102–108 and their provenance are recorded in confirmedRanges.
   - Percent fractions are scaled by 100. CF Gold values are already whole
     percentages. TT Aid Goods uses the displayed number from its percent-formatted
     detail column as a count, consistent with Main (New)!D83.

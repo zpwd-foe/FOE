@@ -9,6 +9,7 @@ const PROJECT_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const STATIC_ASSETS = [
   'assets/favicon.png', 'assets/gb-icon.png',
   'assets/planner-theme.css', 'styles.css', 'core.js', 'charts.js', 'app.js',
+  'combat-ranking.js', 'simple-view.js',
 ];
 
 function fingerprint(file, contents) {

@@ -66,6 +66,12 @@ FIXED_ATTEMPT_SOURCES = {'LoA':'D23', 'SMB':'D38', 'RAH':'D56', 'VV1':'D86'}
 PENDING_UNLOCK_SHEETS = {'CENT', 'HYD', 'PEG', 'Cat', 'SW'}
 PENDING_UNLOCK_SOURCE = 'https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6992/Great-Buildings-Prestige-redesigned-the-feature-overview'
 
+# Explicit corrections confirmed by the user, separate from saved sheet cells.
+CONFIRMED_BOOST_RANGES = {
+    ('SHS', '58'): [{'fromLevel': 102, 'toLevel': 108, 'value': 4,
+                    'reason': 'User confirmed the Copper fighting multiplier stays at 4% through level 108.'}],
+}
+
 DECISION_NOTES = {
     1: 'The Gold multiplier helps red attack in GBG. Compare its next increase with the FP and unlock resources needed to reach it.',
     2: 'Gold improves red attack and defense in GE. Its benefit depends on your existing GE bonuses; Copper adds attack percentage points.',

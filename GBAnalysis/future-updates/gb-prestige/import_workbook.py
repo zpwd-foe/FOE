@@ -13,7 +13,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / 'data'))
 from workbook_mapping import (SHEETS, FIXED_ATTEMPT_SOURCES, DECISION_NOTES,
-                              PENDING_UNLOCK_SHEETS, PENDING_UNLOCK_SOURCE)
+                              PENDING_UNLOCK_SHEETS, PENDING_UNLOCK_SOURCE, CONFIRMED_BOOST_RANGES)
 
 DEFAULT_SOURCE = ROOT.parent.parent / 'input/GB Update - Ubernerd.xlsx'
 NS = {'m': 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'}
@@ -95,10 +95,16 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
         for index, (key, column, scale, *attempts) in enumerate(specs):
             tier = existing.get(key, {}).get('tier', 'Copper')
             values = [None if tier == 'Gold' and level < 101 else numeric(cells, f'{column}{level+4}', scale) for level in levels]
+            confirmations = CONFIRMED_BOOST_RANGES.get((sheet_name, key), [])
+            for confirmation in confirmations:
+                for level in range(confirmation['fromLevel'], confirmation['toLevel'] + 1):
+                    values[level - 1] = confirmation['value']
             unit = 'count' if key == '2' else 'percent' if scale == 100 or key == '5' else 'levels' if key in ('21', '92') else 'count'
             row = {'id': f'{order:02d}-{index+1}', 'boost': key, 'tier': tier, 'unit': unit,
                    'values': values, 'source': {'sheet': sheet_name, 'column': column, 'scale': scale},
                    'coverage': sum(value is not None for value in values)}
+            if confirmations:
+                row['source']['confirmedRanges'] = deepcopy(confirmations)
             if existing.get(key, {}).get('uncertain'):
                 row['uncertain'] = True
             if attempts:
@@ -143,11 +149,11 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
         'source': {'name': source.name, 'author': 'Ubernerd', 'sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
                    'method': 'Saved workbook values; formulas are not recalculated.', 'sheetCount': len(sheets)},
         'methodology': {
-            'values': 'All supplied level-by-level values from the Ubernerd workbook. Detail sheets take priority over summary ranges. Percent fractions are converted to displayed percentages. No missing values are interpolated or filled from screenshots.',
+            'values': 'All supplied level-by-level values from the Ubernerd workbook, with explicitly recorded user confirmations. Detail sheets take priority over summary ranges. Percent fractions are converted to displayed percentages. Raw missing values remain null; display-time retention is marked with a warning.',
             'costs': 'Per-level FP is reconciled against the post-update Costs sheet. Upgrade totals sum levels after the current level through the target, before contributor funding. The combined Coins / Supplies column is the amount of each resource.',
             'rewards': 'Contributor FP rewards are the workbook’s saved P1–P7 values, before personal contribution boosts. No contribution boost or funding assumption is applied.',
             'icons': 'Dashboard boost names, icons and army terminology follow the tracker pairings, with reviewed building-specific scope corrections. Himeji Castle Gold uses the user-confirmed blue attack multiplier in GBG.',
             'recommendations': 'Play-style guidance is editorial; ratings are not calculated cost, efficiency or payback rankings.',
-            'gaps': 'Gold is locked below 101. Other blank cells are Not supplied. The workbook has detail rows through 300 for Gold buildings and 200 for Copper-only buildings; these are source limits, not new game caps.'}})
+            'gaps': 'Gold is locked below 101. Beyond the last supplied boost or attempt-limit level, retain its last known value with a warning and the originating level. Internal gaps stay Not supplied. Costs and rewards are never carried forward. Detail rows end at 300 for Gold buildings and 200 for Copper-only buildings; these are source limits, not new game caps.'}})
     data.pop('sourceArticle', None)
     return data

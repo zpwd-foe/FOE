@@ -15,12 +15,12 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/planner-theme.d591a87fa296.css">
-  <link rel="stylesheet" href="assets/styles.48c52feb6d95.css">
-  <script defer src="assets/guide-data.adcd90f381df.js"></script><script defer src="assets/core.1370d0a62091.js"></script><script defer src="assets/charts.fe74802aa58f.js"></script><script defer src="assets/app.ffb1aae9bbc6.js"></script>
+  <link rel="stylesheet" href="assets/styles.d349f519c4e0.css">
+  <script defer src="assets/guide-data.b6253ec8d936.js"></script><script defer src="assets/core.726f163ca583.js"></script><script defer src="assets/charts.68997e4e09f1.js"></script><script defer src="assets/app.214c9de818ca.js"></script><script defer src="assets/combat-ranking.d44092cc58ab.js"></script><script defer src="assets/simple-view.99f3aab2169f.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#explorer">Skip to building comparison</a>
-<header class="topbar"><a class="brand" href="#"><img class="brand-mark" src="assets/gb-icon.dc6249826920.png" width="40" height="40" alt=""><span>GB Prestige Update - Boost Preview<small>Forge of Empires</small></span></a><div class="header-actions"><span class="edition"><i></i> BETA · PRESTIGE UPDATE</span><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch color mode"><span id="theme-toggle-icon" class="theme-toggle-icon" aria-hidden="true">☾</span><span id="theme-toggle-label">Dark</span></button></div></header>
+<header class="topbar"><div class="brand"><button id="site-icon" class="site-icon" type="button" aria-label="Site icon"><img class="brand-mark" src="assets/gb-icon.dc6249826920.png" width="40" height="40" alt="" draggable="false"></button><a class="brand-title" href="#">GB Prestige Update - Boost Preview<small>Forge of Empires</small></a></div><div class="header-actions"><span class="edition"><i></i> BETA · PRESTIGE UPDATE</span><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch color mode"><span id="theme-toggle-icon" class="theme-toggle-icon" aria-hidden="true">☾</span><span id="theme-toggle-label">Dark</span></button></div></header>
 <main>
   <section id="explorer" class="explorer" aria-labelledby="explorer-heading">
     <div class="page-intro"><div><h1 id="explorer-heading">Explore boosts. Plan your next upgrade.</h1><p>Compare boost progression, upgrade resources, and base contributor FP rewards.</p></div></div>
@@ -42,7 +42,7 @@
           <div class="bonus-example"><strong>Flat boost or multiplier</strong><p>With a 5,000% starting boost:</p><div class="example-pair"><span>+10% boost <b>5,010%</b></span><span>10% multiplier <b>5,500%</b></span></div></div>
           <div class="chance-example"><strong>25% ×82</strong><span>A 25% chance on each of 82 eligible attempts.</span></div>
           <p class="guide-fine">K = thousand · M = million. Red = attacking army; blue = defending army. Attempt limits are shown separately from chances.</p>
-          <p class="guide-fine">Detailed level data ends at 200 or 300; some boosts stop earlier. “Not supplied” means missing source data, not zero or a game limit. Ratings describe play-style fit, not cost efficiency.</p>
+          <p class="guide-fine">Detailed level data ends at 200 or 300; some boosts stop earlier. ⚠ marks a last known value retained at a higher level; dashed lines show these values. “Not supplied” means a gap in the data. Ratings describe play-style fit, not cost efficiency.</p>
         </section>
       </div>
     </details>
@@ -53,6 +53,26 @@
     </div>
     <div class="results-line"><p id="result-count" role="status" aria-live="polite">Loading buildings…</p><button id="reset" class="text-button" type="button">Reset filters</button></div>
     <div id="building-grid"></div><div id="empty" class="empty" hidden><h3>No matches yet</h3><p>Try another search or reset the filters.</p><button id="empty-reset" class="secondary" type="button">Reset filters</button></div>
+  </section>
+  <section id="simple-view" class="simple-view" aria-labelledby="simple-heading" hidden>
+    <div class="simple-intro"><div><p class="simple-eyebrow">Fighting boost per tile</p><h1 id="simple-heading" tabindex="-1">simple dude's view</h1><p>Regular, GBG and GE attack and defense, combined into one ranking.</p></div><button id="simple-back" type="button" class="secondary">← Back to dashboard</button></div>
+    <div class="simple-controls">
+      <div class="simple-bases"><h2>Your base fighting boosts</h2><p>Before multipliers. Each base applies to every affected red and blue attack or defense stat in that mode.</p><div class="simple-base-fields">
+        <label>Regular<span class="simple-input"><input data-simple-base="regular" type="number" min="0" step="any" value="10000" inputmode="decimal" required aria-label="Regular base fighting boost percent"><span>%</span></span></label>
+        <label>GBG<span class="simple-input"><input data-simple-base="gbg" type="number" min="0" step="any" value="20000" inputmode="decimal" required aria-label="GBG base fighting boost percent"><span>%</span></span></label>
+        <label>GE<span class="simple-input"><input data-simple-base="ge" type="number" min="0" step="any" value="20000" inputmode="decimal" required aria-label="GE base fighting boost percent"><span>%</span></span></label>
+      </div></div>
+      <div class="simple-target"><label for="simple-level-select">Target level</label><select id="simple-level-select" aria-label="Select target level"><option value="150">Lv 150</option></select><input id="simple-level-range" type="range" min="1" max="300" step="1" value="150" aria-label="Adjust target level"><div class="simple-range-labels"><span>1</span><span>300</span></div><p>Copper-only buildings stay at level 200 when you choose a higher target.</p></div>
+      <div class="simple-priorities">
+        <datalist id="simple-priority-ticks"><option value="0"></option><option value="25"></option><option value="50"></option><option value="75"></option><option value="100"></option></datalist>
+        <div class="simple-weight"><label for="simple-mode-weight">GBG or GE?</label><span class="simple-weight-note">Regular ×1 · GBG + GE = 1</span><input id="simple-mode-weight" type="range" min="0" max="100" step="25" value="25" list="simple-priority-ticks" aria-describedby="simple-mode-help"><div class="simple-weight-values"><output id="simple-gbg-weight" for="simple-mode-weight">GBG ×0.75</output><output id="simple-ge-weight" for="simple-mode-weight">GE ×0.25</output></div><p id="simple-mode-help">Slide toward the mode you value more.</p></div>
+        <div class="simple-weight"><label for="simple-stat-weight">Attack or defense?</label><span class="simple-weight-note">Attack + defense = 2</span><input id="simple-stat-weight" type="range" min="0" max="100" step="25" value="25" list="simple-priority-ticks" aria-describedby="simple-stat-help"><div class="simple-weight-values"><output id="simple-attack-weight" for="simple-stat-weight">Attack ×1.5</output><output id="simple-defense-weight" for="simple-stat-weight">Defense ×0.5</output></div><p id="simple-stat-help">Applies to both red and blue armies.</p></div>
+        <div class="simple-weight"><label for="simple-army-weight"><span class="army-attacking">Red</span> or <span class="army-defending">blue</span>?</label><span class="simple-weight-note">Red + blue = 2</span><input id="simple-army-weight" type="range" min="0" max="100" step="25" value="50" list="simple-priority-ticks" aria-describedby="simple-army-help"><div class="simple-weight-values"><output id="simple-red-weight" class="army-attacking" for="simple-army-weight">Red ×1</output><output id="simple-blue-weight" class="army-defending" for="simple-army-weight">Blue ×1</output></div><p id="simple-army-help">Red = attacking army · Blue = defending army.</p></div>
+      </div>
+    </div>
+    <p id="simple-error" class="plan-error" role="alert" hidden>Enter a base of 0% or more for each mode.</p>
+    <details class="simple-method"><summary>How the score works</summary><p>Weight each bonus by your attack/defense and red/blue preferences, then apply its mode weight and divide by building tiles. Regular has weight 1; GBG and GE share a combined weight of 1. Attack and defense share a combined weight of 2, and red and blue armies share a combined weight of 2. Defaults are attack ×1.5, defense ×0.5, GBG ×0.75 and GE ×0.25, with red and blue at ×1 each. All three priority sliders have five positions.</p><p>A 3% multiplier with a 20,000% base adds 600 percentage points per affected stat before weighting. Each multiplier uses your entered base independently. A boost to both armies contributes according to both army weights. Regular bonuses count once, even when they work in multiple modes. QI bonuses and special battle effects such as critical-hit chances are excluded. Mode columns and totals show weighted contributions, so scores reflect your priorities rather than the raw in-game bonus.</p><p>Above the highest known level, the last known boost is retained and marked ⚠. Its actual value at your target level is unconfirmed. Gaps between known levels stay missing; buildings with those gaps appear below the ranking. Bonuses with zero weight do not affect scores or warnings.</p></details>
+    <div id="simple-results"><p id="simple-count" class="simple-count" role="status" aria-live="polite"></p><div class="simple-list-head" aria-hidden="true"><span>#</span><span>Great Building</span><div><span>Regular</span><span>GBG</span><span>GE</span></div><span>Weighted / tile</span></div><ol id="simple-ranked" class="simple-rankings" aria-label="Great Buildings ranked by weighted fighting boost per tile"></ol><section id="simple-missing" class="simple-missing" hidden><h2>Missing level data</h2><p>These buildings need more data at your target level before they can be ranked.</p><ul id="simple-unranked" class="simple-rankings" aria-label="Fighting buildings awaiting level data"></ul></section></div>
   </section>
 </main>
 <footer id="dashboard-signature"><span>Another zpwd dashboard</span></footer>

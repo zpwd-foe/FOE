@@ -7,10 +7,12 @@
     "assets/favicon.png": "assets/favicon.5d09588ec69a.png",
     "assets/gb-icon.png": "assets/gb-icon.dc6249826920.png",
     "assets/planner-theme.css": "assets/planner-theme.d591a87fa296.css",
-    "styles.css": "assets/styles.48c52feb6d95.css",
-    "core.js": "assets/core.1370d0a62091.js",
-    "charts.js": "assets/charts.fe74802aa58f.js",
-    "app.js": "assets/app.ffb1aae9bbc6.js",
+    "styles.css": "assets/styles.d349f519c4e0.css",
+    "core.js": "assets/core.726f163ca583.js",
+    "charts.js": "assets/charts.68997e4e09f1.js",
+    "app.js": "assets/app.214c9de818ca.js",
+    "combat-ranking.js": "assets/combat-ranking.d44092cc58ab.js",
+    "simple-view.js": "assets/simple-view.99f3aab2169f.js",
     "assets/icons/bonus_age_reserves.png": "assets/icons/bonus_age_reserves.91c34a542967.png",
     "assets/icons/bonus_aid_blueprints.png": "assets/icons/bonus_aid_blueprints.006703505870.png",
     "assets/icons/bonus_aid_goods.png": "assets/icons/bonus_aid_goods.51ee4a8caf31.png",
@@ -69,6 +71,6 @@
     "assets/icons/bonus_spoils_of_war.png": "assets/icons/bonus_spoils_of_war.d4ac1383b6db.png",
     "assets/icons/bonus_spoils_of_war_enhanced.png": "assets/icons/bonus_spoils_of_war_enhanced.4006a45a3885.png",
     "assets/icons/bonus_supplies.png": "assets/icons/bonus_supplies.32f69a222b31.png",
-    "data/guide-data.js": "assets/guide-data.adcd90f381df.js"
+    "data/guide-data.js": "assets/guide-data.b6253ec8d936.js"
   }
 }

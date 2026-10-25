@@ -65,6 +65,15 @@ class GuideDataTests(unittest.TestCase):
         self.assertEqual(BUILDINGS['ToR']['rows'][1]['values'][0], 3)
         self.assertEqual(BUILDINGS['FI']['rows'][1]['values'][0], 3)
 
+    def test_shs_confirmed_multiplier_extension_has_explicit_provenance(self):
+        row = next(row for row in BUILDINGS['SHS']['rows'] if row['boost'] == '58')
+        self.assertEqual(row['values'][65:108], [4] * 43)
+        self.assertEqual(row['coverage'], 108)
+        self.assertIsNone(row['values'][108])
+        confirmation, = row['source']['confirmedRanges']
+        self.assertEqual((confirmation['fromLevel'], confirmation['toLevel'], confirmation['value']), (102, 108, 4))
+        self.assertIn('User confirmed', confirmation['reason'])
+
     def test_icon_integrity_and_himeji_attack_scope(self):
         for info in DATA['boosts'].values():
             self.assertEqual(hashlib.sha256((ROOT / info['icon']).read_bytes()).hexdigest(), info['icon_sha256'])
@@ -109,6 +118,9 @@ class GuideDataTests(unittest.TestCase):
             for row in b['rows']:
                 for level, actual in enumerate(row['values'], 1):
                     expected = None if row['tier'] == 'Gold' and level < 101 else numeric(cells, f'{row["source"]["column"]}{level+4}', row['source']['scale'])
+                    for confirmation in row['source'].get('confirmedRanges', []):
+                        if confirmation['fromLevel'] <= level <= confirmation['toLevel']:
+                            expected = confirmation['value']
                     self.assertEqual(actual, expected, (b['name'], row['boost'], level))
                     charges = row['source'].get('charges')
                     if charges and len(charges) <= 2:

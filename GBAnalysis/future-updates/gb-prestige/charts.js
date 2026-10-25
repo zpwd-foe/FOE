@@ -1,4 +1,4 @@
-/* Local SVG plots: all supplied observations, with gaps kept open. */
+/* Supplied observations stay solid; retained trailing values use a dashed line. */
 (() => {
   'use strict';
   const NS = 'http://www.w3.org/2000/svg';
@@ -27,10 +27,11 @@
         const axisEnd = spec.values.length + 1;
         const x = level => left + 3 + (level - 1) / (axisEnd - 1) * (right - left - 6);
         const available = spec.values.filter(window.PrestigeCore.finite);
+        const last = window.PrestigeCore.lastKnown(spec.values);
         const max = ceiling(available.length ? Math.max(...available) : 1);
         const y = value => bottom - 3 - value / max * (bottom - top - 7);
         element('title', {}, svg, spec.label);
-        element('desc', {}, svg, `${available.length} supplied values. Blank values are not interpolated. Use the current and target level fields for keyboard selection.`);
+        element('desc', {}, svg, `${available.length} supplied values. Dashed lines retain the last known value beyond its level. Internal gaps are not interpolated. Use the current and target level fields for keyboard selection.`);
         element('rect', { x: left, y: top, width: right-left, height: bottom-top, class: 'chart-frame' }, svg);
         let gapStart = null;
         for (let i = 0; i <= spec.values.length; i++) {
@@ -38,13 +39,14 @@
           if (missing && gapStart === null) gapStart = i + 1;
           if (!missing && gapStart !== null) {
             const end = i, a = x(gapStart), b = x(end);
-            element('rect', { x: a, y: top+1, width: Math.max(1,b-a), height: bottom-top-2, class: 'chart-gap' }, svg);
+            const retained = last && gapStart > last.level;
+            element('rect', { x: a, y: top+1, width: Math.max(1,b-a), height: bottom-top-2, class: retained ? 'chart-retained-area' : 'chart-gap' }, svg);
             if (b-a > 58) {
-              const label = spec.tier === 'Gold' && end < 101 ? 'Locked' : 'Not supplied';
+              const label = retained ? '⚠ Last known' : spec.tier === 'Gold' && end < 101 ? 'Locked' : 'Not supplied';
               const text = element('text', { x: (a+b)/2, y: (top+bottom)/2, 'text-anchor': 'middle', class: 'chart-gap-label' }, svg);
-              if (label === 'Not supplied' && b-a < 100) {
-                element('tspan', { x: (a+b)/2, dy: '-.4em' }, text, 'Not');
-                element('tspan', { x: (a+b)/2, dy: '1.2em' }, text, 'supplied');
+              if ((label === 'Not supplied' || retained) && b-a < 100) {
+                element('tspan', { x: (a+b)/2, dy: '-.4em' }, text, retained ? '⚠ Last' : 'Not');
+                element('tspan', { x: (a+b)/2, dy: '1.2em' }, text, retained ? 'known' : 'supplied');
               } else text.textContent = label;
             }
             gapStart = null;
@@ -62,6 +64,11 @@
         for (const segment of window.PrestigeCore.segments(spec.values)) {
           const path = segment.map(([level, value], i) => i ? `H${x(level)}V${y(value)}` : `M${x(level)},${y(value)}`).join('');
           element('path', { d: path, stroke: color, class: 'chart-curve' }, svg);
+        }
+        if (last && last.level < spec.values.length) {
+          const retained = element('path', { d: `M${x(last.level)},${y(last.value)}H${x(spec.values.length)}`,
+            stroke: color, class: 'chart-curve chart-retained', 'data-retained-from': last.level }, svg);
+          element('title', {}, retained, `⚠ Retained from level ${last.level}; higher-level values are unconfirmed.`);
         }
         const points = element('g', { 'data-all-points': '', 'aria-hidden': 'true' }, svg);
         spec.values.forEach((value, i) => {
@@ -97,7 +104,9 @@
           line.setAttribute('x1',c.x(level)); line.setAttribute('x2',c.x(level));
         }
         c.from.setAttribute('visibility', current.from ? 'visible' : 'hidden');
-        const value = c.spec.values[current.to-1];
+        const observation = window.PrestigeCore.sample(c.spec.row, current.to, c.spec.charges ? 'charges' : 'values');
+        const value = observation.value;
+        c.marker.classList.toggle('is-retained', observation.kind === 'retained');
         c.marker.setAttribute('visibility',window.PrestigeCore.finite(value)?'visible':'hidden');
         if (window.PrestigeCore.finite(value)) { c.marker.setAttribute('cx',c.x(current.to)); c.marker.setAttribute('cy',c.y(value)); }
       });

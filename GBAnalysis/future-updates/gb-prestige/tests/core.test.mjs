@@ -103,12 +103,13 @@ test('every supplied unlocking cost is counted at its level across all 49 buildi
 test('locked, missing, flat increases and multiplier inputs stay distinct',()=>{
   const [copper,gold]=building('SoZ').rows;
   assert.equal(core.status(gold,100),'locked');
-  assert.equal(core.status(gold,225),'missing');
+  assert.equal(core.status(gold,225),'retained');
   assert.equal(core.difference(gold,100,150).kind,'unlock');
   assert.equal(core.difference(copper,100,150).delta,41);
   assert.equal(core.difference(gold,137,150).start,2);
   assert.equal(core.difference(gold,137,150).value,3);
-  assert.equal(core.difference(gold,224,250).kind,'missing');
+  assert.equal(core.difference(gold,224,250).delta,0);
+  assert.deepEqual(Array.from(core.difference(gold,224,250).retainedLevels),[224]);
   assert.equal(core.status({tier:'Copper',values:[0]},1),'available');
 });
 
@@ -122,7 +123,43 @@ test('attempt-weighted chance is separate from collection bonuses',()=>{
   const bg=building('BG').rows[0],aic=building('AIC').rows[0];
   assert.ok(Math.abs(core.expected(bg,101,data.boosts[bg.boost])-8.45)<1e-10);
   assert.equal(core.expected(aic,101,data.boosts[aic.boost]),null);
-  assert.equal(core.expected(building('BG').rows[2],250,data.boosts['16']),null);
+  assert.equal(core.expected(building('BG').rows[2],250,data.boosts['16']),1.98);
+});
+
+test('only trailing boost gaps retain the last observation, including genuine zero',()=>{
+  const row={tier:'Copper',values:[5,null,3,0,null,null]};
+  const snapshot=JSON.stringify(row);
+  assert.equal(core.sample(row,2).kind,'missing');
+  assert.equal(core.sample(row,4).kind,'available');
+  assert.equal(core.sample(row,5).kind,'retained');
+  assert.equal(core.sample(row,5).value,0);
+  assert.equal(core.sample(row,6).sourceLevel,4);
+  assert.equal(core.sample({tier:'Copper',values:[null,null]},2).kind,'missing');
+  assert.equal(core.sample({tier:'Gold',values:[1]},100).kind,'locked');
+  assert.equal(JSON.stringify(row),snapshot,'Raw observations must stay untouched');
+});
+
+test('SHS is confirmed through 108 and retains 4% with provenance above 108',()=>{
+  const row=building('SHS').rows.find(row=>row.boost==='58');
+  assert.equal(core.sample(row,108).kind,'available');
+  assert.equal(core.sample(row,108).value,4);
+  for(const level of [109,150,300]){
+    const observation=core.sample(row,level);
+    assert.equal(observation.kind,'retained');
+    assert.equal(observation.value,4);
+    assert.equal(observation.sourceLevel,108);
+  }
+  assert.deepEqual(Array.from(core.difference(row,100,150).retainedLevels),[108]);
+  assert.equal(core.difference(row,100,150).delta,0);
+  assert.equal(core.multiplierSteps(row).at(-1).level,66);
+});
+
+test('boost and attempt-limit retention have independent source levels',()=>{
+  const row={tier:'Copper',values:[10,20,null,null],charges:[1,2,3,null]};
+  assert.equal(core.sample(row,4).sourceLevel,2);
+  assert.equal(core.sample(row,4,'charges').sourceLevel,3);
+  assert.ok(Math.abs(core.expected(row,4,{mechanic:'Chance'})-0.6)<1e-10);
+  assert.deepEqual(Array.from(core.difference(row,1,4).retainedLevels),[2,3]);
 });
 
 test('multiplicative goal includes Copper multipliers and excludes additive boosts',()=>{
