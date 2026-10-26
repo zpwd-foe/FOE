@@ -167,7 +167,9 @@ const el = {
   versionLabel: document.getElementById("versionLabel"),
   presetSelect: document.getElementById("presetSelect"),
   ageSelect: document.getElementById("ageSelect"),
-  categorySelect: document.getElementById("categorySelect"),
+  categoryFilter: document.getElementById("categoryFilter"),
+  categoryFilterSummary: document.getElementById("categoryFilterSummary"),
+  categoryOptions: document.getElementById("categoryOptions"),
   categorySelectionPreview: document.getElementById("categorySelectionPreview"),
   searchModeSelect: document.getElementById("searchModeSelect"),
   searchInput: document.getElementById("searchInput"),
@@ -394,6 +396,37 @@ function focusValueText(value, leftLabel, rightLabel) {
   return "Balanced";
 }
 
+function categoryFilterInputs() {
+  return Array.from(el.categoryOptions.querySelectorAll('input[type="checkbox"]'));
+}
+
+function selectedCategories() {
+  return categoryFilterInputs()
+    .filter((input) => input.checked && input.value !== ALL_CATEGORIES)
+    .map((input) => input.value);
+}
+
+function setSelectedCategories(values) {
+  const selected = new Set(values.includes(ALL_CATEGORIES) ? [] : values);
+  categoryFilterInputs().forEach((input) => {
+    input.checked = selected.has(input.value);
+  });
+  syncCategoryFilterSummary();
+}
+
+function syncCategoryFilterSummary() {
+  const categories = selectedCategories();
+  const labels = categories.map(displayCategoryLabel);
+  const allOption = categoryFilterInputs().find((input) => input.value === ALL_CATEGORIES);
+  if (allOption) allOption.checked = categories.length === 0;
+  el.categoryFilterSummary.textContent = categories.length === 0
+    ? "All categories"
+    : categories.length === 1 ? labels[0] : `${categories.length} categories selected`;
+  el.categoryFilterSummary.title = labels.join(", ");
+  el.categorySelectionPreview.textContent = labels.join(" · ");
+  el.categorySelectionPreview.hidden = categories.length < 2;
+}
+
 function strengthFilterInputs() {
   return Array.from(el.strengthFilter.querySelectorAll('input[type="checkbox"]'));
 }
@@ -428,7 +461,7 @@ function controls() {
   const searchMode = el.searchModeSelect.value;
   return {
     age: el.ageSelect.value,
-    category: el.categorySelect.value,
+    categories: selectedCategories(),
     searchMode,
     search: searchMode === SEARCH_MODE_PRODUCTION
       ? el.productionSearchSelect.value
@@ -836,7 +869,7 @@ function preferenceSnapshot() {
   return {
     profile: state.profile,
     age: c.age,
-    category: c.category,
+    categories: c.categories,
     searchMode: c.searchMode,
     qiRole: c.qiRole,
     focus: {
@@ -875,7 +908,7 @@ function applyPreferences(preferences) {
   if (!preferences || typeof preferences !== "object") return;
   if (preferences.profile) setActiveProfile(preferences.profile);
   if (preferences.age) el.ageSelect.value = preferences.age;
-  if (preferences.category) el.categorySelect.value = preferences.category;
+  if (preferences.categories) setSelectedCategories(preferences.categories);
   if (preferences.searchMode) el.searchModeSelect.value = preferences.searchMode;
   if (preferences.qiRole) el.qiRoleSelect.value = preferences.qiRole;
 
@@ -962,12 +995,9 @@ function areaFilterValidation(c = controls()) {
 }
 
 function syncLongValuePresentation() {
-  const category = el.categorySelect.selectedOptions[0]?.textContent || el.categorySelect.value;
+  syncCategoryFilterSummary();
   const age = el.ageSelect.selectedOptions[0]?.textContent || el.ageSelect.value;
-  el.categorySelect.title = category;
   el.ageSelect.title = age;
-  el.categorySelectionPreview.textContent = category ? `Selected: ${category}` : "";
-  el.categorySelectionPreview.hidden = category.length <= 30;
   el.compareA.title = el.compareA.value;
   el.compareB.title = el.compareB.value;
   el.productionSearchSelect.title = el.productionSearchSelect.selectedOptions[0]?.textContent || "";
@@ -1229,9 +1259,9 @@ function overallRawWeight(key, c) {
     const combined = attrInfo(constants.prodFpAttr).defaultWeight + attrInfo(constants.prodGoodsAttr).defaultWeight;
     weight = productionRawWeights(c, combined).goods;
   } else if (key === "prod_unit_current_age") {
-    weight = (attrInfo("prod_unit_rogue").defaultWeight || 0) * focusLeft(c.unitAgeFocus);
+    weight = constants.overallCurrentNextUnitCombinedRawWeight * focusLeft(c.unitAgeFocus);
   } else if (key === "prod_unit_next_age") {
-    weight = (attrInfo("prod_unit_rogue").defaultWeight || 0) * focusRight(c.unitAgeFocus);
+    weight = constants.overallCurrentNextUnitCombinedRawWeight * focusRight(c.unitAgeFocus);
   } else if (info.isOverallQiStart) {
     weight = constants.overallQiStartRawWeight;
   } else if (key === constants.prodGuildGoodsAttr) {
@@ -1276,7 +1306,7 @@ function fightingWeight(key, c) {
   if (key === "prod_unit_next_age") {
     return focusRight(c.unitAgeFocus) * constants.fightingCurrentNextUnitCombinedRawWeight * constants.fightingWeightScale;
   }
-  if (key === "prod_unit_rogue") return constants.fightingWeightScale;
+  if (key === "prod_unit_rogue") return constants.fightingRogueRawWeight * constants.fightingWeightScale;
   if (!info.isFighting) return 0;
   let weight = info.defaultWeight || 0;
   if (info.isGbg) {
@@ -1544,7 +1574,7 @@ function filteredRows(rows) {
   const areaFiltersValid = !areaFilterValidation(c).message;
   return rows.filter((row) => {
     if (c.cityOnly && !placedCountForRow(row)) return false;
-    if (c.category !== ALL_CATEGORIES && row.record.category !== c.category) return false;
+    if (c.categories.length && !c.categories.includes(row.record.category)) return false;
     if (c.search && !recordMatchesSearch(row.record, c.search, c.searchMode)) return false;
     if (areaFiltersValid && c.minArea !== null && row.record.adjustedArea < c.minArea) return false;
     if (areaFiltersValid && c.maxArea !== null && row.record.adjustedArea > c.maxArea) return false;
@@ -1614,7 +1644,10 @@ function renderSummary(rows) {
     </div>
   `).join("");
   const benchmarkAge = DATA.ages.find((age) => age.key === c.age)?.label || c.age;
-  el.rankingSubtitle.textContent = `${benchmarkAge}${c.cityOnly ? " benchmark · Actual placed ages" : ""} · ${displayCategoryLabel(c.category)}`;
+  const categoryLabel = c.categories.length > 1
+    ? `${c.categories.length} source categories`
+    : displayCategoryLabel(c.categories[0] || ALL_CATEGORIES);
+  el.rankingSubtitle.textContent = `${benchmarkAge}${c.cityOnly ? " benchmark · Actual placed ages" : ""} · ${categoryLabel}`;
 }
 
 function renderTable(rows) {
@@ -1728,7 +1761,7 @@ function filterChips(c) {
       : el.searchInput.value.trim();
     chips.push(`${searchLabel}: ${searchValue}`);
   }
-  if (c.category !== ALL_CATEGORIES) chips.push(displayCategoryLabel(c.category));
+  c.categories.forEach((category) => chips.push(displayCategoryLabel(category)));
   c.strengths.forEach((strength) => chips.push(`Strength: ${strengthFilterLabel(strength)}`));
   if (areaValidation.message) {
     chips.push("Area filters paused");
@@ -2558,7 +2591,8 @@ function resetDefaults() {
   const defaults = DATA.defaults;
   el.presetSelect.value = "";
   if (!state.cityMap) el.ageSelect.value = DATA.metadata.defaultAge;
-  el.categorySelect.value = ALL_CATEGORIES;
+  setSelectedCategories([]);
+  el.categoryFilter.open = false;
   el.searchModeSelect.value = SEARCH_MODE_BUILDING;
   el.searchInput.value = "";
   el.productionSearchSelect.value = "";
@@ -2658,7 +2692,7 @@ function buildUrlParams() {
   params.set("profile", state.profile);
   if (PRESET_PROFILES_ENABLED && el.presetSelect.value) params.set("preset", el.presetSelect.value);
   params.set("age", c.age);
-  if (c.category !== ALL_CATEGORIES) params.set("category", c.category);
+  c.categories.forEach((category) => params.append("category", category));
   if (c.searchMode !== SEARCH_MODE_BUILDING) params.set("searchMode", c.searchMode);
   if (c.search) params.set("search", c.search);
   params.set("role", c.qiRole);
@@ -2703,7 +2737,7 @@ function applyUrlState() {
   }
   setActiveProfile(params.get("profile") || state.profile);
   if (DATA.ages.some((age) => age.key === params.get("age"))) el.ageSelect.value = params.get("age");
-  if (params.get("category")) el.categorySelect.value = params.get("category");
+  setSelectedCategories(params.getAll("category"));
   if ([SEARCH_MODE_BUILDING, SEARCH_MODE_FRAGMENT, SEARCH_MODE_PRODUCTION].includes(params.get("searchMode"))) {
     el.searchModeSelect.value = params.get("searchMode");
   }
@@ -2787,9 +2821,9 @@ async function changeAge() {
 function init() {
   el.versionLabel.textContent = `Model ${DATA.metadata.workbookModelVersion} · Last updated ${DATA.metadata.generatedAt}`;
   el.ageSelect.innerHTML = DATA.ages.map((age) => `<option value="${escapeHtml(age.key)}" title="${escapeHtml(age.label)}">${escapeHtml(age.label)}</option>`).join("");
-  el.categorySelect.innerHTML = sortedCategoryOptions(DATA.categories).map((category) => {
+  el.categoryOptions.innerHTML = sortedCategoryOptions(DATA.categories).map((category) => {
     const label = escapeHtml(displayCategoryLabel(category));
-    return `<option value="${escapeHtml(category)}" title="${label}">${label}</option>`;
+    return `<label class="checkbox-label category-option"><input type="checkbox" value="${escapeHtml(category)}"><span>${label}</span></label>`;
   }).join("");
   el.productionSearchSelect.innerHTML = [
     '<option value="">Choose production…</option>',
@@ -2858,7 +2892,6 @@ function init() {
   });
 
   [
-    el.categorySelect,
     el.searchModeSelect,
     el.productionSearchSelect,
     el.qiRoleSelect,
@@ -2867,6 +2900,17 @@ function init() {
     el.topNSelect,
     el.weightModeSelect,
   ].forEach((input) => input.addEventListener("change", renderImmediately));
+
+  el.categoryFilter.addEventListener("change", (event) => {
+    if (event.target.value === ALL_CATEGORIES) setSelectedCategories([]);
+    renderImmediately();
+  });
+  el.categoryFilter.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !el.categoryFilter.open) return;
+    event.stopPropagation();
+    el.categoryFilter.open = false;
+    el.categoryFilter.querySelector("summary").focus();
+  });
 
   el.ageSelect.addEventListener("change", changeAge);
 

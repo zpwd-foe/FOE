@@ -92,7 +92,7 @@ XLSX_MAIN_NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 XLSX_REL_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 PACKAGE_REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 # Increment this version before each pushed code change to this workbook generator.
-WORKBOOK_VERSION = "1.0.60"
+WORKBOOK_VERSION = "1.0.61"
 DEFAULT_ESTIMATED_FP_PRODUCTION = 30000.0
 DEFAULT_ESTIMATED_GOODS_PRODUCTION = 20000.0
 DEFAULT_ESTIMATED_SPECIAL_GOODS_PRODUCTION = 120.0
@@ -104,9 +104,11 @@ DEFAULT_FIGHTING_UNIT_AGE_FOCUS = 3
 DEFAULT_FIGHTING_ATTACK_DEFENSE_FOCUS = 2
 DEFAULT_PRODUCTION_FP_GOODS_FOCUS = 2
 FIGHTING_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT = 0.5
+OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT = 0.5
+FIGHTING_ROGUE_RAW_WEIGHT = 0.5
 FIGHTING_GBG_GE_COMBINED_RAW_WEIGHT = 3.0
 DEFAULT_FIGHTING_WEIGHT_SCALE = 60.0 / 9.5
-OVERALL_FIGHTING_WEIGHT_BUDGET = 30.0
+OVERALL_FIGHTING_WEIGHT_BUDGET = 28.75
 OVERALL_NON_FIGHTING_WEIGHT_BUDGET = 30.0
 OVERALL_TOTAL_WEIGHT_CELL = "$B$6"
 FIGHTING_TOTAL_WEIGHT_CELL = "$C$6"
@@ -214,7 +216,8 @@ OVERALL_FIGHTING_SUBGROUP_BUDGETS = {
     OVERALL_FIGHTING_GBG_WEIGHT_GROUP: 4.5,
     OVERALL_FIGHTING_GE_WEIGHT_GROUP: 4.5,
     OVERALL_FIGHTING_QI_WEIGHT_GROUP: 6.0,
-    OVERALL_FIGHTING_UNITS_WEIGHT_GROUP: 5.0,
+    # Remove half of the former 2.5 rogue weight while preserving other units.
+    OVERALL_FIGHTING_UNITS_WEIGHT_GROUP: 3.75,
 }
 OVERALL_FIGHTING_GBG_GE_COMBINED_BUDGET = (
     OVERALL_FIGHTING_SUBGROUP_BUDGETS[OVERALL_FIGHTING_GBG_WEIGHT_GROUP]
@@ -1000,7 +1003,7 @@ def default_weight_for_attr(key: str) -> float:
     }:
         return 0.5
     if key == "prod_unit_rogue":
-        return 0.5
+        return 0.25
     if key in {BOOST_FP_ATTR, BOOST_GOODS_ATTR, BOOST_SPECIAL_GOODS_ATTR, BOOST_GUILD_GOODS_ATTR, BOOST_MEDALS_ATTR}:
         return 0.0
     if key in {"street_connection_level", "generic_street_connection_requirement"}:
@@ -1217,7 +1220,7 @@ def fighting_weight_for_attr(key: str) -> float:
             * DEFAULT_FIGHTING_WEIGHT_SCALE
         )
     if key == "prod_unit_rogue":
-        return 1.0 * DEFAULT_FIGHTING_WEIGHT_SCALE
+        return FIGHTING_ROGUE_RAW_WEIGHT * DEFAULT_FIGHTING_WEIGHT_SCALE
     if not is_fighting_attr(key):
         return 0.0
     weight = default_weight_for_attr(key)
@@ -1352,9 +1355,9 @@ def overall_raw_weight_for_attr(key: str) -> float:
     elif key == PROD_GOODS_ATTR:
         weight = production_goods_raw_weight()
     elif key == "prod_unit_current_age":
-        weight = default_weight_for_attr("prod_unit_rogue") * fighting_current_age_unit_focus_multiplier()
+        weight = OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT * fighting_current_age_unit_focus_multiplier()
     elif key == "prod_unit_next_age":
-        weight = default_weight_for_attr("prod_unit_rogue") * fighting_next_age_unit_focus_multiplier()
+        weight = OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT * fighting_next_age_unit_focus_multiplier()
     elif key in OVERALL_QI_START_ATTRS:
         weight = OVERALL_QI_START_RAW_WEIGHT
     elif key == PROD_GUILD_GOODS_ATTR:
@@ -1415,7 +1418,7 @@ def fighting_weight_cell_value(key: str) -> Any:
             f"*{cached_number(DEFAULT_FIGHTING_WEIGHT_SCALE)}"
         )
     if key == "prod_unit_rogue":
-        return 1.0 * DEFAULT_FIGHTING_WEIGHT_SCALE
+        return FIGHTING_ROGUE_RAW_WEIGHT * DEFAULT_FIGHTING_WEIGHT_SCALE
     if not is_fighting_attr(key):
         return 0.0
     terms = [cached_number(default_weight_for_attr(key))]
@@ -1453,9 +1456,9 @@ def overall_raw_weight_cell_value(key: str) -> Any:
     if key == PROD_GOODS_ATTR:
         return f"={production_goods_raw_weight_formula()}"
     if key == "prod_unit_current_age":
-        return f"={cached_number(default_weight_for_attr('prod_unit_rogue'))}*(5-{CONTROLS_SHEET_REF}!{FIGHTING_UNIT_AGE_FOCUS_CELL})/4"
+        return f"={cached_number(OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT)}*(5-{CONTROLS_SHEET_REF}!{FIGHTING_UNIT_AGE_FOCUS_CELL})/4"
     if key == "prod_unit_next_age":
-        return f"={cached_number(default_weight_for_attr('prod_unit_rogue'))}*({CONTROLS_SHEET_REF}!{FIGHTING_UNIT_AGE_FOCUS_CELL}-1)/4"
+        return f"={cached_number(OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT)}*({CONTROLS_SHEET_REF}!{FIGHTING_UNIT_AGE_FOCUS_CELL}-1)/4"
     if key in OVERALL_QI_START_ATTRS:
         return OVERALL_QI_START_RAW_WEIGHT
     if key == PROD_GUILD_GOODS_ATTR:
@@ -3649,6 +3652,8 @@ SHARED_MODEL_NAMES = (
     "DEFAULT_FIGHTING_ATTACK_DEFENSE_FOCUS",
     "DEFAULT_PRODUCTION_FP_GOODS_FOCUS",
     "FIGHTING_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT",
+    "OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT",
+    "FIGHTING_ROGUE_RAW_WEIGHT",
     "FIGHTING_GBG_GE_COMBINED_RAW_WEIGHT",
     "DEFAULT_FIGHTING_WEIGHT_SCALE",
     "OVERALL_FIGHTING_WEIGHT_BUDGET",

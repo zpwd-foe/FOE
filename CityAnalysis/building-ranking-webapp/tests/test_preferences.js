@@ -34,7 +34,7 @@ function memoryStorage(initial = {}) {
 const allowed = {
   profiles: ["overallEfficiency", "kit"],
   ages: ["VirtualFuture", "SpaceAgeSpaceHub"],
-  categories: ["All Building Categories", "CARE 2026 Event Rewards"],
+  categories: ["All Building Categories", "CARE 2026 Event Rewards", "HAL 2026 Event Rewards"],
   searchModes: ["building", "fragment", "production"],
   qiRoles: ["Both", "Blue", "Red"],
   strengths: ["combat", "special-goods", "kit-oneUp"],
@@ -127,7 +127,7 @@ test("sanitizer keeps valid settings and removes untrusted values", () => {
   assert.deepEqual(sanitized, {
     profile: "kit",
     age: "VirtualFuture",
-    category: "CARE 2026 Event Rewards",
+    categories: ["CARE 2026 Event Rewards"],
     searchMode: "fragment",
     qiRole: "Both",
     focus: { gbgGe: 1, unitAge: 5, fpGoods: 3 },
@@ -160,4 +160,27 @@ test("sanitizer rejects an inverted area range and invalid sorting", () => {
     filters: { noRoadOnly: false },
     customWeights: { kits: {} },
   });
+});
+
+test("category selections round-trip with duplicates and unknown values removed", () => {
+  const sanitized = sanitizePreferences({
+    categories: ["HAL 2026 Event Rewards", "unknown", null, "CARE 2026 Event Rewards", "HAL 2026 Event Rewards"],
+  }, allowed);
+  const expected = { categories: ["HAL 2026 Event Rewards", "CARE 2026 Event Rewards"] };
+  assert.deepEqual(sanitized, expected);
+  const store = createPreferenceStore(memoryStorage());
+  assert.equal(store.save(sanitized), "saved");
+  assert.deepEqual(sanitizePreferences(store.read(), allowed), expected);
+});
+
+test("legacy all-categories settings and empty selections remain unrestricted", () => {
+  for (const value of [
+    { category: "All Building Categories" },
+    { categories: [] },
+    { categories: ["All Building Categories", "HAL 2026 Event Rewards"] },
+    { categories: ["unknown"] },
+    { categories: [], category: "CARE 2026 Event Rewards" },
+  ]) {
+    assert.deepEqual(sanitizePreferences(value, allowed), { categories: [] });
+  }
 });

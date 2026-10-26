@@ -21,10 +21,10 @@ if SCRIPT_DIR not in sys.path:
 
 import building_ranking_model as model  # noqa: E402
 
-DEFAULT_AGE = "SpaceAgeAsteroidBelt"
+DEFAULT_AGE = "SpaceAgeVenus"
 DATA_PREFIX = "window.FOE_BUILDING_RANKING_DATA = "
 # Increment when the serialized website payload shape or semantics change.
-EXPORT_SCHEMA_VERSION = 8
+EXPORT_SCHEMA_VERSION = 9
 BROTLI_QUALITY = 11
 EVENT_CATEGORY_REVIEWS_FILE = os.path.join(
     PROJECT_ROOT, "building-ranking-webapp", "config", "event-category-reviews.json"
@@ -624,6 +624,8 @@ def main(check_only: bool = False) -> None:
             "overallGbgGeCombinedBudget": model.OVERALL_FIGHTING_GBG_GE_COMBINED_BUDGET,
             "overallQiStartRawWeight": model.OVERALL_QI_START_RAW_WEIGHT,
             "fightingCurrentNextUnitCombinedRawWeight": model.FIGHTING_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT,
+            "overallCurrentNextUnitCombinedRawWeight": model.OVERALL_CURRENT_NEXT_UNIT_COMBINED_RAW_WEIGHT,
+            "fightingRogueRawWeight": model.FIGHTING_ROGUE_RAW_WEIGHT,
             "fightingGbgGeCombinedRawWeight": model.FIGHTING_GBG_GE_COMBINED_RAW_WEIGHT,
             "fightingWeightScale": model.DEFAULT_FIGHTING_WEIGHT_SCALE,
             "farmingFpGoodsCombinedRawWeight": model.FARMING_FP_GOODS_COMBINED_RAW_WEIGHT,

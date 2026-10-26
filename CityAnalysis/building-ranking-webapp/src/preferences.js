@@ -29,7 +29,13 @@
 
     if (allowedValue(value.profile, allowed.profiles)) sanitized.profile = value.profile;
     if (allowedValue(value.age, allowed.ages)) sanitized.age = value.age;
-    if (allowedValue(value.category, allowed.categories)) sanitized.category = value.category;
+    const categories = Array.isArray(value.categories)
+      ? value.categories
+      : allowedValue(value.category, allowed.categories) ? [value.category] : null;
+    if (categories) {
+      sanitized.categories = categories.includes("All Building Categories") ? []
+        : [...new Set(categories.filter((item) => allowedValue(item, allowed.categories)))];
+    }
     if (allowedValue(value.searchMode, allowed.searchModes)) sanitized.searchMode = value.searchMode;
     if (allowedValue(value.qiRole, allowed.qiRoles)) sanitized.qiRole = value.qiRole;
 

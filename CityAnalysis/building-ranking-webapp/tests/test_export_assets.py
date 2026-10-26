@@ -38,11 +38,11 @@ class ExportAssetTests(unittest.TestCase):
         overrides = entry.get("overrides", {})
         return overrides.get(age, entry.get("default", fallback))
 
-    def test_default_age_is_space_age_asteroid_belt(self) -> None:
+    def test_default_age_is_space_age_venus(self) -> None:
         data_dir = WEBAPP_ROOT / "data"
         core = json.loads((data_dir / "ranking-core.json").read_text(encoding="utf-8"))
 
-        self.assertEqual(core["metadata"]["defaultAge"], "SpaceAgeAsteroidBelt")
+        self.assertEqual(core["metadata"]["defaultAge"], "SpaceAgeVenus")
 
     def test_core_and_every_age_have_matching_json_gzip_and_brotli(self) -> None:
         data_dir = WEBAPP_ROOT / "data"

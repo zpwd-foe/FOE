@@ -6,7 +6,7 @@
     <title>FOE Building Rankings</title>
     <link rel="icon" href="favicon.png?v=20260711-1" type="image/png" sizes="64x64">
     <script src="src/theme.js?v=20260721-3"></script>
-    <link rel="stylesheet" href="src/styles.css?v=20260905-1">
+    <link rel="stylesheet" href="src/styles.css?v=20261026-2">
   </head>
   <body class="is-loading">
     <a class="skip-link" href="#rankingTitle">Skip to rankings</a>
@@ -48,7 +48,7 @@
             <p>Choose which buildings you want to compare.</p>
             <ul>
               <li><strong>Ranking benchmark age</strong> defines the common comparison scale for scores and ranks.</li>
-              <li><strong>Source category</strong> shows every reward building or only one event or game-mode group.</li>
+              <li><strong>Source category</strong> shows every reward building or any of the selected event and game-mode groups.</li>
               <li><strong>Search</strong> can find a building by name, reward fragment, or an exact production type such as next-age goods or units.</li>
               <li><strong>My City Map</strong> can read a city-map JSON file locally. Each building uses its own placed age for raw values while the ranking benchmark stays common, and copies at different ages appear on separate rows.</li>
             </ul>
@@ -70,11 +70,15 @@
             Ranking benchmark age
             <select id="ageSelect"></select>
           </label>
-          <label>
-            Source category
-            <select id="categorySelect" aria-describedby="categorySelectionPreview"></select>
+          <fieldset class="category-filter-fieldset">
+            <legend>Source category</legend>
+            <details class="category-multiselect" id="categoryFilter">
+              <summary aria-describedby="categoryFilterHint categorySelectionPreview"><span id="categoryFilterSummary">All categories</span></summary>
+              <div class="category-options" id="categoryOptions"></div>
+            </details>
+            <small id="categoryFilterHint" class="selection-preview">Select one or more. Matches any selected category.</small>
             <small id="categorySelectionPreview" class="selection-preview" hidden></small>
-          </label>
+          </fieldset>
           <fieldset class="search-control">
             <legend>Search building by</legend>
             <div class="search-control-row">
@@ -414,9 +418,9 @@
     </aside>
 
     <script
-      src="src/bootstrap.js?v=20260914-2"
+      src="src/bootstrap.js?v=20261026-2"
       data-data-version="5008692557f7"
-      data-app-version="20260914-2"
+      data-app-version="20261026-2"
     ></script>
   </body>
 </html>
