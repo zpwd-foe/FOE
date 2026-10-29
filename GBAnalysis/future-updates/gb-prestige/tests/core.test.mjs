@@ -29,7 +29,25 @@ test('required missing resources block only their total; valid zero stays zero',
   assert.equal(core.rangeSum({gold:false,levelData:[[1,1,1,null]]},3,0,1),0);
 });
 
-test('SHS unlock goods include Copper levels and the destination level',()=>{
+test('20 Gold buildings start coin, supply and medal unlock costs at level 101',()=>{
+  const affected=data.buildings.filter(b=>b.gold&&b.sourceSheet!=='SHS');
+  assert.equal(affected.length,20);
+  for(const b of affected){
+    for(const field of ['coinsSupplies','medals']){
+      for(const [from,to] of [[0,9],[9,10],[10,11],[99,100],[0,100],[50,100]]){
+        assert.equal(core.upgrade(b,from,to)[field],0,`${b.name}, ${from} → ${to}, ${field}`);
+      }
+      const firstGoldCost=core.upgrade(b,100,101)[field];
+      assert.ok(firstGoldCost>0,`${b.name}: ${field} resumes at 101`);
+      assert.equal(core.upgrade(b,99,101)[field],firstGoldCost);
+      assert.equal(core.upgrade(b,50,150)[field],core.upgrade(b,100,150)[field]);
+    }
+  }
+  assert.equal(core.upgrade(building('SoZ'),100,101).coinsSupplies,2253489);
+  assert.equal(core.upgrade(building('SoZ'),100,101).medals,1126744);
+});
+
+test('SHS retains its Copper unlock costs and includes the destination level',()=>{
   const shs=building('SHS');
   assert.equal(core.upgrade(shs,0,10).goodsEach,0);
   assert.equal(core.upgrade(shs,10,11).goodsEach,275);
@@ -40,6 +58,10 @@ test('SHS unlock goods include Copper levels and the destination level',()=>{
   assert.equal(core.upgrade(shs,100,150).goodsEach,85883);
   assert.equal(core.upgrade(shs,50,150).coinsSupplies,444499036);
   assert.equal(core.upgrade(shs,50,150).medals,385836481);
+  assert.equal(core.upgrade(shs,99,100).coinsSupplies,8748000);
+  assert.equal(core.upgrade(shs,99,100).medals,8748000);
+  assert.equal(core.upgrade(shs,100,101).coinsSupplies,8845200);
+  assert.equal(core.upgrade(shs,100,101).medals,8845200);
   assert.equal(core.upgrade(building('SoZ'),50,100).goodsEach,0);
 });
 

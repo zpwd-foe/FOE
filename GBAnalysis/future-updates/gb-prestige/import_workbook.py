@@ -128,9 +128,19 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
             level_data.append([fp, running_total, *resources, *rewards,
                                numeric(costs, f'{column_name(cost_base)}{row_number}'),
                                numeric(costs, f'{column_name(cost_base+1)}{row_number}')])
+        cost_source = {'sheet': 'Costs', 'postColumn': column_name(cost_base+2)}
+        if building['gold'] and sheet_name != 'SHS':
+            confirmation = {
+                'fields': ['coinsSupplies', 'medals'], 'fromLevel': 10,
+                'toLevel': 100, 'value': 0, 'date': '2026-10-28',
+                'reason': 'User confirmed: Gold-tier buildings other than Shattered Horizon Siphon only require coins, supplies and medals to unlock levels 101 and above.'}
+            for level in range(confirmation['fromLevel'], confirmation['toLevel'] + 1):
+                for field in confirmation['fields']:
+                    level_data[level - 1][LEVEL_FIELDS.index(field)] = confirmation['value']
+            cost_source['confirmedUnlockRanges'] = [confirmation]
         building.update({'levels': levels, 'rows': rows, 'levelData': level_data,
                          'sourceSheet': sheet_name, 'guidance': DECISION_NOTES[order],
-                         'costSource': {'sheet': 'Costs', 'postColumn': column_name(cost_base+2)},
+                         'costSource': cost_source,
                          'notes': [], 'workbookNotes': []})
         building.pop('pendingUnlockCosts', None)
         if sheet_name in PENDING_UNLOCK_SHEETS:
@@ -145,12 +155,12 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
                 building['workbookNotes'].append(f'Reward notes in {sheet_name}!{address}: {cells[address].replace(chr(10), "; ")}. No individual reward probabilities are supplied.')
         for key in ['screenshot', 'screenshotSha256', 'sourceImage']:
             building.pop(key, None)
-    data.update({'schemaVersion': 2, 'date': '2026-10-25', 'levelFields': LEVEL_FIELDS,
+    data.update({'schemaVersion': 2, 'date': '2026-10-28', 'levelFields': LEVEL_FIELDS,
         'source': {'name': source.name, 'author': 'Ubernerd', 'sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
-                   'method': 'Saved workbook values; formulas are not recalculated.', 'sheetCount': len(sheets)},
+                   'method': 'Saved workbook values with explicitly recorded user confirmations; formulas are not recalculated.', 'sheetCount': len(sheets)},
         'methodology': {
             'values': 'All supplied level-by-level values from the Ubernerd workbook, with explicitly recorded user confirmations. Detail sheets take priority over summary ranges. Percent fractions are converted to displayed percentages. Raw missing values remain null; display-time retention is marked with a warning.',
-            'costs': 'Per-level FP is reconciled against the post-update Costs sheet. Upgrade totals sum levels after the current level through the target, before contributor funding. The combined Coins / Supplies column is the amount of each resource.',
+            'costs': 'Per-level FP is reconciled against the post-update Costs sheet. Upgrade totals sum levels after the current level through the target, before contributor funding. The combined Coins / Supplies column is the amount of each resource. User-confirmed rule dated 2026-10-28: Gold-tier buildings except Shattered Horizon Siphon have zero coin, supply and medal unlock costs at levels 10–100; workbook costs at 101 and above are retained. Each affected building records this override in costSource.confirmedUnlockRanges.',
             'rewards': 'Contributor FP rewards are the workbook’s saved P1–P7 values, before personal contribution boosts. No contribution boost or funding assumption is applied.',
             'icons': 'Dashboard boost names, icons and army terminology follow the tracker pairings, with reviewed building-specific scope corrections. Himeji Castle Gold uses the user-confirmed blue attack multiplier in GBG.',
             'recommendations': 'Play-style guidance is editorial; ratings are not calculated cost, efficiency or payback rankings.',

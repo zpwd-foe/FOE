@@ -52,6 +52,23 @@ class GuideDataTests(unittest.TestCase):
             self.assertTrue(b['pendingUnlockCosts']['source'].startswith('https://support.innogames.com/'))
             self.assertTrue(all(row[field] is None for row in b['levelData'] for field in [4, 5, 6]))
 
+    def test_gold_unlock_resource_rule_has_explicit_provenance(self):
+        affected = [b for b in BUILDINGS.values() if b['gold'] and b['sourceSheet'] != 'SHS']
+        self.assertEqual(len(affected), 20)
+        for b in BUILDINGS.values():
+            confirmations = b['costSource'].get('confirmedUnlockRanges', [])
+            if b not in affected:
+                self.assertEqual(confirmations, [], b['name'])
+                continue
+            confirmation, = confirmations
+            self.assertEqual(confirmation['fields'], ['coinsSupplies', 'medals'])
+            self.assertEqual((confirmation['fromLevel'], confirmation['toLevel'], confirmation['value']), (10, 100, 0))
+            self.assertEqual(confirmation['date'], '2026-10-28')
+            self.assertIn('User confirmed', confirmation['reason'])
+            for level in range(10, 101):
+                self.assertEqual(b['levelData'][level - 1][4:6], [0, 0], (b['name'], level))
+            self.assertTrue(all(value > 0 for value in b['levelData'][100][4:6]), b['name'])
+
     def test_percent_units_and_charges(self):
         self.assertEqual(BUILDINGS['CF']['rows'][2]['values'][100], 5)
         aid = BUILDINGS['TT']['rows'][0]
@@ -102,7 +119,7 @@ class GuideDataTests(unittest.TestCase):
                     self.assertEqual(record[12:14], [None, None])
 
     @unittest.skipUnless(DEFAULT_SOURCE.exists(), 'Raw authoring workbook is not required for deployment')
-    def test_every_boost_charge_and_unlock_cost_matches_the_saved_workbook(self):
+    def test_every_boost_charge_and_unlock_cost_matches_workbook_and_confirmations(self):
         self.assertEqual(hashlib.sha256(DEFAULT_SOURCE.read_bytes()).hexdigest(), DATA['source']['sha256'])
         sheets = read_workbook(DEFAULT_SOURCE)
         for b in BUILDINGS.values():
@@ -114,6 +131,8 @@ class GuideDataTests(unittest.TestCase):
                 column = header[:-1] if header else None
                 for level, record in enumerate(b['levelData'], 1):
                     expected = numeric(cells, f'{column}{level+4}') if column else None
+                    if b['gold'] and b['sourceSheet'] != 'SHS' and field in (4, 5) and 10 <= level <= 100:
+                        expected = 0
                     self.assertEqual(record[field], expected, (b['name'], label, level))
             for row in b['rows']:
                 for level, actual in enumerate(row['values'], 1):

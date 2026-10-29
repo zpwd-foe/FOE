@@ -86,6 +86,12 @@ Source interpretation:
     current level and include the target. They are before contributor funding.
   - The Coins / Supplies column is the amount required of each resource.
     Goods are shown per type.
+    User-confirmed rule (2026-10-28): all 20 Gold-tier buildings other than
+    Shattered Horizon Siphon have zero coin, supply and medal unlocking costs
+    at levels 10–100. These costs start at level 101. The importer applies this
+    override and records it in each building's costSource.confirmedUnlockRanges.
+    The original workbook is unchanged. SHS, Copper-only buildings, costs at
+    101 and above, goods, blueprints, FP and contributor rewards are unchanged.
     Supplied Copper-level unlock resources are included, including SHS goods
     from level 11. Gold blueprint rows appear only for Gold-capable buildings
     when the selected upgrade reaches level 101 or higher.
@@ -96,7 +102,8 @@ Source interpretation:
     https://support.innogames.com/kb/ForgeOfEmpires/en_DK/6992/Great-Buildings-Prestige-redesigned-the-feature-overview
     Confirmed values (including zero) take precedence; old live costs are not used.
     Tests reconcile all five unlocking-resource fields for every building and
-    level against the source, then check individual costs and upgrade ranges.
+    level against the source and recorded confirmations, then check individual
+    costs, the level 100/101 boundary and upgrade ranges.
   - Multiplier step levels include the known starting/unlock value and increases
     confirmed by consecutive supplied levels. Missing spans are never bridged.
   - P1–P7 values are base FP rewards, not assumed donations or secure amounts.
