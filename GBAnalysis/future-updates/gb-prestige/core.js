@@ -42,6 +42,21 @@
       coinsSupplies: rangeSum(building, 4, from, to), medals: rangeSum(building, 5, from, to),
       goodsEach: rangeSum(building, 6, from, to), previousFP: rangeSum(building, 14, from, to) };
   }
+  function levelFunding(building, level) {
+    const gold = building.gold && level >= 101;
+    const multiplier = gold ? 1 : 1.9, positions = gold ? 7 : 5;
+    const record = Number.isInteger(level) && level > 0 ? building.levelData[level - 1] : null;
+    const total = finite(record?.[0]) && record[0] >= 0 ? record[0] : null;
+    // Round each donor's amount separately, including exact half-FP cases.
+    const contributions = Array.from({ length: positions }, (_, position) => {
+      const reward = record?.[7 + position];
+      return finite(reward) && reward >= 0 ? Math.round(reward * multiplier + 1e-6) : null;
+    });
+    const contributionTotal = contributions.every(finite)
+      ? contributions.reduce((sum, value) => sum + value, 0) : null;
+    const priming = finite(total) && finite(contributionTotal) ? Math.max(0, total - contributionTotal) : null;
+    return { level, total, priming, contributions, contributionTotal, multiplier, positions };
+  }
   function difference(row, from, to) {
     if (from >= to) return { kind: 'invalid' };
     const end = sample(row, to), beginning = sample(row, from);
@@ -86,5 +101,5 @@
         ? [{ level, value, kind: 'increase' }] : [];
     });
   }
-  window.PrestigeCore = { finite, lastKnown, sample, status, clamp, rangeSum, upgrade, difference, expected, segments, matchesGoal, multiplierSteps };
+  window.PrestigeCore = { finite, lastKnown, sample, status, clamp, rangeSum, upgrade, levelFunding, difference, expected, segments, matchesGoal, multiplierSteps };
 })();

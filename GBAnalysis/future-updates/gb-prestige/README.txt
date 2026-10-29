@@ -10,6 +10,21 @@ button for its boost description and multiplier example.
 Boosts show multipliers first, then other Gold boosts, followed by Copper boosts.
 Graph ticks mark 100-level boundaries at 1, 101, 201 and 301 (201 for Copper-only).
 
+Each building also has a two-line FP chart comparing total leveling cost with
+priming cost for every supplied level: 1–200 for Copper-only and 1–300 for Gold
+buildings. These are individual level costs, not cumulative costs. The FP axis
+uses a base-10 logarithmic scale with powers-of-ten ticks so early levels remain
+readable. Zero FP, when present, uses a separate baseline below positive costs.
+Hover and selected-level values remain exact FP amounts. Priming means
+the owner's net FP cost after all expected position contributions, floored at 0;
+it does not calculate when a donor position is secure. P1–P5 contribute 1.9 times
+base FP rewards at every Copper-only level and Gold-building levels below 101.
+Gold-building levels 101 and above use base rewards for P1–P7 (1x). Each position
+is rounded to whole FP before summing. Missing costs or required rewards remain
+gaps, never retained values. Click/tap a cost chart, use its arrow/Home/End keys,
+or change Target level to view exact totals, contributions and priming FP. Gold
+charts mark the contribution-rate change at 101. Unlocking resources are separate.
+
 Unlocking details include blueprint sets, coins, supplies, medals, goods and
 base contributor FP rewards. The sidebar shows total upgrade FP and compares the
 same level range on the live server, using the workbook's pre-update costs. Detailed source
@@ -54,8 +69,8 @@ Authoring files:
   build_data.py: established building/icon metadata plus the workbook import.
   data/tracker-catalog.json: existing icon and mechanic definitions.
   data/guide-data.json and .js: generated runtime data, schema version 2.
-  core.js: missing-data-safe upgrade calculations.
-  charts.js: local SVG rendering, preserving all points and gaps.
+  core.js: missing-data-safe upgrade and per-level funding calculations.
+  charts.js: local SVG boost and cost comparisons, preserving all points and gaps.
   combat-ranking.js: combat scope, multiplier estimates, ranking and icon gesture.
   simple-view.js: hidden leaderboard controls and building breakdowns.
 
@@ -107,7 +122,8 @@ Source interpretation:
   - Multiplier step levels include the known starting/unlock value and increases
     confirmed by consecutive supplied levels. Missing spans are never bridged.
   - P1–P7 values are base FP rewards, not assumed donations or secure amounts.
-    Personal contribution boosts are not applied.
+    The base-reward table remains unadjusted. The cost comparison separately
+    applies the user-specified 1.9x / 1x contribution assumptions above.
   - Himeji Castle's Gold scope is user-confirmed as the blue attack multiplier
     in GBG (pairing 75). Its corrected icon and wording are separate from Seed
     Vault's attack-and-defense multiplier (pairing 63).

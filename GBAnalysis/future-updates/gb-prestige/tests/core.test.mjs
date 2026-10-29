@@ -19,6 +19,67 @@ test('upgrade costs include the destination and exclude completed levels',()=>{
   assert.equal(core.upgrade(zeus,150,100).fp,null);
 });
 
+test('per-level funding rounds each position at 1.9x before subtracting contributions',()=>{
+  const funding=core.levelFunding(building('SoZ'),50);
+  assert.equal(funding.total,1410);
+  assert.equal(funding.multiplier,1.9);
+  assert.equal(funding.positions,5);
+  assert.deepEqual(Array.from(funding.contributions),[627,314,105,29,10]);
+  assert.equal(funding.contributionTotal,1085);
+  assert.equal(funding.priming,325);
+});
+
+test('Gold funding switches at 101 while Copper-only funding remains 1.9x through 200',()=>{
+  const gold=building('SoZ'),copper=building('ToB');
+  assert.equal(core.levelFunding(gold,100).priming,2403);
+  const firstGold=core.levelFunding(gold,101);
+  assert.equal(firstGold.multiplier,1);
+  assert.equal(firstGold.positions,7);
+  assert.equal(firstGold.contributionTotal,720);
+  assert.equal(firstGold.priming,4089);
+  assert.equal(core.levelFunding(copper,101).multiplier,1.9);
+  assert.equal(core.levelFunding(copper,101).positions,5);
+  assert.equal(core.levelFunding(copper,101).priming,3440);
+  assert.equal(core.levelFunding(copper,200).priming,70710);
+  assert.equal(core.levelFunding(building('SHS'),100).multiplier,1.9);
+  assert.equal(core.levelFunding(building('SHS'),101).multiplier,1);
+});
+
+test('per-level funding includes all seven Gold positions and preserves missing data',()=>{
+  const gold=structuredClone(building('SoZ'));
+  gold.levelData[100]=[1000,1000,0,0,0,0,0,100,50,20,10,5,3,2];
+  assert.equal(core.levelFunding(gold,101).contributionTotal,190);
+  assert.equal(core.levelFunding(gold,101).priming,810);
+  gold.levelData[100][13]=null;
+  assert.equal(core.levelFunding(gold,101).total,1000);
+  assert.equal(core.levelFunding(gold,101).priming,null);
+  gold.levelData[100][13]=0;
+  assert.equal(core.levelFunding(gold,101).priming,812);
+  gold.levelData[100][0]=null;
+  assert.equal(core.levelFunding(gold,101).priming,null);
+  assert.equal(core.levelFunding(gold,101).contributionTotal,188);
+  gold.levelData[100][0]=100;
+  assert.equal(core.levelFunding(gold,101).priming,0);
+  for(const level of [0,-1,1.5,301])assert.equal(core.levelFunding(gold,level).priming,null);
+});
+
+test('funding covers every supplied level with the correct building-specific tier rule',()=>{
+  let count=0;
+  for(const b of data.buildings){
+    for(const level of b.levels){
+      const result=core.levelFunding(b,level);
+      const gold=b.gold&&level>=101;
+      assert.equal(result.total,b.levelData[level-1][0],`${b.name}, ${level}`);
+      assert.equal(result.positions,gold?7:5);
+      assert.equal(result.multiplier,gold?1:1.9);
+      assert.ok(Number.isInteger(result.priming)&&result.priming>=0&&result.priming<=result.total);
+      assert.equal(result.total-result.priming,result.contributionTotal);
+      count++;
+    }
+  }
+  assert.equal(count,11900);
+});
+
 test('required missing resources block only their total; valid zero stays zero',()=>{
   const fake={gold:true,levelData:Array.from({length:102},()=>[1,1,2,null,null,null,null])};
   assert.equal(core.rangeSum(fake,3,0,100),0);

@@ -114,5 +114,96 @@
     const resize = new ResizeObserver(draw); resize.observe(host); draw();
     return { update, destroy: () => resize.disconnect() };
   }
-  window.PrestigeCharts = { mount };
+  function mountCosts(svg, points, selection, callbacks) {
+    const core = window.PrestigeCore;
+    let current = selection, geometry;
+    const series = [
+      { key: 'total', label: 'Total leveling cost', color: 'var(--gold)' },
+      { key: 'priming', label: 'Priming cost', color: 'var(--green)' },
+    ];
+    const draw = () => {
+      const width = svg.getBoundingClientRect().width, height = 210;
+      if (width < 160) return;
+      const left = 64, right = width - 14, top = 32, bottom = height - 38;
+      const axisEnd = points.length + 1;
+      const x = level => left + 3 + (level - 1) / (axisEnd - 1) * (right - left - 6);
+      const values = points.flatMap(point => [point.total, point.priming]).filter(core.finite);
+      const positive = values.filter(value => value > 0), hasZero = values.includes(0);
+      const minPower = positive.length ? Math.floor(Math.log10(Math.min(...positive))) : 0;
+      const maxPower = Math.max(minPower + 1, positive.length ? Math.ceil(Math.log10(Math.max(...positive))) : 1);
+      // Positive costs use a true base-10 log scale. Reserve a separate band for zero.
+      const floorPower = minPower - (hasZero ? 1 : 0);
+      const y = value => bottom - 3 - ((value === 0 ? floorPower : Math.log10(value)) - floorPower)
+        / (maxPower - floorPower) * (bottom - top - 7);
+      const costTicks = [...(hasZero ? [0] : []), ...Array.from({length: maxPower-minPower+1}, (_, i) => 10 ** (minPower+i))];
+      svg.replaceChildren(); svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      element('title', {}, svg, 'Total leveling cost vs priming cost per level');
+      element('desc', {}, svg, 'FP uses a base-10 logarithmic axis: each tick is ten times the previous positive tick. Zero FP, when present, uses a separate baseline below the positive scale. Priming is total FP minus all position contributions, rounded separately to whole FP, with a minimum of zero. Missing costs or rewards remain gaps. Click to select a target level, or use arrow keys, Home and End.');
+      element('rect', { x: left, y: top, width: right-left, height: bottom-top, class: 'chart-frame' }, svg);
+      for (const value of costTicks) {
+        element('line', { x1: left, x2: right, y1: y(value), y2: y(value), class: 'chart-grid' }, svg);
+        element('text', { x: left-8, y: y(value)+4, 'text-anchor': 'end', 'data-cost-tick': value }, svg, compact(value));
+      }
+      const ticks = Array.from({length: Math.floor((axisEnd-1)/100)+1}, (_, i) => 1+i*100);
+      for (const level of ticks) element('text', { x: x(level), y: bottom+19, 'text-anchor': level === 1 ? 'start' : level === axisEnd ? 'end' : 'middle', 'data-level-tick': level }, svg, level);
+      element('text', { x: left, y: 16, class: 'axis-title' }, svg, 'FP / level · log scale');
+      element('text', { x: (left+right)/2, y: height-2, 'text-anchor': 'middle', class: 'axis-title' }, svg, 'Building level');
+      if (points[100]?.multiplier === 1) {
+        element('line', { x1: x(101), x2: x(101), y1: top, y2: bottom, class: 'funding-boundary', 'data-funding-boundary': '101' }, svg);
+        element('text', { x: x(101)+6, y: top+15, class: 'funding-boundary-label' }, svg, '101 · 1×');
+      }
+      const markers = [];
+      for (const spec of series) {
+        const group = element('g', { 'data-funding-series': spec.key }, svg);
+        for (const segment of core.segments(points.map(point => point[spec.key]))) {
+          const path = segment.map(([level, value], i) => i ? `H${x(level)}V${y(value)}` : `M${x(level)},${y(value)}`).join('');
+          element('path', { d: path, stroke: spec.color, class: `chart-curve funding-${spec.key}-curve` }, group);
+        }
+        points.forEach(point => {
+          if (core.finite(point[spec.key])) element('circle', { cx: x(point.level), cy: y(point[spec.key]), r: 1, fill: spec.color, 'data-funding-point': point.level, 'aria-hidden': 'true' }, group);
+        });
+        markers.push({ key: spec.key, node: element('circle', { r: 4, fill: spec.color, class: 'chart-selected-point' }, svg) });
+      }
+      const from = element('line', { y1: top, y2: bottom, class: 'chart-current' }, svg);
+      const target = element('line', { y1: top, y2: bottom, class: 'chart-target' }, svg);
+      const hover = element('line', { y1: top, y2: bottom, class: 'chart-hover', visibility: 'hidden' }, svg);
+      const hit = element('rect', { x: left, y: top, width: right-left, height: bottom-top, fill: 'transparent', 'data-chart-hit': '' }, svg);
+      const levelAt = event => core.clamp(1+(event.clientX-svg.getBoundingClientRect().left-left-3)/(right-left-6)*(axisEnd-1), 1, points.length);
+      hit.addEventListener('pointermove', event => {
+        if (event.pointerType === 'touch') return;
+        const level = levelAt(event);
+        hover.setAttribute('x1', x(level)); hover.setAttribute('x2', x(level)); hover.setAttribute('visibility', 'visible');
+        callbacks.hover(event, level);
+      });
+      hit.addEventListener('pointerleave', event => {
+        if (event.pointerType !== 'touch') { hover.setAttribute('visibility', 'hidden'); callbacks.leave(); }
+      });
+      hit.addEventListener('click', event => { const level = levelAt(event); callbacks.select(level); callbacks.hover(event, level); });
+      geometry = { x, y, from, target, markers };
+      update(current);
+    };
+    function update(selection) {
+      current = selection;
+      if (!geometry) return;
+      const { x, y, from, target, markers } = geometry;
+      for (const [line, level] of [[from, Math.max(1,current.from)], [target,current.to]]) {
+        line.setAttribute('x1',x(level)); line.setAttribute('x2',x(level));
+      }
+      from.setAttribute('visibility',current.from?'visible':'hidden');
+      for (const marker of markers) {
+        const value = points[current.to-1]?.[marker.key];
+        marker.node.setAttribute('visibility',core.finite(value)?'visible':'hidden');
+        if (core.finite(value)) { marker.node.setAttribute('cx',x(current.to)); marker.node.setAttribute('cy',y(value)); }
+      }
+    }
+    const onKey = event => {
+      const level = { ArrowLeft: current.to-1, ArrowRight: current.to+1, Home: 1, End: points.length }[event.key];
+      if (level === undefined) return;
+      event.preventDefault(); callbacks.leave(); callbacks.select(core.clamp(level,1,points.length));
+    };
+    svg.addEventListener('keydown',onKey);
+    const resize = new ResizeObserver(draw); resize.observe(svg); draw();
+    return { update, destroy: () => { resize.disconnect(); svg.removeEventListener('keydown',onKey); } };
+  }
+  window.PrestigeCharts = { mount, mountCosts };
 })();

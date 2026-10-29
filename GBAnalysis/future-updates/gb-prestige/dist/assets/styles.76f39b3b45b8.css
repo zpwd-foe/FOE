@@ -236,6 +236,31 @@ dialog::backdrop { background:rgba(11,25,34,.65); backdrop-filter:blur(3px); }
 .plot-selected { font-size:.875rem; color:var(--muted); margin-top:7px; font-variant-numeric:tabular-nums; }
 .plot-selected strong { color:var(--ink); font-weight:650; }
 .plot-coverage { font-size:.75rem; color:var(--muted); margin:5px 0 0; }
+.funding-panel h4 { font-size:1rem; margin:0 0 4px; }
+.funding-scope { font-size:.8125rem; color:var(--muted); margin:0 0 12px; }
+.funding-legend { display:flex; flex-wrap:wrap; gap:8px 18px; font-size:.8125rem; color:var(--muted); }
+.funding-legend>span { display:inline-flex; align-items:center; gap:7px; }
+.funding-legend i { width:22px; border-top:2px solid var(--gold); }
+.funding-legend .funding-priming-key { border-color:var(--green); border-top-style:dashed; }
+.funding-plot { height:210px; margin-top:5px; }
+.funding-plot:focus-visible { outline:2px solid var(--green); outline-offset:3px; border-radius:4px; }
+.funding-priming-curve { stroke-dasharray:5 3; }
+.funding-boundary { stroke:var(--gold); stroke-dasharray:3 4; opacity:.6; }
+.funding-boundary-label { fill:var(--muted)!important; font-size:11px!important; }
+.funding-selected { margin-top:12px; padding:12px 14px; border:1px solid var(--line); border-radius:9px; background:var(--subtle); }
+.funding-selected-level { font-size:.8125rem; color:var(--muted); margin:0 0 10px; }
+.funding-values { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0; font-variant-numeric:tabular-nums; }
+.funding-values dt { font-size:.75rem; color:var(--muted); }
+.funding-values dd { font-size:1.125rem; font-weight:700; margin:3px 0 0; overflow-wrap:anywhere; }
+.funding-values small { font-size:.75rem; font-weight:500; }
+.funding-values>div:first-child dd { color:var(--gold); }
+.funding-values>div:last-child dd { color:var(--green); }
+.funding-contributions { color:var(--muted); font-size:.75rem; margin:10px 0 0; }
+.funding-contributions strong { font-weight:600; }
+.funding-method { margin-top:10px; font-size:.8125rem; color:var(--muted); line-height:1.65; }
+.funding-method summary { color:var(--green); padding:6px 0; }
+.funding-method p { margin:8px 0; }
+.funding-positions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px 12px; font-variant-numeric:tabular-nums; }
 .multiplier-steps { margin-top:14px; }.multiplier-steps h5 { color:var(--muted); font-size:.8125rem; font-weight:600; margin:0 0 8px; }
 .step-levels { display:flex; flex-wrap:wrap; gap:7px; }
 .step-level { display:grid; gap:3px; min-height:44px; padding:7px 11px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); font-size:.8125rem; text-align:left; font-variant-numeric:tabular-nums; }

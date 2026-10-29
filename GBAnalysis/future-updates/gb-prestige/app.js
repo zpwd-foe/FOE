@@ -15,7 +15,8 @@
   const normalize=v=>String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const boost=row=>data.boosts[row.boost];
   const lookup=new Map(data.buildings.map(b=>[b.id,b]));
-  const selected=new Set(), states=new Map(), mounted=new Map(), comparisonLevels=new Map();
+  const selected=new Set(), states=new Map(), mounted=new Map(), fundingMounted=new Map(), comparisonLevels=new Map();
+  const funding=new Map(data.buildings.map(b=>[b.id,b.levels.map(level=>core.levelFunding(b,level))]));
   let focus='All goals';
   const rank={'Strong candidate':0,Situational:1,'Lower priority':2};
   const goals=['All goals','Multiplicative','GBG','GE','QI','Combat','FP','Contributions','Goods','Guild','Historical Allies','Aiding','Quests','City resources'];
@@ -75,11 +76,19 @@
     return `<div class="multiplier-steps"><h5>Multiplier step levels</h5><div class="step-levels">${steps.length?steps.map(step=>`<button type="button" class="step-level" data-step-level="${step.level}" aria-pressed="${selection(b).to===step.level}" aria-label="Set target to level ${step.level}: ${number(step.value)}% multiplier (${factor(step.value)})"><span>Lv ${step.level}</span><strong>${number(step.value)}%${step.kind==='increase'?'':` <span class="step-kind">${step.kind}</span>`}</strong></button>`).join(''):'<p class="footnote">No confirmed step levels supplied.</p>'}</div></div>`;
   }
   function plotMarkup(b){
-    return seriesFor(b).map((series,index)=>{
+    return fundingMarkup(b)+seriesFor(b).map((series,index)=>{
       const row=series.row,available=series.values.filter(core.finite).length;
       const infoId=`boost-info-${b.id}-${row.id}`;
       return `<section class="progression-panel${series.charges?' attempts-panel':''}">${series.charges?'<p class="attempts-heading">Eligible attempts / collections</p>':`${labelMarkup(row,infoId)}<div class="boost-info-panel" id="${infoId}" data-info-row="${row.id}" hidden>${infoMarkup(b,row)}</div>`}<svg class="boost-plot${series.charges?' attempts-plot':''}" data-series="${index}" role="img" aria-label="${escape(series.label)}"></svg>${series.charges?'':`<div class="plot-selected" data-plot-value="${row.id}"></div><p class="plot-coverage">${available} supplied levels · ${row.tier==='Gold'?'Gold unlocks at 101':'Copper'}${row.uncertain?' · effect scope unconfirmed':''}</p>${stepsMarkup(b,row)}`}</section>`;
     }).join('');
+  }
+  function fundingMarkup(b){
+    const rules=b.gold?'P1–P5 contribute 1.9× base rewards at levels 1–100. From level 101, P1–P7 contribute base rewards (1×).':'P1–P5 contribute 1.9× base rewards at every level, including levels 101–200.';
+    return `<section class="progression-panel funding-panel" aria-labelledby="funding-heading-${b.id}"><h4 id="funding-heading-${b.id}">Total leveling cost vs priming cost</h4><p class="funding-scope">FP for each individual level · log scale · levels 1–${b.levels.length}</p><div class="funding-legend"><span><i class="funding-total-key" aria-hidden="true"></i>Total leveling cost</span><span><i class="funding-priming-key" aria-hidden="true"></i>Priming cost</span></div><svg class="boost-plot funding-plot" data-funding-chart role="img" tabindex="0" aria-label="${escape(b.name)} total leveling and priming FP costs by level on a logarithmic axis. Use arrow keys to select a level."></svg><div data-funding-selected="${b.id}" class="funding-selected" aria-live="polite"></div><details class="funding-method"><summary>Contribution assumptions</summary><p>${rules}</p><p>Priming = total FP minus contributions from all positions, with a minimum of 0. Each position is rounded to whole FP before adding. Assumes every reward position is filled; this is the owner's net FP cost, not a calculation of when positions are secure. Unlocking resources are separate.</p></details></section>`;
+  }
+  function fundingSelectedMarkup(b){
+    const point=funding.get(b.id)[selection(b).to-1];
+    return `<p class="funding-selected-level">Level ${point.level} · P1–P${point.positions} at ${number(point.multiplier)}×</p><dl class="funding-values"><div><dt>Total leveling cost</dt><dd>${amount(point.total)} <small>FP</small></dd></div><div><dt>Priming cost</dt><dd>${amount(point.priming)} <small>FP</small></dd></div></dl><p class="funding-contributions">Expected contributions: <strong>${amount(point.contributionTotal)} FP</strong></p>`;
   }
   function controlsMarkup(b){const s=selection(b),max=b.levels.length;return `<div class="level-controls"><label>Current level<input type="number" min="0" max="${max-1}" value="${s.from}" data-from="${b.id}" aria-label="${escape(b.name)} current level"></label><span aria-hidden="true">→</span><label>Target level<input type="number" min="1" max="${max}" value="${s.to}" data-to="${b.id}" aria-label="${escape(b.name)} target level"></label></div><p class="graph-hint">Hover for details. Click or tap any level to set your target.<br><span class="line-key current-key"></span>Current <span class="line-key target-key"></span>Target</p>`;}
   function summaryMarkup(b){
@@ -109,12 +118,24 @@
   function showTooltip(event,b,series,level){
     const row=series.row,s=selection(b),value=series.charges?chargeText(row,level):valueText(row,level);
     tooltip.innerHTML=`<strong class="tooltip-level">Level ${level}</strong>${labelMarkup(row)}<p class="tooltip-value">${escape(value)}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</p><div class="tooltip-cost"><span>FP for this level</span><b>${amount(b.levelData[level-1][0])}</b></div>${level>s.from?`<div class="tooltip-cost"><span>FP from ${s.from} → ${level}</span><b>${amount(core.rangeSum(b,0,s.from,level))}</b></div>`:''}`;
+    positionTooltip(event);
+  }
+  function showFundingTooltip(event,b,level){
+    const point=funding.get(b.id)[level-1];
+    tooltip.innerHTML=`<strong class="tooltip-level">${escape(b.name)} · Level ${level}</strong><div class="tooltip-cost"><span>Total leveling cost</span><b>${amount(point.total)} FP</b></div><div class="tooltip-cost"><span>Expected contributions</span><b>${amount(point.contributionTotal)} FP</b></div><div class="tooltip-cost"><span>Priming cost</span><b>${amount(point.priming)} FP</b></div><p>P1–P${point.positions} at ${number(point.multiplier)}× base rewards</p><div class="funding-positions">${point.contributions.map((value,index)=>`<span>P${index+1}: <b>${amount(value)}</b></span>`).join('')}</div>`;
+    positionTooltip(event);
+  }
+  function positionTooltip(event){
     tooltip.hidden=false;
     const width=tooltip.offsetWidth,height=tooltip.offsetHeight;
     tooltip.style.left=`${Math.max(8,Math.min(innerWidth-width-8,event.clientX+16))}px`;
     tooltip.style.top=`${Math.max(8,Math.min(innerHeight-height-8,event.clientY-height-12))}px`;
   }
-  const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(!entry.isIntersecting)continue;const host=entry.target,b=lookup.get(host.dataset.charts);if(!mounted.has(b.id))mounted.set(b.id,window.PrestigeCharts.mount(host,seriesFor(b),selection(b),{hover:(e,s,l)=>showTooltip(e,b,s,l),leave:hideTooltip,select:level=>{selection(b).to=level;updateBuilding(b);}}));observer.unobserve(host);}},{rootMargin:'500px'});
+  const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(!entry.isIntersecting)continue;const host=entry.target,b=lookup.get(host.dataset.charts);if(!mounted.has(b.id)){
+    const select=level=>{selection(b).to=level;updateBuilding(b);};
+    mounted.set(b.id,window.PrestigeCharts.mount(host,seriesFor(b),selection(b),{hover:(e,s,l)=>showTooltip(e,b,s,l),leave:hideTooltip,select}));
+    fundingMounted.set(b.id,window.PrestigeCharts.mountCosts(host.querySelector('[data-funding-chart]'),funding.get(b.id),selection(b),{hover:(e,l)=>showFundingTooltip(e,b,l),leave:hideTooltip,select}));
+  }observer.unobserve(host);}},{rootMargin:'500px'});
   function updateBuilding(b){
     const card=document.querySelector(`[data-building="${b.id}"]`);if(!card)return;
     const s=selection(b);
@@ -122,9 +143,11 @@
     card.querySelector('[data-plan]').innerHTML=summaryMarkup(b);
     card.querySelector('[data-costs]').innerHTML=costsMarkup(b);
     card.querySelector('[data-rewards]').innerHTML=rewardsMarkup(b);
+    card.querySelector('[data-funding-selected]').innerHTML=fundingSelectedMarkup(b);
     b.rows.forEach(row=>{card.querySelector(`[data-plot-value="${row.id}"]`).innerHTML=`Level ${s.to}: <strong>${escape(valueText(row,s.to))}</strong>${boost(row).multiplier&&core.finite(core.sample(row,s.to).value)?` · ${factor(core.sample(row,s.to).value)}`:''}`;card.querySelector(`[data-info-row="${row.id}"]`).innerHTML=infoMarkup(b,row);});
     card.querySelectorAll('[data-step-level]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.stepLevel)===s.to)));
     mounted.get(b.id)?.update(s);
+    fundingMounted.get(b.id)?.update(s);
   }
   function filteredBuildings(){
     const query=normalize($('#search').value.trim()),tier=$('#tier-filter').value,priority=$('#priority-filter').value;
@@ -133,7 +156,7 @@
     return list.sort((a,b)=>Number(b.gold)-Number(a.gold)||(sort==='priority'?rank[a.priority]-rank[b.priority]:sort==='checkpoint'?a.checkpoint-b.checkpoint:0)||a.name.localeCompare(b.name));
   }
   function render(){
-    observer.disconnect();mounted.forEach(chart=>chart.destroy());mounted.clear();hideTooltip();
+    observer.disconnect();mounted.forEach(chart=>chart.destroy());mounted.clear();fundingMounted.forEach(chart=>chart.destroy());fundingMounted.clear();hideTooltip();
     const items=filteredBuildings();$('#result-count').textContent=items.length===data.buildings.length?`${items.length} buildings`:`${items.length} of ${data.buildings.length} buildings`;
     $('#building-grid').innerHTML=[true,false].map(gold=>{const group=items.filter(b=>b.gold===gold);return group.length?`<section aria-label="${gold?'Gold-tier':'Copper-only'} buildings"><div class="group-title"><h3>${gold?'Gold upgrades':'Copper only'}</h3><span>${group.length} buildings · ${gold?'Gold unlocks at 101':'maximum level 200'}</span></div><div class="card-grid">${group.map(cardMarkup).join('')}</div></section>`:'';}).join('');
     $('#empty').hidden=items.length>0;items.forEach(updateBuilding);
