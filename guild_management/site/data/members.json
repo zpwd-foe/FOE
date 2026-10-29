@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 1,
+  "guildName": "Guardians of Elysium",
+  "timeZone": "America/New_York",
+  "members": [
+    {
+      "id": "us24-15316773",
+      "name": "3 Point",
+      "playerId": "15316773",
+      "joinedOn": "2018-03-01",
+      "status": "current",
+      "tagline": "🥇 Originating Founder 🥇"
+    },
+    {
+      "id": "us24-15707921",
+      "name": "Aint2Lucid",
+      "playerId": "15707921",
+      "joinedOn": "2025-11-16",
+      "status": "current"
+    },
+    {
+      "id": "us24-2067671",
+      "name": "Amaduez",
+      "playerId": "2067671",
+      "joinedOn": "2026-09-14",
+      "status": "current",
+      "tagline": "Dangerous Tater"
+    },
+    {
+      "id": "us24-850173136",
+      "name": "anitarose228",
+      "playerId": "850173136",
+      "joinedOn": "2026-08-11",
+      "status": "current"
+    },
+    {
+      "id": "us24-854199299",
+      "name": "Arcadius2 ElectricBugalu",
+      "playerId": "854199299",
+      "joinedOn": "2026-06-15",
+      "status": "current"
+    },
+    {
+      "id": "us24-852925920",
+      "name": "Bulgoki",
+      "playerId": "852925920",
+      "joinedOn": "2024-11-07",
+      "status": "current"
+    },
+    {
+      "id": "us24-13635543",
+      "name": "Captain Thorpe",
+      "playerId": "13635543",
+      "joinedOn": "2026-10-04",
+      "status": "current",
+      "tagline": "Dangerously Unhinged Captain"
+    },
+    {
+      "id": "us24-853996216",
+      "name": "Clipper",
+      "playerId": "853996216",
+      "joinedOn": "2026-07-23",
+      "status": "current"
+    },
+    {
+      "id": "us24-856776241",
+      "name": "Cranky Roo",
+      "playerId": "856776241",
+      "joinedOn": "2026-10-26",
+      "status": "current"
+    },
+    {
+      "id": "us24-856372577",
+      "name": "david5555",
+      "playerId": "856372577",
+      "joinedOn": "2025-08-04",
+      "status": "current"
+    },
+    {
+      "id": "us24-849228404",
+      "name": "Denniserectus",
+      "playerId": "849228404",
+      "joinedOn": "2026-09-20",
+      "status": "current"
+    },
+    {
+      "id": "us24-13880455",
+      "name": "Fergus Ferguson",
+      "playerId": "13880455",
+      "joinedOn": "2026-06-15",
+      "status": "current"
+    },
+    {
+      "id": "us24-11336148",
+      "name": "Fireblade84",
+      "playerId": "11336148",
+      "joinedOn": "2026-07-05",
+      "status": "current"
+    },
+    {
+      "id": "us24-857244717",
+      "name": "GinnyR",
+      "playerId": "857244717",
+      "joinedOn": "2026-10-15",
+      "status": "current"
+    },
+    {
+      "id": "us24-850068349",
+      "name": "Greenpaint9",
+      "playerId": "850068349",
+      "joinedOn": "2026-08-09",
+      "status": "current"
+    },
+    {
+      "id": "us24-20790356",
+      "name": "hamstein",
+      "playerId": "20790356",
+      "joinedOn": "2020-11-29",
+      "status": "current",
+      "tagline": "Bacon Flavored Beer!!"
+    },
+    {
+      "id": "us24-857202234",
+      "name": "Icarus the Great",
+      "playerId": "857202234",
+      "joinedOn": "2026-09-22",
+      "status": "current"
+    },
+    {
+      "id": "us24-856227627",
+      "name": "Jaqen Hghar",
+      "playerId": "856227627",
+      "joinedOn": "2025-09-18",
+      "status": "current",
+      "tagline": "Valar Morghulis 🎭"
+    },
+    {
+      "id": "us24-19531771",
+      "name": "JOsborne32",
+      "playerId": "19531771",
+      "joinedOn": "2025-10-15",
+      "status": "current",
+      "tagline": "🏛️ Sovereign of 49 GBs"
+    },
+    {
+      "id": "us24-856034122",
+      "name": "Justin 2556",
+      "playerId": "856034122",
+      "joinedOn": "2026-03-02",
+      "status": "current"
+    },
+    {
+      "id": "us24-854990453",
+      "name": "King Glenn 69",
+      "playerId": "854990453",
+      "joinedOn": "2026-04-02",
+      "status": "current"
+    },
+    {
+      "id": "us24-857088422",
+      "name": "Lilchick989",
+      "playerId": "857088422",
+      "joinedOn": "2026-07-12",
+      "status": "current"
+    },
+    {
+      "id": "us24-852609056",
+      "name": "Little lady",
+      "playerId": "852609056",
+      "joinedOn": "2025-12-20",
+      "status": "current"
+    },
+    {
+      "id": "us24-3513092",
+      "name": "LiveMore",
+      "playerId": "3513092",
+      "joinedOn": "2026-09-29",
+      "status": "current"
+    },
+    {
+      "id": "us24-856211546",
+      "name": "Livia 2135 the Cunning",
+      "playerId": "856211546",
+      "joinedOn": "2026-01-08",
+      "status": "current"
+    },
+    {
+      "id": "us24-855603707",
+      "name": "Lizzie1998",
+      "playerId": "855603707",
+      "joinedOn": "2024-10-26",
+      "status": "current"
+    },
+    {
+      "id": "us24-856113398",
+      "name": "lord pea",
+      "playerId": "856113398",
+      "joinedOn": "2026-10-09",
+      "status": "current"
+    },
+    {
+      "id": "us24-855865172",
+      "name": "Melina 2169 the Cruel",
+      "playerId": "855865172",
+      "joinedOn": "2025-01-24",
+      "status": "current"
+    },
+    {
+      "id": "us24-857089839",
+      "name": "Messalina 5303 the Fair",
+      "playerId": "857089839",
+      "joinedOn": "2026-07-22",
+      "status": "current"
+    },
+    {
+      "id": "us24-854415629",
+      "name": "Oliveboy",
+      "playerId": "854415629",
+      "joinedOn": "2026-08-25",
+      "status": "current"
+    },
+    {
+      "id": "us24-856604772",
+      "name": "oneye",
+      "playerId": "856604772",
+      "joinedOn": "2026-02-05",
+      "status": "current"
+    },
+    {
+      "id": "us24-855761769",
+      "name": "Pepe Le Pew II",
+      "playerId": "855761769",
+      "joinedOn": "2025-10-05",
+      "status": "current"
+    },
+    {
+      "id": "us24-856213206",
+      "name": "Roxana 2195",
+      "playerId": "856213206",
+      "joinedOn": "2025-07-06",
+      "status": "current"
+    },
+    {
+      "id": "us24-856444949",
+      "name": "Seleukus the Hard",
+      "playerId": "856444949",
+      "joinedOn": "2025-08-23",
+      "status": "current",
+      "tagline": "🦆 Lord of Quack"
+    },
+    {
+      "id": "us24-14923207",
+      "name": "Sir BackFire",
+      "playerId": "14923207",
+      "joinedOn": "2021-09-04",
+      "status": "current",
+      "tagline": "Murderous Vapours"
+    },
+    {
+      "id": "us24-15857412",
+      "name": "SirWalter929",
+      "playerId": "15857412",
+      "joinedOn": "2019-06-22",
+      "status": "current",
+      "tagline": "the Sir of Beards"
+    },
+    {
+      "id": "us24-13819890",
+      "name": "The High Jackel",
+      "playerId": "13819890",
+      "joinedOn": "2026-09-23",
+      "status": "current"
+    },
+    {
+      "id": "us24-14210627",
+      "name": "Theoutdoorsman71",
+      "playerId": "14210627",
+      "joinedOn": "2019-06-22",
+      "status": "current",
+      "tagline": "God of Outdoors."
+    },
+    {
+      "id": "us24-19909277",
+      "name": "Tiberius the Fisher",
+      "playerId": "19909277",
+      "joinedOn": "2025-11-09",
+      "status": "current"
+    },
+    {
+      "id": "us24-8629248",
+      "name": "treyn21",
+      "playerId": "8629248",
+      "joinedOn": "2026-03-29",
+      "status": "current"
+    },
+    {
+      "id": "us24-13368644",
+      "name": "Trinity-Primrose",
+      "playerId": "13368644",
+      "joinedOn": "2026-06-22",
+      "status": "current"
+    },
+    {
+      "id": "us24-2605963",
+      "name": "Twogelius",
+      "playerId": "2605963",
+      "joinedOn": "2024-02-26",
+      "status": "current",
+      "tagline": "Two can play this game"
+    },
+    {
+      "id": "us24-17463852",
+      "name": "WARRIOR MOTHER1115",
+      "playerId": "17463852",
+      "joinedOn": "2021-12-27",
+      "status": "current",
+      "tagline": "Amazon Prime."
+    },
+    {
+      "id": "us24-852268218",
+      "name": "WeRBorg",
+      "playerId": "852268218",
+      "joinedOn": "2022-03-10",
+      "status": "current",
+      "tagline": "Resistance Is Futile"
+    },
+    {
+      "id": "us24-851889177",
+      "name": "WMonkey the Fuzzy",
+      "playerId": "851889177",
+      "joinedOn": "2026-07-05",
+      "status": "current"
+    },
+    {
+      "id": "us24-855340115",
+      "name": "zpwd",
+      "playerId": "855340115",
+      "joinedOn": "2024-07-23",
+      "status": "current",
+      "tagline": "Zenobia—Perfect Warrior Demon😈"
+    }
+  ]
+}

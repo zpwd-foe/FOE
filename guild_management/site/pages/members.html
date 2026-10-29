@@ -1,0 +1,29 @@
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><span>Members</span></nav>
+      <section class="page-hero celebration-hero" aria-labelledby="page-title">
+        <div class="celebration-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="celebration-hero-copy"><p class="eyebrow">Good company. Great memories.</p><h1 id="page-title">Guild anniversaries</h1>
+        <p class="hero-copy">Here’s to the people who make Elysium feel like home.<br>Every year together is worth celebrating.</p>
+        <p class="celebration-toast"><span aria-hidden="true">✦</span> Cheers to another year with GoE <span aria-hidden="true">✦</span></p></div>
+        <div class="celebration-crest" aria-hidden="true"><span class="crest-stars">✦ &nbsp; ✦ &nbsp; ✦</span><span class="crest-kicker">Better together</span><strong>GoE</strong><span class="crest-rule"></span><span class="crest-caption">Friendship &amp; adventure</span></div>
+      </section>
+      <noscript><p class="panel">Enable JavaScript to view guild anniversaries.</p></noscript>
+      <section class="metrics member-metrics" aria-label="Membership overview">
+        <article class="metric-card"><span class="metric-label"><span class="member-metric-mark" aria-hidden="true">♥</span> Our guild family</span><strong id="member-count">—</strong><span class="metric-sub" id="known-dates">Dates recorded</span></article>
+        <article class="metric-card"><span class="metric-label"><span class="member-metric-mark" aria-hidden="true">✦</span> Celebrating today</span><strong id="today-count">—</strong><span class="metric-sub">A special day together</span></article>
+        <article class="metric-card"><span class="metric-label"><span class="member-metric-mark" aria-hidden="true">✧</span> Coming up</span><strong id="upcoming-count">—</strong><span class="metric-sub">Within the next 30 days</span></article>
+      </section>
+      <section class="panel member-celebrations" aria-labelledby="celebrations-title">
+        <div class="panel-heading"><div><p class="eyebrow">Make a little room for celebration</p><h2 id="celebrations-title">Our next anniversaries</h2><p class="celebration-intro">More adventures. More memories. Another year together.</p></div><span class="panel-note" id="guild-date"></span></div>
+        <div id="anniversary-cards" class="anniversary-cards"></div>
+      </section>
+      <section class="panel" aria-labelledby="roster-title">
+        <div class="panel-heading"><div><p class="eyebrow">Our guild</p><h2 id="roster-title">Member roster</h2></div><span class="panel-note" id="roster-results" aria-live="polite"></span></div>
+        <div class="member-filters">
+          <label>Find a member<input id="member-search" type="search" placeholder="Search by name"></label>
+          <label>Show<select id="member-filter"><option value="current">Current members</option><option value="missing">Missing join dates</option><option value="former">Former members</option><option value="all">All members</option></select></label>
+          <label>Sort by<select id="member-sort"><option value="anniversary">Next anniversary</option><option value="name">Member name</option><option value="joined">Join date</option></select></label>
+        </div>
+        <div class="table-scroll"><table class="member-table"><caption class="sr-only">Guild members, recorded join dates, and upcoming anniversaries</caption><thead><tr><th>Member</th><th>Joined</th><th>Years together</th><th>Next anniversary</th></tr></thead><tbody id="member-rows"></tbody></table></div>
+        <div class="member-empty" id="roster-empty" hidden><h3>No members yet</h3><p>The guild roster has not been published yet.</p></div>
+        <p class="member-footnote">Anniversaries use the recorded join date and the guild’s Eastern time calendar. February 29 anniversaries are celebrated on February 28 in non-leap years.</p>
+      </section>

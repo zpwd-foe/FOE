@@ -6,7 +6,7 @@ This project provides `generate_treasury_report.py`, which creates:
 
 It also includes the no-runtime static GoE Guild Portal in `dashboard/`,
 ready for Cloudflare Pages. The portal provides a home page, a treasury module,
-an individual goods-contribution module, and a resource library. The library
+an individual goods-contribution module, a member-anniversary module, and a resource library. The library
 includes the Official GoE Guild Expedition Lottery Rules and an eight-day GBG
 coin-trial field report. Treasury tools include
 7/30/90-day period controls, age drill-downs, and a short goods watch list.
@@ -483,12 +483,90 @@ Portal routes:
 - `/treasury/` — live treasury dashboard
 - `/treasury/contributions/` — individual guild goods contribution rankings and member drill-downs
 - `/contributions/` — compatibility redirect to the Treasury contribution section
+- `/members/` — member join dates and guild anniversaries
 - `/resources/` — guild resource library
 - `/resources/guild-expedition-lottery-rules/` — lottery rules
 
 Resource metadata lives in `site/resources.json`; policy text lives in
 `site/content/`. Add a resource entry and an HTML content fragment to extend
 the library without changing the shared navigation or page layout.
+
+The homepage combines treasury balances, member contributions, and the next
+guild anniversary in one overview, followed by the resource library. Its
+anniversary spotlight uses the shared roster and Eastern-time anniversary
+model, refreshing when the date changes or the page becomes visible again.
+
+### Member join dates and anniversaries
+
+`/members/` shows current members, recorded join dates, years with the guild,
+today's anniversaries, and the next celebrations. Search and filters include
+members whose dates are unknown and former members. Former members do not appear
+in upcoming celebrations. The calendar follows `America/New_York`; February 29
+anniversaries fall on February 28 in non-leap years. First anniversaries occur
+after a full year. A festive guild banner and anniversary medallions highlight
+upcoming celebrations. The page does not send messages or schedule notifications.
+
+The initial shared roster was imported on 2026-10-29 from the
+[Foestats guild page](https://foestats.com/us/us24/guilds/2516), using its
+45 listed current members: 42 recorded join dates and three unknown dates
+(Icarus the Great, King Glenn 69, and Lilchick989). The source header reports
+46 members, but its member list and API contain 45; no extra member was inferred.
+The guild summary in that response was dated 2026-10-28.
+
+On 2026-10-29, guild leadership confirmed Icarus the Great joined on
+2026-09-22, King Glenn 69 joined on 2026-04-02, Twogelius joined on
+2024-02-26, WeRBorg joined on 2022-03-10, Lilchick989 joined on
+2026-07-12, and 3 Point joined on 2018-03-01. These manually confirmed dates supersede the Foestats values;
+preserve them in future imports. GinnyR (player ID `857244717`) was added on
+2026-10-29 with a confirmed join date of 2026-10-15. All 46 current members now
+have known join dates.
+
+Per the guild's chosen convention, imported dates match Foestats' displayed
+dates in `America/New_York`. Its API provides midnight UTC timestamps; convert
+those to Eastern calendar dates before storing a date-only `joinedOn` value.
+For example, zpwd's source timestamp `2024-07-24T00:00:00.000Z` displays as
+July 23, 2024, so the roster records `2024-07-23`. Do not apply another timezone
+conversion when rendering the stored date. Game player IDs from the source
+identify members independently of names.
+
+Do not infer join dates from the first contribution or the first observed
+record. Leave unknown dates blank. The recorded date is the anniversary anchor;
+leadership can decide whether a returning member keeps an original date or uses
+a new date.
+
+The Members page is read-only and always displays the published shared roster.
+It provides search, filtering, and sorting, with no roster editing or message-copy controls.
+Older browser drafts are ignored and are not modified or deleted.
+
+Guild taglines appear beneath member names in the roster and anniversary cards
+when available. Fourteen were transcribed from the five screenshots in
+`input/member_tag_line/` on 2026-10-29, preserving their spelling, punctuation,
+and emojis. The screenshots show ranks 1–32 and 39–46; ranks 33–38 are absent.
+Only visible taglines were added, matched to existing members by name. Keep the
+screenshots as local source material; they are not published with the dashboard.
+
+Maintain join dates and membership in `site/data/members.json`, or use the
+command-line importer below with a reviewed roster JSON file. Stable record IDs
+survive name changes; optional game player IDs help identify members.
+
+To publish a reviewed roster, use the project's configured Python environment:
+
+```bash
+../CityAnalysis/.venv/bin/python -B import_member_roster.py /path/to/goe-members-YYYY-MM-DD.json
+../CityAnalysis/.venv/bin/python -B build_dashboard.py
+../CityAnalysis/.venv/bin/python -B -m unittest discover -s tests -p 'test_*.py'
+node --test tests/test_anniversaries.js
+```
+
+The importer validates before writing `site/data/members.json`. Commit that
+source file with the rebuilt `dashboard/` assets when publication is requested.
+Daily treasury builds retain the member module and its roster through the shared
+site build. The source schema is
+version 1 with `guildName`, `timeZone`, and `members`; each member has a unique
+`id`, `name`, optional `playerId` (text), optional `tagline` (up to 200 characters),
+`joinedOn` (ISO date or null), and `status` (`current` or `former`). Taglines are
+rendered as plain text; omitted or blank values leave no empty label. The roster uses the existing portal access
+policy; do not include private notes.
 
 ## Common Examples
 

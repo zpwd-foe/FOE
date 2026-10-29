@@ -13,6 +13,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+from member_roster import read_roster
+
 
 ROOT = Path(__file__).resolve().parent
 SITE_DIR = ROOT / "site"
@@ -112,6 +114,8 @@ def validate_minimum_font_size() -> None:
     errors: list[str] = []
     assets = (
         (ASSET_SOURCE_DIR / "styles.css", CSS_FONT_SIZE_PATTERNS),
+        (ASSET_SOURCE_DIR / "anniversaries.css", CSS_FONT_SIZE_PATTERNS),
+        (ASSET_SOURCE_DIR / "home.css", CSS_FONT_SIZE_PATTERNS),
         (ASSET_SOURCE_DIR / "app.js", SCRIPT_FONT_SIZE_PATTERNS),
     )
     for path, patterns in assets:
@@ -442,11 +446,15 @@ def publish_assets(
     data_source: Path = DEFAULT_DATA_SOURCE,
     contribution_data_source: Path = DEFAULT_CONTRIBUTION_DATA_SOURCE,
 ) -> dict[str, Path]:
+    roster = read_roster(SITE_DIR / "data" / "members.json")
     sources: dict[str, tuple[Path, str]] = {
         "styles": (ASSET_SOURCE_DIR / "styles.css", "styles"),
         "data": (data_source, "data"),
         "app": (ASSET_SOURCE_DIR / "app.js", "app"),
         "contributions_app": (ASSET_SOURCE_DIR / "contributions.js", "contributions"),
+        "anniversaries_model": (ASSET_SOURCE_DIR / "anniversaries-model.js", "anniversaries-model"),
+        "anniversaries_app": (ASSET_SOURCE_DIR / "anniversaries.js", "anniversaries"),
+        "home_app": (ASSET_SOURCE_DIR / "home.js", "home"),
         "icon": (ASSET_SOURCE_DIR / "GOE.png", "GOE"),
     }
     for image_format in BANNER_FORMATS:
@@ -463,8 +471,11 @@ def publish_assets(
     output_dir.mkdir(parents=True, exist_ok=True)
     targets: dict[str, Path] = {}
     for name, (source, output_stem) in sources.items():
-        content = minify_css(read_text(source)).encode() if name == "styles" else None
+        content = minify_css(read_text(source) + "\n" + read_text(ASSET_SOURCE_DIR / "anniversaries.css") + "\n" + read_text(ASSET_SOURCE_DIR / "home.css")).encode() if name == "styles" else None
         targets[name] = fingerprinted_asset(source, output_dir, output_stem, content)
+    roster_json = json.dumps(roster, separators=(",", ":"))
+    roster_script = f'window.GOE_MEMBER_ROSTER = {roster_json};\n'
+    targets["member_roster"] = fingerprinted_asset(Path("member-roster.js"), output_dir, "member-roster", roster_script.encode())
     contribution_summary, contribution_details = publish_contribution_assets(
         contribution_data_source,
         output_dir,
@@ -590,6 +601,7 @@ def navigation(active: str) -> str:
     items = [
         ("home", "/", "Home"),
         ("treasury", "/treasury/", "Treasury"),
+        ("members", "/members/", "Members"),
         ("resources", "/resources/", "Resources"),
     ]
     links = []
@@ -708,6 +720,11 @@ def publish_dashboard(
     styles_asset = f"/{assets['styles'].name}"
     icon_asset = f"/{assets['icon'].name}"
 
+    home_scripts = "\n".join(
+        f'    <script defer src="/{assets[key].name}"></script>'
+        for key in ("anniversaries_model", "member_roster", "home_app")
+    )
+
     home_content = render(
         read_text(SITE_DIR / "pages" / "home.html"),
         {
@@ -737,6 +754,7 @@ def publish_dashboard(
             content=home_content,
             styles_asset=styles_asset,
             icon_asset=icon_asset,
+            scripts=home_scripts,
         ),
     )
 
@@ -794,6 +812,25 @@ def publish_dashboard(
             target="/treasury/contributions/",
             styles_asset=styles_asset,
             icon_asset=icon_asset,
+        ),
+    )
+
+    member_scripts = "\n".join(
+        f'    <script defer src="/{assets[key].name}"></script>'
+        for key in ("anniversaries_model", "member_roster", "anniversaries_app")
+    )
+    write_text(
+        output_dir / "members" / "index.html",
+        page(
+            base_template,
+            title="Guild Anniversaries | GoE Guild Portal",
+            description="Guild member join dates and upcoming GoE anniversaries.",
+            active_nav="members",
+            main_class="shell shell--members",
+            content=read_text(SITE_DIR / "pages" / "members.html"),
+            styles_asset=styles_asset,
+            icon_asset=icon_asset,
+            scripts=member_scripts,
         ),
     )
 
@@ -878,7 +915,7 @@ def publish_dashboard(
 def main() -> None:
     args = parse_args()
     assets = publish_dashboard(args.output_dir)
-    print("Dashboard pages built: /, /treasury/, /treasury/contributions/, /resources/, /404.html")
+    print("Dashboard pages built: /, /treasury/, /treasury/contributions/, /members/, /resources/, /404.html")
     print("Published assets: " + ", ".join(path.name for path in assets.values()))
 
 

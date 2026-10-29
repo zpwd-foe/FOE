@@ -295,10 +295,14 @@ def run_offline_validation(project_dir: Path, *, require_current_sources: bool =
     for script in (
         "site/assets/app.js",
         "site/assets/contributions.js",
+        "site/assets/anniversaries-model.js",
+        "site/assets/anniversaries.js",
+        "site/assets/home.js",
         "site/data/treasury-data.js",
         "site/data/contribution-data.js",
     ):
         run([node, "--check", script], cwd=project_dir)
+    run([node, "--test", "tests/test_anniversaries.js"], cwd=project_dir)
     run(["git", "diff", "--check"], cwd=project_dir)
     validate_generated_metadata(project_dir, require_current_sources=require_current_sources)
     validate_compatibility_page(project_dir)

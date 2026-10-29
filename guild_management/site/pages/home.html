@@ -7,45 +7,46 @@
         <div class="portal-hero__content">
           <p class="eyebrow">Guardians of Elysium</p>
           <h1 id="page-title">One guild.<br>One hub.<br>Everything <em>GoE.</em></h1>
-          <p class="hero-copy">Your command center for treasury operations, member contributions, and the resources that keep GoE running strong.</p>
-          <div class="hero-actions" aria-label="Portal sections">
-            <div class="hero-destination">
-              <a class="hero-destination__parent" href="/treasury/"><strong>Treasury</strong><span>Balances, trends, and contribution insights.</span></a>
-              <div class="hero-destination__children" aria-label="Treasury pages"><a href="/treasury/">Overview</a><a href="/treasury/contributions/">Member contributions</a></div>
-            </div>
-            <div class="hero-destination">
-              <a class="hero-destination__parent" href="/resources/"><strong>Resources</strong><span>Policies, guides, and guild references.</span></a>
-              <div class="hero-destination__children" aria-label="Resource pages"><a href="/resources/">Resource library</a><a href="/resources/guild-expedition-lottery-rules/">Lottery rules</a></div>
-            </div>
+          <p class="hero-copy">Our people, our progress, and our next adventure.<br>A shared home for everything that keeps GoE growing.</p>
+          <nav class="home-hero-links" aria-label="Explore the guild">
+            <a href="/treasury/">Treasury <span aria-hidden="true">↗</span></a>
+            <a href="/members/">Members <span aria-hidden="true">↗</span></a>
+            <a href="/resources/">Resources <span aria-hidden="true">↗</span></a>
+          </nav>
+        </div>
+      </section>
+
+      <div class="home-hub">
+        <section aria-labelledby="overview-title">
+          <div class="home-section-heading"><div><p class="eyebrow">Life in Elysium</p><h2 id="overview-title">Your guild at a glance</h2></div><span class="home-guild-count" id="home-member-count">Together in Elysium</span></div>
+          <div class="home-overview-grid">
+            <a class="home-overview-card" href="/treasury/">
+              <div class="home-card-heading"><span class="home-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="9" cy="6" rx="6" ry="3"/><path d="M3 6v5c0 1.7 2.7 3 6 3m-6-3v5c0 1.7 2.7 3 6 3m3-7c0-1.7 2-3 4.5-3s4.5 1.3 4.5 3-2 3-4.5 3-4.5-1.3-4.5-3Zm0 0v6c0 1.7 2 3 4.5 3s4.5-1.3 4.5-3v-6"/></svg></span><h3>Guild treasury</h3><span class="home-card-arrow" aria-hidden="true">↗</span></div>
+              <p class="home-card-period">Data through {{treasury_as_of}}</p>
+              <strong class="home-card-value">{{treasury_total}}</strong>
+              <p class="home-card-unit">goods ready for our next adventure</p>
+              <p class="home-card-note">{{treasury_status}}</p>
+              <span class="home-card-footer">Explore balances &amp; trends <span aria-hidden="true">→</span></span>
+            </a>
+            <a class="home-overview-card home-overview-card--contributions" href="/treasury/contributions/">
+              <div class="home-card-heading"><span class="home-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V12h4v8m2 0V8h4v12m2 0V4h4v16M2 20h20"/></svg></span><h3>Member contributions</h3><span class="home-card-arrow" aria-hidden="true">↗</span></div>
+              <p class="home-card-period">{{contribution_date_range}}</p>
+              <strong class="home-card-value">{{contribution_total}}</strong>
+              <p class="home-card-unit">goods contributed by {{contribution_members}} members</p>
+              <p class="home-card-note">{{contribution_direct}} donated directly. Every contribution helps us grow.</p>
+              <span class="home-card-footer">See our shared progress <span aria-hidden="true">→</span></span>
+            </a>
+            <a class="home-overview-card home-overview-card--anniversary" href="/members/">
+              <div class="home-card-heading"><span class="home-card-icon" aria-hidden="true">✦</span><h3>Guild anniversaries</h3><span class="home-card-arrow" aria-hidden="true">↗</span></div>
+              <p class="home-card-period" id="home-next-label">The people behind GoE</p>
+              <div class="home-anniversary-spotlight"><span class="home-date-medallion" aria-hidden="true"><span id="home-next-month">GoE</span><strong id="home-next-day">✦</strong></span><div><strong id="home-next-name">Every year, together</strong><p id="home-next-detail">Join dates and guild milestones.</p><p id="home-next-tagline" hidden></p></div></div>
+              <p class="home-card-note" id="home-next-outlook">Another year worth celebrating</p>
+              <span class="home-card-footer">Celebrate our people <span aria-hidden="true">→</span></span>
+            </a>
           </div>
-        </div>
-      </section>
-
-      <section class="home-section home-section--treasury" aria-labelledby="operations-title">
-        <div class="section-heading">
-          <div><p class="eyebrow">Live operations</p><h2 id="operations-title">Treasury at a glance</h2></div>
-          <a class="text-link" href="/treasury/">Explore treasury <span aria-hidden="true">&rarr;</span></a>
-        </div>
-        <div class="treasury-home-grid">
-          <a class="treasury-feature" href="/treasury/">
-            <span class="feature-kicker"><span class="live-dot" aria-hidden="true"></span> Overview · Data through {{treasury_as_of}}</span>
-            <strong>{{treasury_total}}</strong>
-            <span class="feature-label">goods in the treasury</span>
-            <span class="feature-status">{{treasury_status}}</span>
-          </a>
-          <a class="treasury-feature treasury-feature--contributions" href="/treasury/contributions/">
-            <span class="feature-kicker">Member contributions · {{contribution_date_range}}</span>
-            <strong>{{contribution_total}}</strong>
-            <span class="feature-label">goods contributed by {{contribution_members}} members</span>
-            <span class="feature-status">{{contribution_direct}} contributed directly, with building production powering the rest.</span>
-          </a>
-        </div>
-      </section>
-
-      <section class="home-section home-section--resources" aria-labelledby="resources-title">
-        <div class="section-heading">
-          <div><p class="eyebrow">Guild library</p><h2 id="resources-title">Guild resources</h2></div>
-          <a class="text-link" href="/resources/">Browse all <span aria-hidden="true">&rarr;</span></a>
-        </div>
-        <div class="resource-grid">{{resource_cards}}</div>
-      </section>
+        </section>
+        <section class="home-library" aria-labelledby="resources-title">
+          <div class="home-section-heading"><div><p class="eyebrow">For the adventures ahead</p><h2 id="resources-title">From the guild library</h2></div><a class="text-link" href="/resources/">All resources <span aria-hidden="true">→</span></a></div>
+          <div class="resource-grid">{{resource_cards}}</div>
+        </section>
+      </div>
