@@ -2079,7 +2079,9 @@ function attributeRowsFor(row) {
   const contributionByKey = Object.fromEntries(row.contributions.map((item) => [item.key, item]));
   const c = controls();
   const weights = customizedWeightMap(PROFILE_CONFIG[state.profile].weightProfile, c);
-  const rows = Object.keys(row.record.attrs)
+  // Boost-only buildings can have effective production without a stored production attribute.
+  const keys = new Set([...Object.keys(row.record.attrs), ...DATA.attrKeys]);
+  const rows = [...keys]
     .map((key) => {
       const contribution = contributionByKey[key];
       return {
@@ -2101,7 +2103,7 @@ function detailText(value) {
 }
 
 function formatAttributeValue(key, value) {
-  const formatted = fmtCompact(value);
+  const formatted = fmtCompact(value, key === DATA.constants.prodGoodsAttr ? 0 : 2);
   const kitFamily = kitFamilyForAttr(key);
   if (kitFamily) return `${formatted} ${kitFamily.unit}`;
   return formatted && isPercentageAttribute(key) ? `${formatted}%` : formatted;
@@ -2485,6 +2487,9 @@ function openDetail(rowKey, focusClose = true, returnFocus = null) {
     <h3>Summary</h3>
     <p class="detail-summary">${escapeHtml(explainRanking(row))}</p>
     <h3>Ranking Attributes</h3>
+    ${attrRows.some((item) => Math.abs(item.raw - item.effective) > 1e-9)
+      ? `<p class="detail-section-note">Values in parentheses include production boosts calculated from your Base production inputs. Their score contribution is included in the corresponding production row.</p>`
+      : ""}
     <div class="attribute-table-wrap">
       <table class="attribute-table signal-table">
         <thead>
