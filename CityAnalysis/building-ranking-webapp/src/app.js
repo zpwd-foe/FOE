@@ -120,6 +120,7 @@ const state = {
   loadedAge: null,
   cityMap: null,
   productionView: "base",
+  profileSettings: {},
   customWeights: {
     overall: {},
     fighting: {},
@@ -865,6 +866,7 @@ function preferenceAllowlist() {
 }
 
 function preferenceSnapshot() {
+  rememberProfileSettings();
   const c = controls();
   return {
     profile: state.profile,
@@ -894,6 +896,7 @@ function preferenceSnapshot() {
       topN: c.topN,
     },
     weightMode: el.weightModeSelect.value,
+    profileSettings: state.profileSettings,
     customWeights: sanitizeCustomWeightState(state.customWeights),
     sort: { ...state.sort },
   };
@@ -933,6 +936,12 @@ function applyPreferences(preferences) {
   if (filters.noRoadOnly !== undefined) el.noRoadFilter.checked = filters.noRoadOnly;
   if (filters.topN) el.topNSelect.value = filters.topN;
   if (preferences.weightMode) el.weightModeSelect.value = preferences.weightMode;
+  // Legacy settings belonged to the last active family, not every family.
+  rememberProfileSettings();
+  if (preferences.profileSettings) {
+    state.profileSettings = preferences.profileSettings;
+    applyProfileSettings(state.profileSettings[activeWeightProfile()]);
+  }
   if (preferences.customWeights) state.customWeights = sanitizeCustomWeightState(preferences.customWeights);
   if (preferences.sort) state.sort = { ...preferences.sort };
 }
@@ -1850,11 +1859,12 @@ function renderCustomWeights() {
   const profile = activeWeightProfile();
   const rules = customWeightRules(profile);
   const kitProfile = profile === "kits";
+  const customMode = el.weightModeSelect.value === "custom";
   const c = controls();
   const rows = customizableWeightRows(profile, c);
   const activeCount = Object.keys(state.customWeights[profile] || {}).length;
   const totalWeight = rows.reduce((sum, row) => {
-    const value = row.override !== undefined ? row.override : row.defaultWeight;
+    const value = customMode && row.override !== undefined ? row.override : row.defaultWeight;
     return sum + Math.abs(value || 0);
   }, 0);
   el.customWeights.innerHTML = `
@@ -1863,7 +1873,7 @@ function renderCustomWeights() {
       <strong>${fmt(totalWeight, kitProfile ? 0 : 2)} importance total</strong>
     </div>
     <p class="section-note">${
-      el.weightModeSelect.value === "custom"
+      customMode
         ? activeCount
           ? `${activeCount} custom change${activeCount === 1 ? " is" : "s are"} active for this profile. Every unchanged field still uses its default value.`
           : "Custom mode is on, but no values have been changed yet. Edit any field to create a custom value."
@@ -1875,7 +1885,7 @@ function renderCustomWeights() {
     }</p>
     <div class="weight-list">
       ${rows.map((row) => {
-        const isChanged = row.override !== undefined && Math.abs((row.override || 0) - (row.defaultWeight || 0)) > 1e-9;
+        const isChanged = customMode && row.override !== undefined && Math.abs((row.override || 0) - (row.defaultWeight || 0)) > 1e-9;
         const defaultLabel = fmt(row.defaultWeight, kitProfile ? 0 : 2);
         return `
         <label class="weight-row">
@@ -1893,8 +1903,8 @@ function renderCustomWeights() {
             class="${isChanged ? "changed-weight-input" : ""}"
             data-weight-key="${row.key}"
             placeholder="${defaultLabel}"
-            value="${row.override !== undefined ? row.override : el.weightModeSelect.value === "custom" ? row.defaultWeight : ""}"
-            ${el.weightModeSelect.value === "custom" ? "" : "disabled"}
+            value="${customMode && row.override !== undefined ? row.override : row.defaultWeight}"
+            ${customMode ? "" : "disabled"}
           >
         </label>
       `;
@@ -2602,12 +2612,8 @@ function resetDefaults() {
   el.searchInput.value = "";
   el.productionSearchSelect.value = "";
   if (!state.cityMap) el.cityScopeSelect.value = "all";
-  el.qiRoleSelect.value = defaults.qiFighterRole;
-  el.gbgGeFocus.value = defaults.fightingGbgGeFocus;
-  el.redBlueFocus.value = defaults.fightingRedBlueFocus;
-  el.attackDefenseFocus.value = defaults.fightingAttackDefenseFocus;
-  el.unitAgeFocus.value = defaults.fightingUnitAgeFocus;
-  el.fpGoodsFocus.value = defaults.productionFpGoodsFocus;
+  state.profileSettings = {};
+  applyProfileSettings();
   el.fpEstimate.value = defaults.estimatedFpProduction;
   el.goodsEstimate.value = defaults.estimatedGoodsProduction;
   el.guildGoodsEstimate.value = defaults.estimatedGuildGoodsProduction;
@@ -2619,7 +2625,6 @@ function resetDefaults() {
   el.maxAreaFilter.value = "";
   el.noRoadFilter.checked = false;
   el.topNSelect.value = "200";
-  el.weightModeSelect.value = "default";
   state.customWeights = {
     overall: {},
     fighting: {},
@@ -2632,8 +2637,47 @@ function resetDefaults() {
 
 function setActiveProfile(profile) {
   if (!PROFILE_CONFIG[profile]) return;
+  const previousFamily = activeWeightProfile();
+  const nextFamily = PROFILE_CONFIG[profile].weightProfile;
+  if (previousFamily !== nextFamily) {
+    rememberProfileSettings();
+    applyProfileSettings(state.profileSettings[nextFamily]);
+  }
   state.profile = profile;
   syncProfileTabs();
+}
+
+function defaultProfileSettings() {
+  const defaults = DATA.defaults;
+  return {
+    weightMode: "default",
+    qiRole: defaults.qiFighterRole,
+    focus: {
+      gbgGe: defaults.fightingGbgGeFocus,
+      redBlue: defaults.fightingRedBlueFocus,
+      attackDefense: defaults.fightingAttackDefenseFocus,
+      unitAge: defaults.fightingUnitAgeFocus,
+      fpGoods: defaults.productionFpGoodsFocus,
+    },
+  };
+}
+
+function rememberProfileSettings() {
+  state.profileSettings[activeWeightProfile()] = {
+    weightMode: el.weightModeSelect.value,
+    qiRole: el.qiRoleSelect.value,
+    focus: Object.fromEntries(Object.keys(defaultProfileSettings().focus)
+      .map((key) => [key, Number(el[`${key}Focus`].value)])),
+  };
+}
+
+function applyProfileSettings(settings = {}) {
+  const defaults = defaultProfileSettings();
+  el.weightModeSelect.value = settings.weightMode ?? defaults.weightMode;
+  el.qiRoleSelect.value = settings.qiRole ?? defaults.qiRole;
+  for (const [key, value] of Object.entries(defaults.focus)) {
+    el[`${key}Focus`].value = settings.focus?.[key] ?? value;
+  }
 }
 
 function syncProfileTabs() {
@@ -2692,6 +2736,7 @@ function decodeState(value) {
 }
 
 function buildUrlParams() {
+  rememberProfileSettings();
   const c = controls();
   const params = new URLSearchParams();
   params.set("profile", state.profile);
@@ -2722,6 +2767,10 @@ function buildUrlParams() {
   }
   const hasOverrides = Object.values(state.customWeights).some((profile) => Object.keys(profile).length > 0);
   if (hasOverrides) params.set("weights", encodeState(state.customWeights));
+  const settings = Object.fromEntries(Object.entries(state.profileSettings).filter(([, value]) => (
+    JSON.stringify(value) !== JSON.stringify(defaultProfileSettings())
+  )));
+  if (Object.keys(settings).length) params.set("profileSettings", encodeState(settings));
   return params;
 }
 
@@ -2741,6 +2790,15 @@ function applyUrlState() {
     applyPreset(params.get("preset"));
   }
   setActiveProfile(params.get("profile") || state.profile);
+  if (params.has("profileSettings")) {
+    state.profileSettings = sanitizedPreferences({
+      profileSettings: decodeState(params.get("profileSettings")),
+    }).profileSettings || {};
+    applyProfileSettings(state.profileSettings[activeWeightProfile()]);
+  } else if (params.has("profile")) {
+    // Old share links encode only the active family's settings. Missing mode means Default.
+    applyProfileSettings();
+  }
   if (DATA.ages.some((age) => age.key === params.get("age"))) el.ageSelect.value = params.get("age");
   setSelectedCategories(params.getAll("category"));
   if ([SEARCH_MODE_BUILDING, SEARCH_MODE_FRAGMENT, SEARCH_MODE_PRODUCTION].includes(params.get("searchMode"))) {
@@ -2770,15 +2828,17 @@ function applyUrlState() {
   if (params.get("maxArea")) el.maxAreaFilter.value = params.get("maxArea");
   el.noRoadFilter.checked = params.get("noRoad") === "1";
   if (params.get("topN")) el.topNSelect.value = params.get("topN");
-  if (params.get("mode") === "custom") el.weightModeSelect.value = "custom";
+  if (["default", "custom"].includes(params.get("mode"))) el.weightModeSelect.value = params.get("mode");
   if (params.get("sort")) {
     const [key, dir] = params.get("sort").split(":");
     if (key && dir) state.sort = { key, dir };
   }
   const decodedWeights = params.get("weights") ? decodeState(params.get("weights")) : null;
-  if (decodedWeights && typeof decodedWeights === "object") {
+  if (params.has("profile") || params.has("weights")) {
+    // A ranking link with no overrides must not activate saved device weights.
     state.customWeights = sanitizeCustomWeightState(decodedWeights);
   }
+  rememberProfileSettings();
   state.suppressUrlUpdate = false;
 }
 
@@ -3018,6 +3078,7 @@ function init() {
   });
   el.resetWeightsButton.addEventListener("click", () => {
     state.customWeights[activeWeightProfile()] = {};
+    el.weightModeSelect.value = "default";
     renderImmediately();
     announce("Weights for the active profile restored.");
   });

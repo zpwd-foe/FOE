@@ -23,6 +23,22 @@
     return value;
   }
 
+  function sanitizeWeightSettings(value, allowed) {
+    if (!isObject(value)) return {};
+    const sanitized = {};
+    if (allowedValue(value.weightMode, allowed.weightModes)) sanitized.weightMode = value.weightMode;
+    if (allowedValue(value.qiRole, allowed.qiRoles)) sanitized.qiRole = value.qiRole;
+    if (isObject(value.focus)) {
+      const focus = {};
+      ["gbgGe", "redBlue", "attackDefense", "unitAge", "fpGoods"].forEach((key) => {
+        const number = boundedNumber(value.focus[key], 1, 5, true);
+        if (number !== null) focus[key] = number;
+      });
+      if (Object.keys(focus).length) sanitized.focus = focus;
+    }
+    return sanitized;
+  }
+
   function sanitizePreferences(value, allowed = {}) {
     if (!isObject(value)) return {};
     const sanitized = {};
@@ -37,15 +53,13 @@
         : [...new Set(categories.filter((item) => allowedValue(item, allowed.categories)))];
     }
     if (allowedValue(value.searchMode, allowed.searchModes)) sanitized.searchMode = value.searchMode;
-    if (allowedValue(value.qiRole, allowed.qiRoles)) sanitized.qiRole = value.qiRole;
-
-    if (isObject(value.focus)) {
-      const focus = {};
-      ["gbgGe", "redBlue", "attackDefense", "unitAge", "fpGoods"].forEach((key) => {
-        const number = boundedNumber(value.focus[key], 1, 5, true);
-        if (number !== null) focus[key] = number;
+    Object.assign(sanitized, sanitizeWeightSettings(value, allowed));
+    if (isObject(value.profileSettings)) {
+      sanitized.profileSettings = {};
+      (allowed.weightProfiles || []).forEach((profile) => {
+        if (!isObject(value.profileSettings[profile])) return;
+        sanitized.profileSettings[profile] = sanitizeWeightSettings(value.profileSettings[profile], allowed);
       });
-      if (Object.keys(focus).length) sanitized.focus = focus;
     }
 
     if (isObject(value.production)) {
@@ -76,8 +90,6 @@
       if (allowedValue(value.filters.topN, allowed.topNs)) filters.topN = value.filters.topN;
       if (Object.keys(filters).length) sanitized.filters = filters;
     }
-
-    if (allowedValue(value.weightMode, allowed.weightModes)) sanitized.weightMode = value.weightMode;
 
     if (isObject(value.customWeights)) {
       const attributeKeys = new Set(allowed.attributeKeys || []);

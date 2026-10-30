@@ -168,7 +168,7 @@
             <button class="info-button" type="button" aria-expanded="false" aria-controls="focusInfo" aria-label="Show Focus controls information" data-info-label="Focus controls">i</button>
           </div>
           <div id="focusInfo" class="section-note info-text" hidden>
-            <p>Use these controls to tell the dashboard what matters most to you.</p>
+            <p>Use these controls to tell the dashboard what matters most to you. Each ranking family remembers its own focus choices; Total and Efficiency share the same choices.</p>
             <ul>
               <li>Move a slider left or right to favor that side. The middle is balanced; either end fully favors one side.</li>
               <li><strong>GBG/GE</strong> means Guild Battlegrounds versus Guild Expedition.</li>
@@ -284,7 +284,7 @@
                 <li>A higher number gives that benefit more influence; zero ignores it.</li>
                 <li>Weights cannot be negative. Kit profiles use whole numbers from zero to ten.</li>
                 <li>Changing one weight shifts the balance between benefits. It does not simply add points to every score.</li>
-                <li>Each profile keeps its own custom values. <strong>Set All to 0</strong> ignores every benefit in the active profile; <strong>Reset profile weights</strong> restores the active profile; <strong>Reset defaults</strong> restores every profile.</li>
+                <li>Each ranking family keeps its own weight mode and custom values. Total and Efficiency share these settings. <strong>Set All to 0</strong> ignores every benefit in the active profile; <strong>Reset profile weights</strong> clears its custom values and returns it to Default mode; <strong>Reset defaults</strong> restores every profile.</li>
               </ul>
             </div>
             <div id="customWeights" class="custom-weights"></div>
@@ -418,9 +418,9 @@
     </aside>
 
     <script
-      src="src/bootstrap.js?v=20261027-1"
+      src="src/bootstrap.js?v=20261030-1"
       data-data-version="c097598295c4"
-      data-app-version="20261027-1"
+      data-app-version="20261030-1"
     ></script>
   </body>
 </html>

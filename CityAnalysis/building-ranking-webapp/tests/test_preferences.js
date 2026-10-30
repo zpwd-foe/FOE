@@ -184,3 +184,19 @@ test("legacy all-categories settings and empty selections remain unrestricted", 
     assert.deepEqual(sanitizePreferences(value, allowed), { categories: [] });
   }
 });
+
+test("profile settings accept only known families, modes, roles and bounded focus values", () => {
+  const sanitized = sanitizePreferences({
+    profileSettings: {
+      overall: { weightMode: "custom", qiRole: "Blue", focus: { gbgGe: 1, redBlue: 6, fpGoods: 2.5 } },
+      kits: { weightMode: "invalid", qiRole: "unknown", focus: { unitAge: 5 } },
+      unknown: { weightMode: "custom" },
+    },
+  }, allowed);
+  assert.deepEqual(sanitized, {
+    profileSettings: {
+      overall: { weightMode: "custom", qiRole: "Blue", focus: { gbgGe: 1 } },
+      kits: { focus: { unitAge: 5 } },
+    },
+  });
+});
