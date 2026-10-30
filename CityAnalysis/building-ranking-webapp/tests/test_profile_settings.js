@@ -1,50 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const vm = require("node:vm");
-const preferences = require("../src/preferences.js");
 const data = require("../data/ranking-core.json");
-
-const source = fs.readFileSync(path.join(__dirname, "../src/app.js"), "utf8");
-
-function dashboard() {
-  const elements = new Map();
-  const options = {
-    qiRoleSelect: ["Both", "Blue", "Red"],
-    weightModeSelect: ["default", "custom"],
-    topNSelect: ["50", "200", "all"],
-  };
-  function element(id) {
-    if (!elements.has(id)) {
-      let value = "";
-      elements.set(id, {
-        get value() { return value; },
-        set value(next) { value = String(next); },
-        options: (options[id] || []).map((option) => ({ value: option })),
-        querySelectorAll: () => [],
-        checked: false,
-      });
-    }
-    return elements.get(id);
-  }
-  const context = vm.createContext({
-    window: {
-      FOE_BUILDING_RANKING_DATA: data,
-      FOE_BUILDING_RANKING_STRENGTHS: {},
-      FOE_BUILDING_RANKING_CATEGORY_LABELS: { displayCategoryLabel: (value) => value },
-      FOE_BUILDING_RANKING_PREFERENCES: preferences,
-      location: { search: "" },
-    },
-    document: { getElementById: element, querySelector: element, querySelectorAll: () => [] },
-    URLSearchParams, TextEncoder, TextDecoder, btoa, atob,
-  });
-  // Load the real application functions without starting its browser-only event wiring.
-  vm.runInContext(source.replace(/\ninit\(\);\s*$/, ""), context);
-  context.resetDefaults();
-  const state = vm.runInContext("state", context);
-  return { app: context, state, element };
-}
+const { dashboard } = require("./helpers/dashboard.js");
 
 function snapshot(app) {
   return JSON.parse(JSON.stringify(app.sanitizedPreferences(app.preferenceSnapshot())));

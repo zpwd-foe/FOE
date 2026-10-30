@@ -30,8 +30,10 @@
 
   function entityLevel(entry) {
     if (!isObject(entry)) return null;
+    if (typeof entry.level !== "number" && typeof entry.level !== "string") return null;
+    if (typeof entry.level === "string" && !entry.level.trim()) return null;
     const numeric = Number(entry.level);
-    return Number.isInteger(numeric) && numeric >= 0 ? numeric : null;
+    return Number.isSafeInteger(numeric) && numeric >= 0 ? numeric : null;
   }
 
   function isGreatBuilding(entry) {

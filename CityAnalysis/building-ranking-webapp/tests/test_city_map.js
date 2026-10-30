@@ -126,6 +126,26 @@ test("normalizes valid placement levels and rejects non-age values", () => {
   assert.equal(entityLevel({ level: 2.5 }), null);
   assert.equal(entityLevel({ level: "unknown" }), null);
   assert.equal(entityLevel({}), null);
+  for (const level of [null, "", "  ", false, true, [], [0], {}, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(entityLevel({ level }), null);
+  }
+  assert.equal(entityLevel({ level: 0 }), 0);
+  assert.equal(entityLevel({ level: "0" }), 0);
+  assert.equal(entityLevel({ level: " 12 " }), 12);
+});
+
+test("unknown placement ages stay excluded even when Stone Age records exist", () => {
+  const summary = summarizeCityMap({ CityMapData: [
+    { cityentity_id: "unknown", level: null },
+    { cityentity_id: "unknown", level: "" },
+    { cityentity_id: "unknown", level: false },
+    { cityentity_id: "stone", level: 0 },
+  ] });
+  const ages = [{ key: "StoneAge" }];
+  const records = ["unknown", "stone"].map((entityId) => ({ entityId }));
+  const resolved = resolvePlacementRecords(summary, ages, records, { StoneAge: records });
+  assert.deepEqual(resolved.map((group) => group.entityId), ["stone"]);
+  assert.equal(summary.ageIdentifiedEntries, 1);
 });
 
 test("converts mixed placement levels into rankable age groups", () => {

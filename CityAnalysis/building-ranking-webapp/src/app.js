@@ -118,6 +118,7 @@ const state = {
   detailSort: { key: "score", dir: "desc" },
   suppressUrlUpdate: false,
   loadedAge: null,
+  pendingAge: null,
   cityMap: null,
   productionView: "base",
   profileSettings: {},
@@ -262,6 +263,8 @@ let pendingAfterRender = null;
 let announceTimer = null;
 let preferenceTimer = null;
 let preferenceIdleHandle = null;
+let ageLoadId = 0;
+let cityMapLoadId = 0;
 
 function browserStorage() {
   try {
@@ -461,7 +464,7 @@ function syncStrengthFilterSummary() {
 function controls() {
   const searchMode = el.searchModeSelect.value;
   return {
-    age: el.ageSelect.value,
+    age: state.pendingAge ? state.loadedAge : el.ageSelect.value,
     categories: selectedCategories(),
     searchMode,
     search: searchMode === SEARCH_MODE_PRODUCTION
@@ -774,15 +777,19 @@ async function loadCityMapFile(file) {
     return;
   }
 
+  const loadId = ++cityMapLoadId;
   el.cityMapFile.disabled = true;
   el.cityMapFile.setAttribute("aria-busy", "true");
   el.cityMapStatus.dataset.status = "loading";
   el.cityMapStatus.textContent = "Reading the city map in this browser…";
   let summary;
   try {
-    const payload = JSON.parse(await file.text());
+    const contents = await file.text();
+    if (loadId !== cityMapLoadId) return;
+    const payload = JSON.parse(contents);
     summary = cityMapApi.summarizeCityMap(payload);
   } catch (error) {
+    if (loadId !== cityMapLoadId) return;
     console.error("The selected file could not be parsed as a city map.", error);
     rejectCityMapFile(
       "This file is not a supported city-map JSON export.",
@@ -801,6 +808,7 @@ async function loadCityMapFile(file) {
       placementAges.map((age) => window.FOE_LOAD_BUILDING_RANKING_CITY_AGE?.(age))
     );
   } catch (error) {
+    if (loadId !== cityMapLoadId) return;
     console.error("The city map was valid, but its placed-age data could not be loaded.", error);
     rejectCityMapFile(
       "The city map is valid, but its building data could not be loaded. Check the site connection and try again.",
@@ -809,6 +817,7 @@ async function loadCityMapFile(file) {
     return;
   }
 
+  if (loadId !== cityMapLoadId) return;
   try {
     state.cityMap = {
       ...summary,
@@ -818,7 +827,6 @@ async function loadCityMapFile(file) {
     state.productionView = "base";
     el.cityScopeSelect.value = "city";
     renderImmediately();
-    const stats = cityMapMatchStats();
     announce(`City map loaded. Base production calculated from ${production.matchedCopies} matched copies.`);
   } catch (error) {
     console.error("The city map loaded, but base production could not be calculated.", error);
@@ -827,16 +835,21 @@ async function loadCityMapFile(file) {
       "The city map loaded, but base production could not be calculated."
     );
   } finally {
-    el.cityMapFile.disabled = false;
-    el.cityMapFile.removeAttribute("aria-busy");
+    if (loadId === cityMapLoadId) {
+      el.cityMapFile.disabled = false;
+      el.cityMapFile.removeAttribute("aria-busy");
+    }
   }
 }
 
 function clearCityMap() {
+  cityMapLoadId += 1;
   state.cityMap = null;
   state.productionView = "base";
   DATA.cityRecordsByAge = {};
   el.cityMapFile.value = "";
+  el.cityMapFile.disabled = false;
+  el.cityMapFile.removeAttribute("aria-busy");
   el.cityScopeSelect.value = "all";
   renderImmediately();
   announce("Loaded city map cleared. Showing all rankable buildings.");
@@ -1867,18 +1880,28 @@ function renderCustomWeights() {
     const value = customMode && row.override !== undefined ? row.override : row.defaultWeight;
     return sum + Math.abs(value || 0);
   }, 0);
+  const totalLabel = `${fmt(totalWeight, kitProfile ? 0 : 2)} importance total`;
+  const statusLabel = customMode
+    ? activeCount
+      ? `${activeCount} custom change${activeCount === 1 ? " is" : "s are"} active for this profile. Every unchanged field still uses its default value.`
+      : "Custom mode is on, but no values have been changed yet. Edit any field to create a custom value."
+    : `Using the recommended weights for ${PROFILE_CONFIG[state.profile].title}. Choose Custom if you want to change the balance.`;
+  const editingInput = el.customWeights.querySelector("input[data-weight-key]:focus");
+  if (customMode && editingInput?.dataset.weightProfile === profile) {
+    // Keep the native input, its caret and incomplete decimal text alive during recalculation.
+    el.customWeights.querySelector(".custom-summary strong").textContent = totalLabel;
+    el.customWeights.querySelector("[data-weight-status]").textContent = statusLabel;
+    const row = rows.find((item) => item.key === editingInput.dataset.weightKey);
+    editingInput.classList.toggle("changed-weight-input", row?.override !== undefined
+      && Math.abs(row.override - row.defaultWeight) > 1e-9);
+    return;
+  }
   el.customWeights.innerHTML = `
     <div class="custom-summary">
       <span>${PROFILE_CONFIG[state.profile].title}</span>
-      <strong>${fmt(totalWeight, kitProfile ? 0 : 2)} importance total</strong>
+      <strong>${totalLabel}</strong>
     </div>
-    <p class="section-note">${
-      customMode
-        ? activeCount
-          ? `${activeCount} custom change${activeCount === 1 ? " is" : "s are"} active for this profile. Every unchanged field still uses its default value.`
-          : "Custom mode is on, but no values have been changed yet. Edit any field to create a custom value."
-        : `Using the recommended weights for ${PROFILE_CONFIG[state.profile].title}. Choose Custom if you want to change the balance.`
-    }</p>
+    <p class="section-note" data-weight-status>${statusLabel}</p>
     <p class="section-note">${kitProfile
       ? "Kit weights use whole numbers from 0 to 10. Zero ignores a kit family."
       : "Weights must be zero or greater. Arrow controls change values by 1. Zero ignores an attribute."
@@ -1902,6 +1925,7 @@ function renderCustomWeights() {
             inputmode="${rules.integer ? "numeric" : "decimal"}"
             class="${isChanged ? "changed-weight-input" : ""}"
             data-weight-key="${row.key}"
+            data-weight-profile="${profile}"
             placeholder="${defaultLabel}"
             value="${customMode && row.override !== undefined ? row.override : row.defaultWeight}"
             ${customMode ? "" : "disabled"}
@@ -2437,6 +2461,12 @@ function trapDetailFocus(event) {
 function openDetail(rowKey, focusClose = true, returnFocus = null) {
   const row = state.rows.find((item) => item.key === rowKey);
   if (!row) return;
+  const sameBuilding = state.activeDetailRowKey === rowKey;
+  const draft = sameBuilding ? Object.fromEntries(["observedValue", "reportNotes"]
+    .map((id) => [id, document.getElementById(id)?.value || ""])) : null;
+  const focused = el.detailContent.contains(document.activeElement) ? document.activeElement : null;
+  const selection = focused && typeof focused.selectionStart === "number"
+    ? [focused.selectionStart, focused.selectionEnd, focused.selectionDirection] : null;
   if (focusClose) {
     state.detailReturnFocus = returnFocus
       || (!el.detailDrawer.contains(document.activeElement) ? document.activeElement : state.detailReturnFocus);
@@ -2537,6 +2567,14 @@ function openDetail(rowKey, focusClose = true, returnFocus = null) {
   el.drawerBackdrop.hidden = false;
   document.body.classList.add("drawer-open");
   setBackgroundInert(true);
+  if (draft) {
+    for (const [id, value] of Object.entries(draft)) document.getElementById(id).value = value;
+  }
+  if (!focusClose && focused) {
+    const nextFocus = (focused.id && document.getElementById(focused.id)) || el.closeDrawer;
+    nextFocus.focus({ preventScroll: true });
+    if (selection && nextFocus.setSelectionRange) nextFocus.setSelectionRange(...selection);
+  }
   el.detailContent.querySelectorAll("[data-detail-sort]").forEach((button) => {
     button.addEventListener("click", () => {
       const key = button.dataset.detailSort;
@@ -2579,6 +2617,13 @@ function render() {
   renderBuildingList();
   renderCustomWeights();
   renderCompare();
+  if (state.activeDetailRowKey) {
+    if (state.rows.some((row) => row.key === state.activeDetailRowKey)) {
+      openDetail(state.activeDetailRowKey, false);
+    } else {
+      closeDetail();
+    }
+  }
   updateUrl();
   schedulePreferenceSave();
 }
@@ -2602,15 +2647,30 @@ function scheduleRender(delay = 100, afterRender = null) {
   }, delay);
 }
 
-function resetDefaults() {
-  const defaults = DATA.defaults;
-  el.presetSelect.value = "";
-  if (!state.cityMap) el.ageSelect.value = DATA.metadata.defaultAge;
+function resetRankingFilters() {
   setSelectedCategories([]);
   el.categoryFilter.open = false;
   el.searchModeSelect.value = SEARCH_MODE_BUILDING;
   el.searchInput.value = "";
   el.productionSearchSelect.value = "";
+  setSelectedStrengths([]);
+  el.strengthFilter.open = false;
+  el.minAreaFilter.value = "";
+  el.maxAreaFilter.value = "";
+  el.noRoadFilter.checked = false;
+  el.topNSelect.value = "200";
+  state.sort = { key: "profile", dir: "desc" };
+}
+
+function resetDefaults() {
+  const defaults = DATA.defaults;
+  ageLoadId += 1;
+  state.pendingAge = null;
+  el.ageSelect.disabled = false;
+  el.ageSelect.removeAttribute("aria-busy");
+  el.presetSelect.value = "";
+  el.ageSelect.value = state.cityMap && state.loadedAge ? state.loadedAge : DATA.metadata.defaultAge;
+  resetRankingFilters();
   if (!state.cityMap) el.cityScopeSelect.value = "all";
   state.profileSettings = {};
   applyProfileSettings();
@@ -2619,12 +2679,6 @@ function resetDefaults() {
   el.guildGoodsEstimate.value = defaults.estimatedGuildGoodsProduction;
   el.medalEstimate.value = defaults.estimatedMedalProduction;
   el.specialGoodsEstimate.value = defaults.estimatedSpecialGoodsProduction;
-  setSelectedStrengths([]);
-  el.strengthFilter.open = false;
-  el.minAreaFilter.value = "";
-  el.maxAreaFilter.value = "";
-  el.noRoadFilter.checked = false;
-  el.topNSelect.value = "200";
   state.customWeights = {
     overall: {},
     fighting: {},
@@ -2632,7 +2686,6 @@ function resetDefaults() {
     qi: {},
     kits: {},
   };
-  state.sort = { key: "profile", dir: "desc" };
 }
 
 function setActiveProfile(profile) {
@@ -2785,6 +2838,8 @@ function applyUrlState() {
   const params = new URLSearchParams(window.location.search);
   if (!params.size) return;
   state.suppressUrlUpdate = true;
+  // Full ranking links omit default filters; those omissions must override device preferences.
+  if (params.has("profile")) resetRankingFilters();
   if (PRESET_PROFILES_ENABLED && params.get("preset") && PRESETS[params.get("preset")]) {
     el.presetSelect.value = params.get("preset");
     applyPreset(params.get("preset"));
@@ -2796,7 +2851,8 @@ function applyUrlState() {
     }).profileSettings || {};
     applyProfileSettings(state.profileSettings[activeWeightProfile()]);
   } else if (params.has("profile")) {
-    // Old share links encode only the active family's settings. Missing mode means Default.
+    // Omitted families in a full link use defaults, including links with no settings map.
+    state.profileSettings = {};
     applyProfileSettings();
   }
   if (DATA.ages.some((age) => age.key === params.get("age"))) el.ageSelect.value = params.get("age");
@@ -2858,28 +2914,43 @@ function initMobileCollapsibles() {
 async function changeAge() {
   const requestedAge = el.ageSelect.value;
   const previousAge = state.loadedAge;
+  const loadId = ++ageLoadId;
   if (requestedAge === previousAge) {
+    state.pendingAge = null;
+    el.ageSelect.disabled = false;
+    el.ageSelect.removeAttribute("aria-busy");
     renderImmediately();
-    return;
+    return true;
   }
   cancelPreferenceSave();
+  state.pendingAge = requestedAge;
   el.ageSelect.disabled = true;
   el.ageSelect.setAttribute("aria-busy", "true");
   announce(`Loading ${ageLabel(requestedAge)} buildings.`);
   try {
     await window.FOE_LOAD_BUILDING_RANKING_AGE?.(requestedAge);
+    if (loadId !== ageLoadId) return null;
     if (!Array.isArray(DATA.recordsByAge[requestedAge])) throw new Error("Age data did not load.");
     state.loadedAge = requestedAge;
+    state.pendingAge = null;
+    el.ageSelect.value = requestedAge;
     renderImmediately();
     announce(`${ageLabel(requestedAge)} buildings loaded.`);
+    return true;
   } catch (error) {
+    if (loadId !== ageLoadId) return null;
     console.error(error);
+    state.pendingAge = null;
     el.ageSelect.value = previousAge;
+    renderImmediately();
     announce(`${ageLabel(requestedAge)} buildings could not be loaded. Your previous age is still selected.`);
+    return false;
   } finally {
-    el.ageSelect.disabled = false;
-    el.ageSelect.removeAttribute("aria-busy");
-    syncLongValuePresentation();
+    if (loadId === ageLoadId) {
+      el.ageSelect.disabled = false;
+      el.ageSelect.removeAttribute("aria-busy");
+      syncLongValuePresentation();
+    }
   }
 }
 
@@ -3037,30 +3108,16 @@ function init() {
   el.resetButton.addEventListener("click", async () => {
     cancelPreferenceSave();
     preferenceStore.clear();
-    const previousAge = state.loadedAge;
     resetDefaults();
-    const defaultAge = el.ageSelect.value;
-    let ageLoadFailed = false;
-    if (defaultAge !== state.loadedAge) {
-      el.ageSelect.disabled = true;
-      el.ageSelect.setAttribute("aria-busy", "true");
-      try {
-        await window.FOE_LOAD_BUILDING_RANKING_AGE?.(defaultAge);
-        if (!Array.isArray(DATA.recordsByAge[defaultAge])) throw new Error("Default age data did not load.");
-        state.loadedAge = defaultAge;
-      } catch (error) {
-        console.error(error);
-        ageLoadFailed = true;
-        el.ageSelect.value = previousAge;
-      } finally {
-        el.ageSelect.disabled = false;
-        el.ageSelect.removeAttribute("aria-busy");
-      }
-    }
-    preferenceStore.remember(sanitizedPreferences(preferenceSnapshot()));
+    const resetPreferences = sanitizedPreferences(preferenceSnapshot());
+    // Only the reset baseline is considered saved; edits during the request must still persist.
+    preferenceStore.remember({ ...resetPreferences, age: state.loadedAge });
+    const ageLoaded = await changeAge();
+    if (ageLoaded === null) return;
+    preferenceStore.remember({ ...resetPreferences, age: state.loadedAge });
     renderImmediately();
     setPreferenceStatus("Saved settings cleared. New changes will save on this device.", "cleared");
-    announce(ageLoadFailed
+    announce(!ageLoaded
       ? "Defaults were restored, but the default city age could not be loaded."
       : "Dashboard defaults restored and saved settings cleared.");
   });
@@ -3095,9 +3152,7 @@ function init() {
   });
   el.customWeights.addEventListener("input", (event) => {
     const input = event.target.closest("input[data-weight-key]");
-    if (!input) return;
-    const weightList = el.customWeights.querySelector(".weight-list");
-    const previousScrollTop = weightList?.scrollTop || 0;
+    if (!input || input.validity?.badInput) return;
     const profile = activeWeightProfile();
     const key = input.dataset.weightKey;
     const value = input.value.trim();
@@ -3105,22 +3160,20 @@ function init() {
     if (value === "") {
       delete state.customWeights[profile][key];
     } else {
-      const sanitized = sanitizeCustomWeight(profile, value);
-      state.customWeights[profile][key] = sanitized;
-      input.value = String(sanitized);
+      state.customWeights[profile][key] = sanitizeCustomWeight(profile, value);
     }
-    scheduleRender(140, () => {
+    scheduleRender(140);
+  });
+  el.customWeights.addEventListener("focusout", (event) => {
+    const input = event.target.closest("input[data-weight-key]");
+    if (!input || input.dataset.weightProfile !== activeWeightProfile()) return;
+    const profile = activeWeightProfile();
+    const key = input.dataset.weightKey;
+    input.value = String(state.customWeights[profile]?.[key] ?? weightMap(profile, controls())[key] ?? 0);
+    const previousScrollTop = el.customWeights.querySelector(".weight-list")?.scrollTop || 0;
+    scheduleRender(0, () => {
       const nextWeightList = el.customWeights.querySelector(".weight-list");
       if (nextWeightList) nextWeightList.scrollTop = previousScrollTop;
-      const nextInput = Array.from(el.customWeights.querySelectorAll("input[data-weight-key]"))
-        .find((candidate) => candidate.dataset.weightKey === key);
-      if (nextInput && document.activeElement === document.body) {
-        try {
-          nextInput.focus({ preventScroll: true });
-        } catch (_error) {
-          nextInput.focus();
-        }
-      }
     });
   });
   el.tableWrap.addEventListener("wheel", handOffTableScroll, { passive: false });
