@@ -306,7 +306,7 @@ body {
 .status-chip { color:#71591f; background:#f2e7ca; border-color:#dbc58f; }
 .status-chip--official { color:#285c3a; background:#dfece1; border-color:#afceb6; }
 
-.shell--treasury, .shell--resources, .shell--policy { padding-top:36px; }
+.shell--treasury, .shell--resources, .shell--policy, .shell--members { padding-top:36px; }
 .page-hero, .policy-hero { position:relative; padding:28px 30px 34px; max-width:none; background:linear-gradient(105deg,#fffdf7,#f3ebd8); border:1px solid #d2c29f; border-left:5px solid #9c7b35; border-radius:4px; box-shadow:0 10px 30px rgba(48,39,24,.06); }
 .page-hero::after, .policy-hero::after { position:absolute; right:22px; top:18px; width:54px; height:54px; border:1px solid rgba(156,123,53,.24); transform:rotate(45deg); content:""; }
 .page-hero h1, .policy-hero h1, .treasury-intro h1 { color:#23442e; }
@@ -353,7 +353,7 @@ body {
   .treasury-home-grid { grid-template-columns:1fr; }
   .home-section { width:calc(100vw - 28px); }
   .shell--home { padding-top:0; }
-  .shell--treasury, .shell--resources, .shell--policy { padding-top:25px; }
+  .shell--treasury, .shell--resources, .shell--policy, .shell--members { padding-top:25px; }
   .page-hero, .policy-hero { padding:21px 18px 25px; }
 }
 
@@ -589,7 +589,7 @@ tbody tr:nth-child(even) { background:#e7f0ea; }
 .critical-alert.is-healthy .alert-label { margin:0; }
 .critical-alert.is-healthy h2 { font-family:inherit; font-size:14px; font-weight:750; }
 .critical-alert.is-healthy #critical-guidance { display:none; }
-.shell--treasury:not(.shell--contributions) .metric-card { min-height:112px; padding:18px 20px; }
+.shell--treasury:not(.shell--contributions) .metric-card, .member-metrics .metric-card { min-height:112px; padding:18px 20px; }
 .chart-summary { margin:10px 4px 0; color:var(--muted); font-size:12px; line-height:1.45; }
 #trend-chart:focus-visible { outline:3px solid #d8ad4e; outline-offset:4px; border-radius:3px; }
 .treasury-contribution-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:24px; margin-bottom:14px; padding:17px 21px; background:linear-gradient(120deg,#f8f3e5,#fffdf6); border:1px solid #d4c6a7; border-left:5px solid #9c7b35; border-radius:5px; box-shadow:0 8px 24px rgba(18,54,33,.07); }
@@ -742,9 +742,9 @@ tbody tr:nth-child(even) { background:#e7f0ea; }
   .treasury-intro .range-control { width:100%; display:grid; grid-template-columns:repeat(3,1fr); }
   .critical-alert.is-healthy > div:last-child { display:block; }
   .critical-alert.is-healthy .alert-label { margin-bottom:2px; }
-  .shell--treasury:not(.shell--contributions) .metrics { grid-template-columns:1fr 1fr; }
-  .shell--treasury:not(.shell--contributions) .metric-card:first-child { grid-column:1/-1; }
-  .shell--treasury:not(.shell--contributions) .metric-card { min-height:104px; }
+  .shell--treasury:not(.shell--contributions) .metrics, .member-metrics { grid-template-columns:1fr 1fr; }
+  .shell--treasury:not(.shell--contributions) .metric-card:first-child, .member-metrics .metric-card:first-child { grid-column:1/-1; }
+  .shell--treasury:not(.shell--contributions) .metric-card, .member-metrics .metric-card { min-height:104px; }
   .treasury-contribution-card { padding:17px 16px; }
   .treasury-contribution-card__link { width:100%; justify-content:center; }
   .age-panel-heading { display:grid; }
