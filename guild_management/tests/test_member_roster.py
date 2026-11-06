@@ -28,6 +28,28 @@ class MemberRosterTests(unittest.TestCase):
                 self.payload["members"][0]["joinedOn"] = value
                 validate_roster(self.payload, self.today)
 
+    def test_former_member_departure_date_is_preserved(self) -> None:
+        member = self.payload["members"][0]
+        member.update(status="former", departedOn="2026-10-20")
+        clean = validate_roster(self.payload, self.today)["members"][0]
+        self.assertEqual(clean["joinedOn"], "2024-02-29")
+        self.assertEqual(clean["departedOn"], "2026-10-20")
+        del member["departedOn"]
+        self.assertIsNone(validate_roster(self.payload, self.today)["members"][0]["departedOn"])
+
+    def test_departure_dates_must_be_valid_and_within_membership(self) -> None:
+        member = self.payload["members"][0]
+        member["status"] = "former"
+        for value in ("2025-02-29", "2027-01-01", "2011-01-01", "2024-02-28", "2026-2-01", "", 123):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                member["departedOn"] = value
+                validate_roster(self.payload, self.today)
+        member["departedOn"] = member["joinedOn"]
+        self.assertEqual(validate_roster(self.payload, self.today)["members"][0]["departedOn"], member["joinedOn"])
+        member["status"] = "current"
+        with self.assertRaises(ValueError):
+            validate_roster(self.payload, self.today)
+
     def test_duplicate_identity_and_player_id_are_rejected(self) -> None:
         duplicate = copy.deepcopy(self.payload["members"][0])
         self.payload["members"].append(duplicate)

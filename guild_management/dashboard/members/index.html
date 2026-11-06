@@ -6,7 +6,7 @@
     <meta name="description" content="Guild member join dates and upcoming GoE anniversaries.">
     <title>Guild Anniversaries | GoE Guild Portal</title>
     <link rel="icon" href="/GOE.cf564778dc8b.png">
-    <link rel="stylesheet" href="/styles.0ddec6040531.css">
+    <link rel="stylesheet" href="/styles.bbbc1ba7504e.css">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -43,11 +43,12 @@
         <div class="member-filters">
           <label>Find a member<input id="member-search" type="search" placeholder="Search by name"></label>
           <label>Show<select id="member-filter"><option value="current">Current members</option><option value="missing">Missing join dates</option><option value="former">Former members</option><option value="all">All members</option></select></label>
-          <label>Sort by<select id="member-sort"><option value="anniversary">Next anniversary</option><option value="name">Member name</option><option value="joined">Join date</option></select></label>
+          <label>Sort by<select id="member-sort"><option value="joined">Join date</option><option value="anniversary">Next anniversary</option><option value="name">Member name</option></select></label>
         </div>
-        <div class="table-scroll"><table class="member-table"><caption class="sr-only">Guild members, recorded join dates, and upcoming anniversaries</caption><thead><tr><th>Member</th><th>Joined</th><th>Years together</th><th>Next anniversary</th></tr></thead><tbody id="member-rows"></tbody></table></div>
+        <div class="table-scroll"><table class="member-table" id="member-table"><caption class="sr-only" id="member-caption">Guild members, recorded join dates, and upcoming anniversaries</caption><thead><tr id="member-columns"><th scope="col">Member</th><th scope="col">Joined</th><th scope="col">Years together</th><th scope="col">Next anniversary</th></tr></thead><tbody id="member-rows"></tbody></table></div>
         <div class="member-empty" id="roster-empty" hidden><h3>No members yet</h3><p>The guild roster has not been published yet.</p></div>
-        <p class="member-footnote">Anniversaries use the recorded join date and the guild’s Eastern time calendar. February 29 anniversaries are celebrated on February 28 in non-leap years.</p>
+        <p class="member-footnote" id="join-date-footnote" hidden><span aria-hidden="true">* </span>Actual join date may be earlier than recorded.</p>
+        <p class="member-footnote">Join dates, departure dates, and anniversaries use the guild’s Eastern Time (ET) calendar. February 29 anniversaries are celebrated on February 28 in non-leap years.</p>
       </section>
 
     </main>
@@ -55,8 +56,8 @@
       <span>Guardians of Elysium</span>
       <span>Guild tools and official resources &middot; 2026</span>
     </footer>
-    <script defer src="/anniversaries-model.36dd8b86621e.js"></script>
-    <script defer src="/member-roster.e86a15d40535.js"></script>
-    <script defer src="/anniversaries.a791d7b1176b.js"></script>
+    <script defer src="/anniversaries-model.0c1da3327524.js"></script>
+    <script defer src="/member-roster.a0ce718229d1.js"></script>
+    <script defer src="/anniversaries.3aa1a1302cd7.js"></script>
   </body>
 </html>

@@ -210,14 +210,16 @@
       "name": "Messalina 5303 the Fair",
       "playerId": "857089839",
       "joinedOn": "2026-07-22",
-      "status": "current"
+      "status": "former",
+      "departedOn": "2026-11-02"
     },
     {
       "id": "us24-854415629",
       "name": "Oliveboy",
       "playerId": "854415629",
       "joinedOn": "2026-08-25",
-      "status": "current"
+      "status": "former",
+      "departedOn": "2026-11-04"
     },
     {
       "id": "us24-856604772",
@@ -261,6 +263,7 @@
       "name": "SirWalter929",
       "playerId": "15857412",
       "joinedOn": "2019-06-22",
+      "joinedOnMayBeEarlier": true,
       "status": "current",
       "tagline": "the Sir of Beards"
     },
@@ -269,13 +272,15 @@
       "name": "The High Jackel",
       "playerId": "13819890",
       "joinedOn": "2026-09-23",
-      "status": "current"
+      "status": "former",
+      "departedOn": "2026-10-31"
     },
     {
       "id": "us24-14210627",
       "name": "Theoutdoorsman71",
       "playerId": "14210627",
       "joinedOn": "2019-06-22",
+      "joinedOnMayBeEarlier": true,
       "status": "current",
       "tagline": "God of Outdoors."
     },

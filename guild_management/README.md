@@ -499,7 +499,8 @@ model, refreshing when the date changes or the page becomes visible again.
 ### Member join dates and anniversaries
 
 `/members/` shows current members, recorded join dates, years with the guild,
-today's anniversaries, and the next celebrations. Search and filters include
+today's anniversaries, and the next celebrations. The roster defaults to join
+date, oldest first, with unknown dates last. Search and filters include
 members whose dates are unknown and former members. Former members do not appear
 in upcoming celebrations. The calendar follows `America/New_York`; February 29
 anniversaries fall on February 28 in non-leap years. First anniversaries occur
@@ -518,12 +519,31 @@ On 2026-10-29, guild leadership confirmed Icarus the Great joined on
 2024-02-26, WeRBorg joined on 2022-03-10, Lilchick989 joined on
 2026-07-12, and 3 Point joined on 2018-03-01. These manually confirmed dates supersede the Foestats values;
 preserve them in future imports. GinnyR (player ID `857244717`) was added on
-2026-10-29 with a confirmed join date of 2026-10-15. All 46 current members now
-have known join dates.
+2026-10-29 with a confirmed join date of 2026-10-15. At that point, all 46 current
+members had known join dates.
 
-Per the guild's chosen convention, imported dates match Foestats' displayed
-dates in `America/New_York`. Its API provides midnight UTC timestamps; convert
-those to Eastern calendar dates before storing a date-only `joinedOn` value.
+On 2026-11-06, the roster was refreshed against Foestats data dated 2026-11-05.
+Oliveboy, Messalina 5303 the Fair, and The High Jackel were marked as former
+members after their departures were confirmed in the source's previous-member
+list. Their records and join dates remain available under the former-member
+filter. Foestats lists 42 current members while its guild summary reports 43;
+GinnyR is still absent from its player data, so the leadership-confirmed record
+was retained. The shared roster now has 43 current members and three former
+members, with all join dates, stable IDs, names, and taglines preserved.
+Their departure dates are recorded in Eastern Time: The High Jackel on
+2026-10-31, Messalina 5303 the Fair on 2026-11-02, and Oliveboy on 2026-11-04.
+The former-member view shows only Member, Joined, and Departed columns. In the
+all-members view, former members show their departure date in the membership
+details instead of years together or an upcoming anniversary.
+
+SirWalter929 and Theoutdoorsman71 retain their recorded join date of 2019-06-22,
+with `joinedOnMayBeEarlier: true`. Their dates link to the footnote “Actual join
+date may be earlier than recorded.” Preserve these flags in future imports.
+
+Per the guild's chosen convention, imported join and departure dates match
+Foestats' displayed dates in `America/New_York`. Its API provides midnight UTC
+timestamps; convert those to Eastern calendar dates before storing date-only
+`joinedOn` or `departedOn` values.
 For example, zpwd's source timestamp `2024-07-24T00:00:00.000Z` displays as
 July 23, 2024, so the roster records `2024-07-23`. Do not apply another timezone
 conversion when rendering the stored date. Game player IDs from the source
@@ -564,7 +584,12 @@ Daily treasury builds retain the member module and its roster through the shared
 site build. The source schema is
 version 1 with `guildName`, `timeZone`, and `members`; each member has a unique
 `id`, `name`, optional `playerId` (text), optional `tagline` (up to 200 characters),
-`joinedOn` (ISO date or null), and `status` (`current` or `former`). Taglines are
+`joinedOn` (ISO date or null), and `status` (`current` or `former`).
+An optional boolean `joinedOnMayBeEarlier` marks a recorded join date with the
+shared earlier-date footnote. Former members
+also have `departedOn` (ISO date or null when unknown). A recorded departure must
+be on or after the join date and cannot be in the future; current members cannot
+have a departure date. Taglines are
 rendered as plain text; omitted or blank values leave no empty label. The roster uses the existing portal access
 policy; do not include private notes.
 

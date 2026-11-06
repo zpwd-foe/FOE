@@ -42,3 +42,19 @@ test("record identity and player IDs stay unique when renaming members", () => {
   assert.equal(clean.members[0].name, "New name");
   assert.ok(!("notes" in clean.members[0]));
 });
+test("former members retain departure dates without generating anniversaries", () => {
+  const former = { ...member("2024-02-29", "former"), departedOn: "2026-10-20" };
+  const clean = api.validateRoster(roster([former]), "2026-10-28").members[0];
+  assert.equal(clean.joinedOn, "2024-02-29");
+  assert.equal(clean.departedOn, "2026-10-20");
+  assert.equal(api.anniversary(clean, "2026-10-28"), null);
+  assert.equal(api.validateRoster(roster([member(null, "former")]), "2026-10-28").members[0].departedOn, null);
+});
+test("departure dates must be valid, nonfuture, and on or after joining", () => {
+  const former = member("2024-02-29", "former");
+  for (const departedOn of ["2025-02-29", "2027-01-01", "2011-01-01", "2024-02-28", "2026-2-01", "", 123]) {
+    assert.throws(() => api.validateRoster(roster([{ ...former, departedOn }]), "2026-10-28"));
+  }
+  assert.equal(api.validateRoster(roster([{ ...former, departedOn: former.joinedOn }]), "2026-10-28").members[0].departedOn, former.joinedOn);
+  assert.throws(() => api.validateRoster(roster([{ ...former, status: "current", departedOn: "2026-10-20" }]), "2026-10-28"));
+});

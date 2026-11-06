@@ -30,14 +30,22 @@
       const playerId = member.playerId ?? "";
       if (typeof playerId !== "string" || (playerId && (!/^[1-9][0-9]{0,19}$/.test(playerId) || playerIds.has(playerId)))) throw new Error("Player IDs must be unique positive integers, stored as text.");
       const joinedOn = member.joinedOn ?? null;
+      const joinedOnMayBeEarlier = member.joinedOnMayBeEarlier === undefined ? false : member.joinedOnMayBeEarlier;
+      if (typeof joinedOnMayBeEarlier !== "boolean") throw new Error("The earlier join-date flag must be true or false.");
       if (joinedOn !== null) {
         parts(joinedOn);
         if (joinedOn > today) throw new Error("A join date cannot be in the future.");
       }
       if (!["current", "former"].includes(member.status)) throw new Error("Member status must be current or former.");
+      const departedOn = member.departedOn ?? null;
+      if (departedOn !== null) {
+        parts(departedOn);
+        if (departedOn > today) throw new Error("A departure date cannot be in the future.");
+        if (member.status !== "former" || (joinedOn !== null && departedOn < joinedOn)) throw new Error("Only former members can have a departure date, on or after their join date.");
+      }
       ids.add(member.id);
       if (playerId) playerIds.add(playerId);
-      return { id: member.id, name: member.name.trim(), playerId, joinedOn, status: member.status, ...(tagline.trim() ? { tagline: tagline.trim() } : {}) };
+      return { id: member.id, name: member.name.trim(), playerId, joinedOn, status: member.status, ...(joinedOnMayBeEarlier ? { joinedOnMayBeEarlier } : {}), ...(member.status === "former" ? { departedOn } : {}), ...(tagline.trim() ? { tagline: tagline.trim() } : {}) };
     });
     return { schemaVersion: 1, guildName: payload.guildName, timeZone: payload.timeZone, members };
   }

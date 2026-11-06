@@ -35,6 +35,9 @@ def validate_roster(payload: object, today: dt.date | None = None) -> dict:
         if not isinstance(player_id, str) or (player_id and (not re.fullmatch(r"[1-9][0-9]{0,19}", player_id) or player_id in player_ids)):
             raise ValueError("Player IDs must be unique positive integers, stored as text.")
         joined = member.get("joinedOn")
+        joined_may_be_earlier = member.get("joinedOnMayBeEarlier", False)
+        if type(joined_may_be_earlier) is not bool:
+            raise ValueError("The earlier join-date flag must be true or false.")
         if joined is not None:
             if not isinstance(joined, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", joined):
                 raise ValueError("Join dates must use YYYY-MM-DD, or null when unknown.")
@@ -44,10 +47,23 @@ def validate_roster(payload: object, today: dt.date | None = None) -> dict:
         status = member.get("status")
         if status not in ("current", "former"):
             raise ValueError("Member status must be current or former.")
+        departed = member.get("departedOn")
+        if departed is not None:
+            if not isinstance(departed, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", departed):
+                raise ValueError("Departure dates must use YYYY-MM-DD, or null when unknown.")
+            departure_date = dt.date.fromisoformat(departed)
+            if departure_date < dt.date(2012, 1, 1) or departure_date > today:
+                raise ValueError("Departure dates must be from 2012 onward and cannot be in the future.")
+            if status != "former" or (joined is not None and departed < joined):
+                raise ValueError("Only former members can have a departure date, on or after their join date.")
         ids.add(identity)
         if player_id:
             player_ids.add(player_id)
         entry = {"id": identity, "name": name.strip(), "playerId": player_id, "joinedOn": joined, "status": status}
+        if joined_may_be_earlier:
+            entry["joinedOnMayBeEarlier"] = True
+        if status == "former":
+            entry["departedOn"] = departed
         if tagline.strip():
             entry["tagline"] = tagline.strip()
         clean.append(entry)
