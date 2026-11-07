@@ -546,6 +546,14 @@ The former-member view shows only Member, Joined, and Departed columns. In the
 all-members view, former members show their departure date in the membership
 details instead of years together or an upcoming anniversary.
 
+On 2026-11-07, the roster was refreshed against Foestats data dated 2026-11-06.
+Princess Pomp (`14711031`) and Tawatinaw (`852613367`) were added with join
+dates of 2026-11-05 in Eastern Time. No new departures were found. The source
+lists 44 current members and its guild summary reports 45; retaining GinnyR's
+leadership-confirmed record gives 45 current members and three former members,
+all with known join dates. Existing join dates, IDs, taglines, and earlier-date
+flags were preserved.
+
 SirWalter929 and Theoutdoorsman71 retain their recorded join date of 2019-06-22,
 with `joinedOnMayBeEarlier: true`. Their dates link to the footnote “Actual join
 date may be earlier than recorded.” Preserve these flags in future imports.

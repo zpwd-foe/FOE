@@ -236,6 +236,13 @@
       "status": "current"
     },
     {
+      "id": "us24-14711031",
+      "name": "Princess Pomp",
+      "playerId": "14711031",
+      "joinedOn": "2026-11-05",
+      "status": "current"
+    },
+    {
       "id": "us24-856213206",
       "name": "Roxana 2195",
       "playerId": "856213206",
@@ -263,9 +270,16 @@
       "name": "SirWalter929",
       "playerId": "15857412",
       "joinedOn": "2019-06-22",
-      "joinedOnMayBeEarlier": true,
       "status": "current",
+      "joinedOnMayBeEarlier": true,
       "tagline": "the Sir of Beards"
+    },
+    {
+      "id": "us24-852613367",
+      "name": "Tawatinaw",
+      "playerId": "852613367",
+      "joinedOn": "2026-11-05",
+      "status": "current"
     },
     {
       "id": "us24-13819890",
@@ -280,8 +294,8 @@
       "name": "Theoutdoorsman71",
       "playerId": "14210627",
       "joinedOn": "2019-06-22",
-      "joinedOnMayBeEarlier": true,
       "status": "current",
+      "joinedOnMayBeEarlier": true,
       "tagline": "God of Outdoors."
     },
     {
