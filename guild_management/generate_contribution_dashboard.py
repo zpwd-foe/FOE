@@ -334,6 +334,22 @@ def without_audited_duplicates(
     return [row for index, row in enumerate(rows) if index not in excluded]
 
 
+def distinct_boundary_rows(
+    baseline_rows: Sequence[dict[str, object]],
+    current_rows: Sequence[dict[str, object]],
+    cutoff: dt.datetime,
+) -> list[dict[str, object]]:
+    """Find new signatures without interpreting changes in legacy multiplicity."""
+    before = Counter(record_key(row) for row in baseline_rows if row["timestamp"] == cutoff)
+    boundary = [row for row in current_rows if row["timestamp"] == cutoff]
+    after = Counter(record_key(row) for row in boundary)
+    if not before or any(after[key] != count for key, count in before.items()):
+        return []
+    if any(count != 1 for key, count in after.items() if key not in before):
+        return []
+    return [row for row in boundary if record_key(row) not in before]
+
+
 def audit_inventory_delta(
     baseline_contribution: Path,
     current_contribution: Path,
@@ -342,6 +358,7 @@ def audit_inventory_delta(
     *,
     capture_context: dict[str, object] | None = None,
     baseline_payload: dict[str, object] | None = None,
+    allow_boundary_recovery: bool = True,
 ) -> dict[str, object]:
     """Prove that signed log changes equal treasury changes for every good."""
     baseline_rows, _ = normalized_export(baseline_contribution)
@@ -473,6 +490,34 @@ def audit_inventory_delta(
             row = current_rows[index]
             contribution_delta[str(row["good"])] -= int(row["amount"])
         per_age, mismatches = compare_delta(contribution_delta)
+    boundary_rows: list[dict[str, object]] = []
+    previous_alignment = baseline_audit.get("timeAlignment") or {}
+    previous_capture_text = previous_alignment.get("treasuryCapturedAt")
+    if (
+        mismatches
+        and allow_boundary_recovery
+        and cached_audit_matches(baseline_payload, baseline_contribution, baseline_treasury)
+        and captured_at is not None
+        and captured_at >= cutoff + dt.timedelta(minutes=1)
+        and previous_capture_text
+        and not carried
+        and not retained_mixed_rows
+        and not duplicate_indexes
+    ):
+        previous_capture = dt.datetime.fromisoformat(previous_capture_text)
+        if previous_capture.replace(second=0, microsecond=0) == cutoff:
+            # The previous export closed during this minute. Accept only all of
+            # its newly observed, distinct signatures, and only if they explain
+            # every remaining inventory difference. Never search for a subset.
+            candidates = distinct_boundary_rows(baseline_rows, raw_current, cutoff)
+            candidate_delta = contribution_delta.copy()
+            for row in candidates:
+                candidate_delta[str(row["good"])] += int(row["amount"])
+            candidate_per_age, candidate_mismatches = compare_delta(candidate_delta)
+            if candidates and not candidate_mismatches and not (set(candidate_delta) - set(current_goods)):
+                boundary_rows = candidates
+                contribution_delta = candidate_delta
+                per_age, mismatches = candidate_per_age, candidate_mismatches
     if mismatches:
         examples = "; ".join(
             f"{item['good']} ({int(item['difference']):+d})"
@@ -491,6 +536,8 @@ def audit_inventory_delta(
         "pendingSignedAmount": sum(int(row["amount"]) for row in pending),
         "carriedPendingRecordCount": len(carried),
         "carriedPendingSignedAmount": sum(int(row["amount"]) for row in carried),
+        "recoveredBoundaryRecordCount": len(boundary_rows),
+        "recoveredBoundarySignedAmount": sum(int(row["amount"]) for row in boundary_rows),
         "cutoffTimestamp": cutoff.isoformat(timespec="seconds"),
         "goodsChecked": len(current_goods),
         "agesChecked": len(per_age),
@@ -739,6 +786,7 @@ def append_audited_rows(
     keep_mixed_production: bool = False,
     duplicate_indexes: Sequence[int] = (),
     pending_after: dt.datetime | None = None,
+    boundary_record_count: int = 0,
 ) -> list[dict[str, object]]:
     """Extend a previously audited canonical payload without reopening history."""
     rows = payload_rows(existing_payload)
@@ -753,6 +801,12 @@ def append_audited_rows(
         keep_mixed_production_after=cutoff if keep_mixed_production else pending_after,
     )
     current_rows = without_audited_duplicates(current_rows, duplicate_indexes)
+    boundary_rows = (
+        distinct_boundary_rows(rows, read_export(current_contribution), cutoff)
+        if boundary_record_count else []
+    )
+    if len(boundary_rows) != boundary_record_count:
+        raise ValueError("Audited boundary records no longer match the current export")
     latest_names = {
         str(row["playerId"]): str(row["playerName"])
         for row in current_rows
@@ -763,6 +817,7 @@ def append_audited_rows(
         if player_id in latest_names:
             row["playerName"] = latest_names[player_id]
     rows.extend(row.copy() for row in current_rows if row["timestamp"] > cutoff)
+    rows.extend(row.copy() for row in boundary_rows)
     rows.sort(key=lambda row: row["timestamp"], reverse=True)
     return rows
 
@@ -814,6 +869,7 @@ def main() -> None:
                 current_treasury,
                 capture_context=capture_context,
                 baseline_payload=existing_payload,
+                allow_boundary_recovery=not explicit_baseline,
             )
             if (
                 not explicit_baseline
@@ -836,10 +892,11 @@ def main() -> None:
                     duplicate_indexes=inventory_audit["duplicateProductionRowIndexes"],
                     pending_after=(dt.datetime.fromisoformat(capture_context["treasuryCapturedAt"])
                                    if inventory_audit["pendingRecordCount"] else None),
+                    boundary_record_count=inventory_audit.get("recoveredBoundaryRecordCount", 0),
                 )
                 old_meta = existing_payload["meta"]
                 raw_current_count = len(read_export(current_contribution))
-                added_count = sum(1 for row in rows if row["timestamp"] > cutoff)
+                added_count = len(rows) - len(existing_payload["records"])
                 duplicate_count = (
                     int(old_meta.get("duplicateRecordCount", 0))
                     + raw_current_count
@@ -903,6 +960,12 @@ def main() -> None:
             )
         if inventory_audit.get("carriedPendingRecordCount"):
             print(f"Reconciled {inventory_audit['carriedPendingRecordCount']} pending records from the prior capture.")
+        if inventory_audit.get("recoveredBoundaryRecordCount"):
+            print(
+                f"Recovered {inventory_audit['recoveredBoundaryRecordCount']} distinct records "
+                f"({inventory_audit['recoveredBoundarySignedAmount']:+,} goods) from the prior "
+                "capture minute; all goods reconcile and source CSVs are unchanged."
+            )
 
 
 if __name__ == "__main__":

@@ -176,6 +176,16 @@ requests and does not edit either CSV or synthesize treasury balances. All goods
 must still balance exactly. Missing or changed evidence, transactions in an
 ambiguous capture minute, and unexplained differences stop publication.
 
+A later export can reveal distinct records from the previous export's final
+minute. Recovery requires the checksum-matching, audited canonical baseline
+and its observed treasury capture time within that minute, plus verified current
+capture evidence. Every old boundary signature must retain its multiplicity;
+each new signature must occur once. The generator accepts all new boundary
+records only when their signed amounts explain every inventory difference
+exactly. It never chooses a subset, infers repeated transaction identities, or
+reopens older history. The audit records the recovered count and signed amount,
+and later refreshes retain these records exactly once.
+
 The private staging input manifest includes the exporter state and referenced
 page evidence, so changed evidence invalidates a cached build. Keep the last-good
 canonical contribution payload and private capture evidence for pending records.
