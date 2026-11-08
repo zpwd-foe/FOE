@@ -1,6 +1,21 @@
 {
   "resources": [
     {
+      "slug": "foe-tools-copper-gold-rate-setup",
+      "title": "FOE Tools Setup for FoE & Friends 1.9 Copper and 1.1 Gold Threads",
+      "shortTitle": "FoE & Friends 1.9 Copper and 1.1 Gold Setup",
+      "description": "Use FOE Tools to set our thread rates, prime your Great Building (GB), and prepare a message for the FoE & Friends 1.9 Copper or 1.1 Gold thread.",
+      "category": "Great Buildings",
+      "status": "Guide",
+      "owner": "GoE Guild Portal",
+      "effectiveDate": "November 7, 2026",
+      "lastReviewed": "November 7, 2026",
+      "version": "1.0",
+      "audience": "All GoE guild members",
+      "contentFile": "foe-tools-copper-gold-rate-setup.html",
+      "layout": "guide"
+    },
+    {
       "slug": "guild-expedition-lottery-rules",
       "title": "Official GoE Guild Expedition Lottery Rules",
       "shortTitle": "Guild Expedition Lottery Rules",

@@ -496,10 +496,19 @@ Portal routes:
 - `/members/` — member join dates and guild anniversaries
 - `/resources/` — guild resource library
 - `/resources/guild-expedition-lottery-rules/` — lottery rules
+- `/resources/foe-tools-copper-gold-rate-setup/` — illustrated FOE Tools setup, priming, and promotion-message guide
 
 Resource metadata lives in `site/resources.json`; policy text lives in
 `site/content/`. Add a resource entry and an HTML content fragment to extend
 the library without changing the shared navigation or page layout.
+Use `"layout": "guide"` for instructional resources that share the article
+layout without policy labels or a policy review banner. Guide screenshots live
+in `site/assets/resources/`; the builder fingerprints these assets and resolves
+`{{filename_with_underscores_asset}}` tokens in resource content. The Copper and
+Gold guide uses the supplied document's four annotated screenshots and its
+1.90 Copper / 1.10 Gold example, with percentage inputs of 90 and 10. Embedded
+screenshots use 768, 1280, and 2048 pixel WebP variants through `srcset`; later
+screenshots load lazily, and each image opens at full resolution when selected.
 
 The homepage combines treasury balances, member contributions, and the next
 guild anniversary in one overview, followed by the resource library. Its

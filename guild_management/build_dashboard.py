@@ -457,6 +457,9 @@ def publish_assets(
         "home_app": (ASSET_SOURCE_DIR / "home.js", "home"),
         "icon": (ASSET_SOURCE_DIR / "GOE.png", "GOE"),
     }
+    for source in sorted((ASSET_SOURCE_DIR / "resources").glob("*")):
+        if source.is_file() and source.suffix.lower() in CACHEABLE_ASSET_SUFFIXES:
+            sources[source.stem.replace("-", "_")] = (source, source.stem)
     for image_format in BANNER_FORMATS:
         for width in BANNER_WIDTHS:
             sources[f"banner_{image_format}_{width}"] = (
@@ -854,7 +857,10 @@ def publish_dashboard(
 
     resource_template = read_text(SITE_DIR / "pages" / "resource.html")
     for resource in resources:
-        article = read_text(SITE_DIR / "content" / str(resource["contentFile"]))
+        article = render(
+            read_text(SITE_DIR / "content" / str(resource["contentFile"])),
+            {f"{key}_asset": f"/{asset.name}" for key, asset in assets.items()},
+        )
         layout = str(resource.get("layout", "policy"))
         if layout == "dashboard":
             resource_content = article
@@ -866,6 +872,7 @@ def publish_dashboard(
                     "title": html.escape(str(resource["title"])),
                     "description": html.escape(str(resource["description"])),
                     "category": html.escape(str(resource["category"])),
+                    "resource_type": "Setup guide" if layout == "guide" else "Guild policy",
                     "status": html.escape(str(resource["status"])),
                     "status_class": " status-chip--official" if str(resource["status"]).strip().lower() == "official" else "",
                     "owner": html.escape(str(resource["owner"])),
@@ -874,11 +881,11 @@ def publish_dashboard(
                     "version": html.escape(str(resource["version"])),
                     "audience": html.escape(str(resource["audience"])),
                     "table_of_contents": table_of_contents(article),
-                    "review_notice": review_notice(resource),
+                    "review_notice": "" if layout == "guide" else review_notice(resource),
                     "article": article,
                 },
             )
-            main_class = "shell shell--policy"
+            main_class = "shell shell--policy shell--guide" if layout == "guide" else "shell shell--policy"
         slug = str(resource["slug"])
         write_text(
             output_dir / "resources" / slug / "index.html",
