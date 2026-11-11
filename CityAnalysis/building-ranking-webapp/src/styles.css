@@ -1199,6 +1199,26 @@ input[aria-invalid="true"] {
   background: var(--disabled);
 }
 
+.goods-age-multipliers {
+  min-width: 0;
+  margin: 0 0 8px;
+  padding: 8px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+}
+
+.goods-age-multipliers legend {
+  padding: 0 4px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.goods-age-multipliers .weight-row:last-child {
+  border-bottom: 0;
+}
+
 .slider-control {
   margin-bottom: 14px;
 }

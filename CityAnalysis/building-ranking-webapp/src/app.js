@@ -122,6 +122,7 @@ const state = {
   cityMap: null,
   productionView: "base",
   profileSettings: {},
+  goodsAgeMultipliers: { previous: 1, current: 1, next: 1 },
   customWeights: {
     overall: {},
     fighting: {},
@@ -481,6 +482,8 @@ function controls() {
     estimatedGuildGoodsProduction: numberValue(el.guildGoodsEstimate.value),
     estimatedMedalProduction: numberValue(el.medalEstimate.value),
     estimatedSpecialGoodsProduction: numberValue(el.specialGoodsEstimate.value),
+    goodsAgeMultipliers: activeWeightProfile() === "farming" && el.weightModeSelect.value === "custom"
+      ? { ...state.goodsAgeMultipliers } : null,
     strengths: selectedStrengths(),
     minArea: el.minAreaFilter.value === "" ? null : numberValue(el.minAreaFilter.value),
     maxArea: el.maxAreaFilter.value === "" ? null : numberValue(el.maxAreaFilter.value),
@@ -1158,6 +1161,16 @@ function effectiveAttrValue(record, key, c) {
   return base;
 }
 
+function scoringAttrValue(record, key, c) {
+  const effective = effectiveAttrValue(record, key, c);
+  if (key !== DATA.constants.prodGoodsAttr || !c.goodsAgeMultipliers) return effective;
+  // Replace each age's existing contribution; Goods Total and boost equivalents are counted once.
+  return effective
+    + rawAttr(record, "prod_resource_all_goods_of_previous_age") * (c.goodsAgeMultipliers.previous - 1)
+    + rawAttr(record, "prod_resource_all_goods_of_age") * (c.goodsAgeMultipliers.current - 1)
+    + rawAttr(record, "prod_resource_all_goods_of_next_age") * (c.goodsAgeMultipliers.next - 1);
+}
+
 function directionFor(key) {
   return attrInfo(key).direction || "Higher";
 }
@@ -1189,7 +1202,7 @@ function computeStats(records, c) {
     let min = Infinity;
     let max = -Infinity;
     for (const record of records) {
-      const value = effectiveAttrValue(record, key, c);
+      const value = scoringAttrValue(record, key, c);
       min = Math.min(min, value);
       max = Math.max(max, value);
     }
@@ -1448,7 +1461,7 @@ function scoreRecord(record, stats, weights, c) {
     const weight = weights[key] || 0;
     if (!weight) continue;
     const stat = stats[key];
-    const value = effectiveAttrValue(record, key, c);
+    const value = scoringAttrValue(record, key, c);
     const normalized = normalizeValue(key, value, stat.min, stat.max);
     const points = normalized * weight;
     score += points;
@@ -1868,6 +1881,25 @@ function renderControlState(rows, visibleRows) {
   el.resultMeta.append(sortStatus);
 }
 
+function renderGoodsAgeMultipliers(customMode) {
+  if (activeWeightProfile() !== "farming") return "";
+  return `<fieldset class="goods-age-multipliers">
+    <legend>Goods value by age</legend>
+    <p class="section-note">Adjust the goods counted by Goods Total, without adding extra weight points. Use 0–10×; arrows change by 1. 1× keeps its value; 0× ignores that age. Other goods and boost equivalents stay at 1×.</p>
+    ${["previous", "current", "next"].map((age) => {
+      const value = customMode ? state.goodsAgeMultipliers[age] : 1;
+      const label = `${age[0].toUpperCase()}${age.slice(1)}-age goods`;
+      return `<label class="weight-row">
+        <span>${label}<small>Multiplier · default 1×</small></span>
+        <input type="number" min="0" max="10" step="1" inputmode="decimal"
+          aria-label="${label} multiplier" data-goods-age="${age}" data-weight-profile="farming"
+          class="${value !== 1 ? "changed-weight-input" : ""}" value="${value}" placeholder="1"
+          ${customMode ? "" : "disabled"}>
+      </label>`;
+    }).join("")}
+  </fieldset>`;
+}
+
 function renderCustomWeights() {
   const profile = activeWeightProfile();
   const rules = customWeightRules(profile);
@@ -1875,7 +1907,8 @@ function renderCustomWeights() {
   const customMode = el.weightModeSelect.value === "custom";
   const c = controls();
   const rows = customizableWeightRows(profile, c);
-  const activeCount = Object.keys(state.customWeights[profile] || {}).length;
+  const activeCount = Object.keys(state.customWeights[profile] || {}).length
+    + (profile === "farming" ? Object.values(state.goodsAgeMultipliers).filter((value) => value !== 1).length : 0);
   const totalWeight = rows.reduce((sum, row) => {
     const value = customMode && row.override !== undefined ? row.override : row.defaultWeight;
     return sum + Math.abs(value || 0);
@@ -1886,14 +1919,16 @@ function renderCustomWeights() {
       ? `${activeCount} custom change${activeCount === 1 ? " is" : "s are"} active for this profile. Every unchanged field still uses its default value.`
       : "Custom mode is on, but no values have been changed yet. Edit any field to create a custom value."
     : `Using the recommended weights for ${PROFILE_CONFIG[state.profile].title}. Choose Custom if you want to change the balance.`;
-  const editingInput = el.customWeights.querySelector("input[data-weight-key]:focus");
+  const editingInput = el.customWeights.querySelector("input[data-weight-key]:focus")
+    || el.customWeights.querySelector("input[data-goods-age]:focus");
   if (customMode && editingInput?.dataset.weightProfile === profile) {
     // Keep the native input, its caret and incomplete decimal text alive during recalculation.
     el.customWeights.querySelector(".custom-summary strong").textContent = totalLabel;
     el.customWeights.querySelector("[data-weight-status]").textContent = statusLabel;
     const row = rows.find((item) => item.key === editingInput.dataset.weightKey);
-    editingInput.classList.toggle("changed-weight-input", row?.override !== undefined
-      && Math.abs(row.override - row.defaultWeight) > 1e-9);
+    editingInput.classList.toggle("changed-weight-input", editingInput.dataset.goodsAge
+      ? state.goodsAgeMultipliers[editingInput.dataset.goodsAge] !== 1
+      : row?.override !== undefined && Math.abs(row.override - row.defaultWeight) > 1e-9);
     return;
   }
   el.customWeights.innerHTML = `
@@ -1931,6 +1966,7 @@ function renderCustomWeights() {
             ${customMode ? "" : "disabled"}
           >
         </label>
+        ${row.key === DATA.constants.prodGoodsAttr ? renderGoodsAgeMultipliers(customMode) : ""}
       `;
       }).join("")}
     </div>
@@ -1955,6 +1991,7 @@ function renderCompare() {
         <span>
           ${escapeHtml(displayAttributeLabel(item.label, item.key))}
           <small>Raw ${formatAttributeValue(item.key, item.raw)}${Math.abs(item.raw - item.effective) > 1e-9 ? ` · Effective ${formatAttributeValue(item.key, item.effective)}` : ""}</small>
+          ${weightedGoodsValueNote(item)}
         </span>
         <strong>${fmt(item.scorePoints)}</strong>
       </div>
@@ -2123,6 +2160,7 @@ function attributeRowsFor(row) {
         label: attrLabel(key),
         raw: rawAttr(row.record, key),
         effective: effectiveAttrValue(row.record, key, c),
+        scoringValue: scoringAttrValue(row.record, key, c),
         weight: weights[key] || 0,
         scorePoints: contribution?.scorePoints || 0,
       };
@@ -2143,10 +2181,16 @@ function formatAttributeValue(key, value) {
   return formatted && isPercentageAttribute(key) ? `${formatted}%` : formatted;
 }
 
+function weightedGoodsValueNote(item) {
+  if (!Number.isFinite(item.scoringValue) || Math.abs(item.scoringValue - item.effective) <= 1e-9) return "";
+  return `<small>Weighted for scoring: ${formatAttributeValue(item.key, item.scoringValue)}</small>`;
+}
+
 function rawEffectiveValue(item) {
   const raw = formatAttributeValue(item.key, item.raw);
-  if (Math.abs(item.raw - item.effective) <= 1e-9) return raw;
-  return `${raw} (${formatAttributeValue(item.key, item.effective)})`;
+  const actual = Math.abs(item.raw - item.effective) <= 1e-9
+    ? raw : `${raw} (${formatAttributeValue(item.key, item.effective)})`;
+  return actual + weightedGoodsValueNote(item);
 }
 
 function detailSortMarker(key) {
@@ -2527,6 +2571,9 @@ function openDetail(rowKey, focusClose = true, returnFocus = null) {
     <h3>Summary</h3>
     <p class="detail-summary">${escapeHtml(explainRanking(row))}</p>
     <h3>Ranking Attributes</h3>
+    ${attrRows.some((item) => weightedGoodsValueNote(item))
+      ? `<p class="detail-section-note">Farming age multipliers adjust only the Goods Total scoring value. Actual production is unchanged, and the Goods Total weight is applied once. Other goods and boost equivalents keep their original value.</p>`
+      : ""}
     ${attrRows.some((item) => Math.abs(item.raw - item.effective) > 1e-9)
       ? `<p class="detail-section-note">Values in parentheses include production boosts calculated from your Base production inputs. Their score contribution is included in the corresponding production row.</p>`
       : ""}
@@ -2722,10 +2769,14 @@ function rememberProfileSettings() {
     focus: Object.fromEntries(Object.keys(defaultProfileSettings().focus)
       .map((key) => [key, Number(el[`${key}Focus`].value)])),
   };
+  if (activeWeightProfile() === "farming" && Object.values(state.goodsAgeMultipliers).some((value) => value !== 1)) {
+    state.profileSettings.farming.goodsAgeMultipliers = { ...state.goodsAgeMultipliers };
+  }
 }
 
 function applyProfileSettings(settings = {}) {
   const defaults = defaultProfileSettings();
+  state.goodsAgeMultipliers = preferenceApi.sanitizeGoodsAgeMultipliers(settings.goodsAgeMultipliers);
   el.weightModeSelect.value = settings.weightMode ?? defaults.weightMode;
   el.qiRoleSelect.value = settings.qiRole ?? defaults.qiRole;
   for (const [key, value] of Object.entries(defaults.focus)) {
@@ -3135,6 +3186,7 @@ function init() {
   });
   el.resetWeightsButton.addEventListener("click", () => {
     state.customWeights[activeWeightProfile()] = {};
+    if (activeWeightProfile() === "farming") state.goodsAgeMultipliers = preferenceApi.sanitizeGoodsAgeMultipliers();
     el.weightModeSelect.value = "default";
     renderImmediately();
     announce("Weights for the active profile restored.");
@@ -3146,11 +3198,24 @@ function init() {
         .filter((key) => isCustomizableWeight(profile, key))
         .map((key) => [key, 0])
     );
+    if (profile === "farming") state.goodsAgeMultipliers = { previous: 0, current: 0, next: 0 };
     el.weightModeSelect.value = "custom";
     renderImmediately();
-    announce("All weights for the active profile set to zero.");
+    announce(profile === "farming"
+      ? "All Farming weights and goods age multipliers set to zero."
+      : "All weights for the active profile set to zero.");
   });
   el.customWeights.addEventListener("input", (event) => {
+    const multiplier = event.target.closest("input[data-goods-age]");
+    if (multiplier?.dataset.goodsAge) {
+      if (activeWeightProfile() !== "farming" || el.weightModeSelect.value !== "custom" || multiplier.validity?.badInput) return;
+      const age = multiplier.dataset.goodsAge;
+      if (!["previous", "current", "next"].includes(age)) return;
+      state.goodsAgeMultipliers[age] = multiplier.value.trim() === "" ? 1
+        : preferenceApi.sanitizeGoodsAgeMultipliers({ [age]: Math.max(0, numberValue(multiplier.value)) })[age];
+      scheduleRender(140);
+      return;
+    }
     const input = event.target.closest("input[data-weight-key]");
     if (!input || input.validity?.badInput) return;
     const profile = activeWeightProfile();
@@ -3165,11 +3230,12 @@ function init() {
     scheduleRender(140);
   });
   el.customWeights.addEventListener("focusout", (event) => {
-    const input = event.target.closest("input[data-weight-key]");
+    const input = event.target.closest("input[data-weight-key]") || event.target.closest("input[data-goods-age]");
     if (!input || input.dataset.weightProfile !== activeWeightProfile()) return;
     const profile = activeWeightProfile();
     const key = input.dataset.weightKey;
-    input.value = String(state.customWeights[profile]?.[key] ?? weightMap(profile, controls())[key] ?? 0);
+    input.value = String(input.dataset.goodsAge ? state.goodsAgeMultipliers[input.dataset.goodsAge]
+      : state.customWeights[profile]?.[key] ?? weightMap(profile, controls())[key] ?? 0);
     const previousScrollTop = el.customWeights.querySelector(".weight-list")?.scrollTop || 0;
     scheduleRender(0, () => {
       const nextWeightList = el.customWeights.querySelector(".weight-list");

@@ -17,6 +17,7 @@ test("offers the requested production searches without Forge Points", () => {
       "Blueprints - Current and Higher Age",
       "Blueprints - Random",
       "Current-age goods",
+      "Previous-age goods",
       "Current-age units/troops",
       "Diamonds",
     ]

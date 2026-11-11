@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { dashboard } = require("./helpers/dashboard.js");
 
-function editor(profile = "farming") {
+function editor(profile = "farming", goodsAge = "") {
   const view = dashboard({ initialize: true, renderWeights: true });
   const { app, element, timers } = view;
   app.setActiveProfile(profile);
@@ -11,14 +11,15 @@ function editor(profile = "farming") {
   const family = app.activeWeightProfile();
   const row = app.customizableWeightRows(family, app.controls())[0];
   const input = element("weightInput");
-  input.dataset = { weightKey: row.key, weightProfile: family };
+  input.dataset = goodsAge ? { goodsAge, weightProfile: family } : { weightKey: row.key, weightProfile: family };
   input.closest = () => input;
-  input.value = row.defaultWeight;
+  input.value = goodsAge ? 1 : row.defaultWeight;
   const panel = element("customWeights");
   const summary = element("weightSummary");
   const status = element("weightStatus");
   panel.querySelector = (selector) => ({
-    "input[data-weight-key]:focus": app.document.activeElement === input ? input : null,
+    "input[data-weight-key]:focus": !goodsAge && app.document.activeElement === input ? input : null,
+    "input[data-goods-age]:focus": goodsAge && app.document.activeElement === input ? input : null,
     ".custom-summary strong": summary,
     "[data-weight-status]": status,
     ".weight-list": element("weightList"),
@@ -118,4 +119,41 @@ test("switching family replaces a focused weight editor with the new family's va
   assert.equal(view.replacements(), 1);
   assert.match(view.panel.innerHTML, /data-weight-profile="fighting"/);
   assert.doesNotMatch(view.panel.innerHTML, /value="777"/);
+});
+
+test("multiplier edits preserve focus, decimal text, and the importance total", () => {
+  const view = editor("farming", "previous");
+  for (const value of ["0", "0.", "0.5"]) {
+    view.type(value);
+    view.flush(140);
+    assert.equal(view.input.value, value);
+    assert.equal(view.replacements(), 0);
+    assert.equal(view.app.document.activeElement, view.input);
+    assert.equal(view.summary.textContent, "60.00 importance total");
+  }
+  assert.equal(view.state.goodsAgeMultipliers.previous, 0.5);
+  assert.match(view.status.textContent, /1 custom change is active/);
+  view.input.validity.badInput = true;
+  view.type("");
+  assert.equal(view.state.goodsAgeMultipliers.previous, 0.5);
+  view.input.validity.badInput = false;
+  view.type("");
+  view.flush(140);
+  assert.equal(view.state.goodsAgeMultipliers.previous, 1);
+  assert.equal(view.input.value, "");
+  view.blur();
+  assert.equal(view.input.value, "1");
+});
+
+test("goods multiplier inputs cap at 10 and keep their bounds separate from scoring weights", () => {
+  for (const [typed, expected] of [["11", 10], ["1000", 10], ["-5", 0], ["0.5", 0.5]]) {
+    const view = editor("farming", "next");
+    view.type(typed);
+    view.flush(140);
+    assert.equal(view.state.goodsAgeMultipliers.next, expected);
+    assert.equal(view.input.value, typed);
+    view.blur();
+    assert.equal(view.input.value, String(expected));
+    assert.match(view.panel.innerHTML, /min="0" max="10" step="1"/);
+  }
 });

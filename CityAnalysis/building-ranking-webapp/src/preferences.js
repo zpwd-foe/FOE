@@ -39,6 +39,12 @@
     return sanitized;
   }
 
+  function sanitizeGoodsAgeMultipliers(value) {
+    return Object.fromEntries(["previous", "current", "next"].map((age) => [
+      age, Math.min(10, boundedNumber(value?.[age], 0, Number.MAX_VALUE) ?? 1),
+    ]));
+  }
+
   function sanitizePreferences(value, allowed = {}) {
     if (!isObject(value)) return {};
     const sanitized = {};
@@ -59,6 +65,11 @@
       (allowed.weightProfiles || []).forEach((profile) => {
         if (!isObject(value.profileSettings[profile])) return;
         sanitized.profileSettings[profile] = sanitizeWeightSettings(value.profileSettings[profile], allowed);
+        if (profile === "farming" && isObject(value.profileSettings[profile].goodsAgeMultipliers)) {
+          sanitized.profileSettings[profile].goodsAgeMultipliers = sanitizeGoodsAgeMultipliers(
+            value.profileSettings[profile].goodsAgeMultipliers
+          );
+        }
       });
     }
 
@@ -184,6 +195,7 @@
     STORAGE_KEY,
     SCHEMA_VERSION,
     sanitizePreferences,
+    sanitizeGoodsAgeMultipliers,
     createPreferenceStore,
   };
 });

@@ -37,6 +37,12 @@
       unit: "goods/day",
     },
     {
+      key: "previous-age-goods",
+      label: "Previous-age goods",
+      attributeKey: "prod_resource_all_goods_of_previous_age",
+      unit: "goods/day",
+    },
+    {
       key: "current-age-units",
       label: "Current-age units/troops",
       attributeKey: "prod_unit_current_age",
