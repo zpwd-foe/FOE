@@ -356,6 +356,7 @@ function sanitizeCustomWeightState(value) {
     if (!weights || typeof weights !== "object" || Array.isArray(weights)) continue;
     for (const [key, weight] of Object.entries(weights)) {
       if (!attributeKeys.has(key)) continue;
+      if (attrInfo(key).isForcedZero) continue;
       if (!Number.isFinite(Number(weight))) continue;
       sanitized[profile][key] = sanitizeCustomWeight(profile, weight);
     }
@@ -1449,7 +1450,8 @@ function customizableWeightRows(profile, c) {
       override: state.customWeights[profile]?.[key],
       group: attrInfo(key).isKit ? "Kit production" : attrInfo(key).overallGroup || "Non-Fighting",
     }))
-    .filter((row) => isCustomizableWeight(profile, row.key) || row.override !== undefined)
+    .filter((row) => !attrInfo(row.key).isForcedZero
+      && (isCustomizableWeight(profile, row.key) || row.override !== undefined))
     .sort((a, b) => Math.abs(b.defaultWeight) - Math.abs(a.defaultWeight) || a.label.localeCompare(b.label));
 }
 

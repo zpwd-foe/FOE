@@ -253,6 +253,7 @@ HIDDEN_ZERO_WEIGHT_ADVANCED_CONTROL_LABELS = {
     "Boost: Supply production percentage",
     "Gross Happiness",
     "Happiness Demand",
+    "Is Special",
     "Limited Config Collectionamount",
     "Limited Config Expire Time (days)",
     "Multiplycollection Chance",
@@ -950,6 +951,7 @@ def attr_description(key: str) -> str:
     if key in production_descriptions:
         return production_descriptions[key]
     generic_descriptions = {
+        "generic_is_special": "Internal special-building flag from the reference data. Hidden and defaults to zero weight.",
         "generic_autopolivatepriority_priority": "Internal auto-polivate priority from the reference data. Hidden and defaults to zero weight.",
         "generic_limited_config_collectionamount": "Limited-building collection count from reference config. Hidden and defaults to zero weight.",
         "generic_limited_config_expiretime": "Limited-building expiration duration, converted from seconds to days. Hidden and defaults to zero weight.",
