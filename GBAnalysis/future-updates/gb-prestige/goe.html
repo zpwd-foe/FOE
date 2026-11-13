@@ -37,7 +37,7 @@
     <form id="priming-form" novalidate>
       <ol class="steps" aria-label="Six steps to prime and post your Great Building">
         <li class="field name-field"><label for="player-name"><span class="step" aria-hidden="true">1</span>Your name</label><input id="player-name" type="text" maxlength="100" placeholder="In-game name" autocomplete="nickname" spellcheck="false" aria-describedby="name-help" required><p id="name-help" class="field-help"></p></li>
-        <li class="field building-field"><label for="building"><span class="step" aria-hidden="true">2</span>Select GB</label><select id="building" required><option value="">Loading buildings…</option></select></li>
+        <li class="field building-field"><label for="building"><span class="step" aria-hidden="true">2</span>Select GB</label><div class="select-control"><select id="building" required><option value="">Loading buildings…</option></select></div></li>
         <li class="field level-field"><label for="target-level"><span class="step" aria-hidden="true">3</span>TARGET level</label><input id="target-level" type="number" min="1" max="300" step="1" value="101" inputmode="numeric" required aria-describedby="input-error"><p id="input-error" class="error" role="alert" hidden></p></li>
         <li class="result wide">
           <div class="section-heading"><h2><span class="step" aria-hidden="true">4</span>Prime your EMPTY GB</h2><span id="rate-label" class="rate-label"></span></div>
@@ -63,9 +63,10 @@
       <p>Start with an empty level and add the priming FP shown. This leaves room for all listed contributions and your final flip.</p>
       <p>After all positions are filled, finish the level with the FP you saved: the P5 amount for Copper or P7 for Gold.</p>
       <p>Treasury GBs produce goods for the guild.</p>
+      <p class="sniping-warning">Priming all positions at once increases <strong>sniping risk.</strong></p>
     </div></details>
     <noscript><p class="error">Enable JavaScript to calculate priming costs and prepare your message.</p></noscript>
   </main>
-  <footer><span>Guardians of Elysium</span><p class="sniping-warning">Priming all positions at once increases <strong>sniping risk.</strong></p><small class="tool-version" aria-label="Tool version {{APP_VERSION}}">v{{APP_VERSION}}</small></footer>
+  <footer><span>Guardians of Elysium</span><small class="tool-version" aria-label="Tool version {{APP_VERSION}}">v{{APP_VERSION}}</small></footer>
 </body>
 </html>

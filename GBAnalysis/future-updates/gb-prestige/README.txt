@@ -176,7 +176,7 @@ GOE Prime & Post:
     Other Copper, Social tab: ⚔️GoE & Friends Copper Tier 190 🟠
     Other Gold, Social tab: ⚔️GoE & Friends Gold Tier 110 🟡
   A bold tab badge appears above the thread name in step 6.
-  The page footer warns that this simplified method primes all positions at
+  The Rates & calculation section warns that this simplified method primes all positions at
   once, increasing the chance of being sniped. Rates and the cost breakdown
   stay in a collapsed details section to keep the main workflow simple.
   GOE rules are isolated in goe-priming.js; general explorer charts are unchanged.

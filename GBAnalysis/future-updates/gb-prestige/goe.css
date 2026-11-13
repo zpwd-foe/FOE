@@ -71,6 +71,9 @@ label, h2 { display: flex; align-items: center; gap: 10px; font-size: 18px; font
 label { margin-bottom: 10px; }
 h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
 input, select { width: 100%; border: 1px solid var(--control-border); background: var(--field); border-radius: 7px; padding: 10px; color: var(--ink); min-height: 48px; font-size: 18px; }
+.select-control { position: relative; }
+.select-control select { display: block; appearance: none; -webkit-appearance: none; padding-right: 44px; }
+.select-control::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-70%) rotate(45deg); pointer-events: none; }
 input::placeholder { color: var(--muted); }
 input[aria-invalid="true"] { border-color: var(--error); }
 #target-level { font-variant-numeric: tabular-nums; }
