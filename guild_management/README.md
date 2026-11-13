@@ -505,8 +505,12 @@ Portal routes:
 The Tools navigation and homepage card open `/tools/gb-prime-post/`. It uses the
 same tested build as `GBAnalysis/future-updates/gb-prestige`, including all GOE
 rates, treasury routing, the final-flip reserve, and the sniping warning. Names
-and light/dark choices are stored only in the visitor's browser. Its compact
-cost dataset loads independently of treasury and contribution data.
+and light/dark choices are stored only in the visitor's browser. Each tab remembers
+its own player name, GB and target level across refreshes. New tabs start from the
+last completed setup with a nonblank name and valid level, saved locally between
+visits; refreshing another tab does not change that default. Existing saved names
+migrate automatically. These fixed-size storage entries replace earlier values.
+Its compact cost dataset loads independently of treasury and contribution data.
 
 To update the tool, run `npm run build` in the prestige project, then rebuild
 this portal. `portal_tools.py` imports only the tool's fingerprinted dependencies

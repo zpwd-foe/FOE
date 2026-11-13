@@ -132,8 +132,18 @@ Source interpretation:
 GOE Prime & Post:
   Open /goe.html on the built preview, also linked from the explorer. This guild tool uses
   the prestige costs, with current reward calculations and GOE contribution rules.
-  It remembers the player name in browser localStorage (goe-gb-player-name),
-  lists all 49 GBs alphabetically, and calculates one TARGET level at a time.
+  It lists all 49 GBs alphabetically and calculates one TARGET level at a time.
+  Each tab stores its player name, GB and level together in sessionStorage
+  (goe-gb-selection), including unfinished edits, so refreshing preserves that
+  tab's setup. New tabs and later visits fall back to the last completed setup
+  with a nonblank name and valid level in localStorage under the same key.
+  GB changes, completed name/level edits, Enter and
+  Copy update that shared default; opening or refreshing a tab never does.
+  Existing tabs stay independent. Each storage entry is overwritten, not appended.
+  Names saved by the original tool (goe-gb-player-name) are preserved during
+  migration; that old key is removed after a complete setup is saved successfully.
+  Unknown saved GBs or malformed records fall back safely; blocked storage does
+  not prevent calculation or copying.
   Copper: five slots, 1.9x without guild goods or 2.0x with guild goods.
   Gold: seven slots, 1.1x without guild goods or 1.2x with guild goods.
   Gold-capable buildings switch at target 101. Copper-only buildings keep Copper
@@ -181,8 +191,9 @@ GOE Prime & Post:
   reuses its shared navigation header; the theme toggle sits beside the title.
   The tool matches the portal's forest-and-gold palette, Inter/system body
   font stack, and Georgia headings while preserving its larger font sizes.
-  Name input only updates the message; storage writes wait for a short pause
-  and flush on change/page exit. Cost calculations only run on GB/level changes.
+  The lower-right footer displays the package.json version, inserted at build time.
+  Name input updates the message and small tab record immediately. Cost
+  calculations only run on GB/level changes.
 
 Build and preview:
   npm run build

@@ -8,10 +8,10 @@
   <title>GOE · Prime & Post</title>
   <link rel="icon" type="image/png" href="/GOE.cf564778dc8b.png">
   <script src="/goe-theme.335dfd4147d9.js"></script>
-  <link rel="stylesheet" href="/goe.b2c97ab6f3a5.css">
+  <link rel="stylesheet" href="/goe.133200abb74a.css">
   <script defer src="/goe-data.eb102e5737b4.js"></script>
   <script defer src="/goe-priming.aaef4178772e.js"></script>
-  <script defer src="/goe.6a08d14ee66b.js"></script>
+  <script defer src="/goe.87d573be52cd.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#calculator">Skip to calculator</a>
@@ -40,7 +40,7 @@
         <li class="field building-field"><label for="building"><span class="step" aria-hidden="true">2</span>Select GB</label><select id="building" required><option value="">Loading buildings…</option></select></li>
         <li class="field level-field"><label for="target-level"><span class="step" aria-hidden="true">3</span>TARGET level</label><input id="target-level" type="number" min="1" max="300" step="1" value="101" inputmode="numeric" required aria-describedby="input-error"><p id="input-error" class="error" role="alert" hidden></p></li>
         <li class="result wide">
-          <div class="section-heading"><h2><span class="step" aria-hidden="true">4</span>Prime your GB</h2><span id="rate-label" class="rate-label"></span></div>
+          <div class="section-heading"><h2><span class="step" aria-hidden="true">4</span>Prime your EMPTY GB</h2><span id="rate-label" class="rate-label"></span></div>
           <div id="result-content" aria-live="polite" aria-atomic="true">
             <div class="priming-row"><p class="prime-cost"><span id="priming-cost">—</span> <span class="fp-unit">FP</span></p><p class="flip-note">Reserve <strong id="final-flip">—</strong> to flip later.</p></div>
           </div>
@@ -60,11 +60,12 @@
     <details class="rules"><summary>Rates &amp; calculation <span aria-hidden="true">＋</span></summary><div class="rules-body">
       <dl id="cost-breakdown" class="cost-breakdown"><div><dt>Level cost</dt><dd id="level-cost">—</dd></div><div><dt>FPs from contributors</dt><dd id="contribution-total">—</dd></div><div><dt>Your final flip</dt><dd id="final-flip-total">—</dd></div></dl>
       <table><caption>Contribution rate × base FP reward</caption><thead><tr><th scope="col">Tier</th><th scope="col">Other GBs</th><th scope="col">Treasury GBs</th></tr></thead><tbody><tr><th scope="row">Copper · 5 slots</th><td>1.9×</td><td>2.0×</td></tr><tr><th scope="row">Gold · 7 slots</th><td>1.1×</td><td>1.2×</td></tr></tbody></table>
-      <p>Priming = level cost − contributions − flip reserve (P5 for Copper, P7 for Gold).</p>
-      <p>Assumes an empty level with all slots filled. Treasury GBs produce guild goods. Eligible GBs use Gold rates from level 101.</p>
+      <p>Start with an empty level and add the priming FP shown. This leaves room for all listed contributions and your final flip.</p>
+      <p>After all positions are filled, finish the level with the FP you saved: the P5 amount for Copper or P7 for Gold.</p>
+      <p>Treasury GBs produce goods for the guild.</p>
     </div></details>
     <noscript><p class="error">Enable JavaScript to calculate priming costs and prepare your message.</p></noscript>
   </main>
-  <footer><span>Guardians of Elysium</span><p class="sniping-warning">Priming all positions at once increases <strong>sniping risk.</strong></p></footer>
+  <footer><span>Guardians of Elysium</span><p class="sniping-warning">Priming all positions at once increases <strong>sniping risk.</strong></p><small class="tool-version" aria-label="Tool version 1.0.0">v1.0.0</small></footer>
 </body>
 </html>

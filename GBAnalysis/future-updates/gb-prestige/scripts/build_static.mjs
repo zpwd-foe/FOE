@@ -85,7 +85,8 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
   addAsset('data/goe-data.js', Buffer.from(`window.GB_PRESTIGE_DATA = ${JSON.stringify(goeDataset(dataset)).replaceAll('</', '<\\/')};\n`));
 
   for (const page of PAGES) {
-    output.set(page, rewritePage(await readFile(path.join(root, page), 'utf8'), assets));
+    const source = (await readFile(path.join(root, page), 'utf8')).replaceAll('{{APP_VERSION}}', version);
+    output.set(page, rewritePage(source, assets));
   }
   output.set('_headers', await readFile(path.join(root, '_headers')));
   const manifest = { schemaVersion: 1, algorithm: 'sha256', hashLength: 12, version, assets };

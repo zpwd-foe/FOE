@@ -117,6 +117,7 @@ table { width: 100%; border-collapse: collapse; font-size: 15px; color: var(--in
 caption { text-align: left; color: var(--muted); margin-bottom: 6px; }
 th, td { padding: 10px 5px; border-bottom: 1px solid var(--line); text-align: left; }
 footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; width: min(1180px, 90vw); margin: 0 auto; padding: 0 0 16px; color: var(--muted); font-size: 14px; }
+.tool-version { margin-left: auto; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 @media (max-width: 899px) {
   .steps { grid-template-columns: 1fr; padding: 18px; gap: 22px; }
   .steps > li { grid-column: 1; }
