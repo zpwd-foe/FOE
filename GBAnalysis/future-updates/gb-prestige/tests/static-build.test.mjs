@@ -39,7 +39,7 @@ test('deployment is reproducible and publishes only runtime files', async t => {
   const fresh = await temporary(t);
   await writeFile(path.join(fresh, 'stale-private.txt'), 'Must not survive a rebuild');
   const manifest = await buildStatic({ outputRoot: fresh });
-  const expected = ['index.html', '404.html', '_headers', 'asset-manifest.json', ...Object.values(manifest.assets)].sort();
+  const expected = ['index.html', '404.html', 'goe.html', '_headers', 'asset-manifest.json', ...Object.values(manifest.assets)].sort();
   assert.deepEqual(await listFiles(fresh), expected);
   assert.deepEqual(await listFiles(DIST), expected);
   assert.equal(manifest.version, '1.0.0');
@@ -57,7 +57,7 @@ test('all assets have correct hashes, cache policies and resolvable page referen
     assert.match(file, new RegExp(`\\.${digest(await readFile(path.join(DIST, file)))}\\.[^.]+$`));
     assert.ok(file.startsWith('assets/'));
   }
-  for (const page of ['index.html', '404.html']) {
+  for (const page of ['index.html', '404.html', 'goe.html']) {
     const html = await read(page);
     for (const [, reference] of html.matchAll(/\b(?:src|href)="([^"]+)"/g)) {
       if (reference === '/' || /^(?:#|https?:\/\/)/.test(reference)) continue;
@@ -69,7 +69,7 @@ test('all assets have correct hashes, cache policies and resolvable page referen
   const rules = [...headers.matchAll(/^(\/[^\n]*)\n\s+Cache-Control: ([^\n]+)/gm)];
   const policy = file => rules.filter(([, pattern]) => new RegExp(`^${pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace('*', '.*')}$`).test(`/${file}`)).map(([, , value]) => value);
   for (const file of Object.values(manifest.assets)) assert.deepEqual(policy(file), ['public, max-age=31536000, immutable']);
-  for (const file of ['', 'index.html', '404', '404.html', 'asset-manifest.json']) assert.deepEqual(policy(file), ['no-cache']);
+  for (const file of ['', 'index.html', '404', '404.html', 'goe', 'goe.html', 'asset-manifest.json']) assert.deepEqual(policy(file), ['no-cache']);
 });
 
 test('packaged data preserves all 49 buildings and points to exact source images', async () => {
@@ -85,6 +85,38 @@ test('packaged data preserves all 49 buildings and points to exact source images
   }
 });
 
+test('GOE loads a small dataset with identical results at every supported level', async () => {
+  const manifest = JSON.parse(await read('asset-manifest.json'));
+  const script = await read(manifest.assets['data/goe-data.js']);
+  const compact = runtimeData(script);
+  const source = JSON.parse(await read('data/guide-data.json', ROOT));
+  const context = vm.createContext({ window: {} });
+  vm.runInContext(await read('goe-priming.js', ROOT), context);
+  const { calculate, postingThread, promotion } = context.window.GOEPriming;
+  assert.ok(Buffer.byteLength(script) < Buffer.byteLength(await read(manifest.assets['data/guide-data.js'])) * 0.1,
+    'GOE data must stay below 10% of the explorer payload');
+  assert.deepEqual(compact.buildings.map(b => b.id), source.buildings.map(b => b.id));
+  for (const [index, building] of compact.buildings.entries()) {
+    const original = source.buildings[index];
+    assert.equal(building.name, original.name);
+    assert.equal(building.levelData.length, original.levelData.length);
+    for (let level = 1; level <= original.levelData.length; level++) {
+      const expected = calculate(original, level, source.boosts);
+      const actual = calculate(building, level, compact.boosts);
+      assert.deepEqual(actual, expected, `${original.name} ${level}`);
+      assert.deepEqual(postingThread(actual), postingThread(expected));
+      assert.equal(promotion('𝘻𝘱𝘸𝘥', building, actual), promotion('𝘻𝘱𝘸𝘥', original, expected));
+    }
+  }
+  const html = await read('goe.html');
+  assert.ok(html.includes(manifest.assets['data/goe-data.js']));
+  assert.ok(!html.includes(manifest.assets['data/guide-data.js']));
+  const scriptFiles = [...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map(match => match[1]);
+  const scriptBytes = (await Promise.all(scriptFiles.map(file => readFile(path.join(DIST, file)))))
+    .reduce((total, bytes) => total + bytes.length, 0);
+  assert.ok(scriptBytes < 140_000, `GOE scripts exceed the 140 kB budget: ${scriptBytes}`);
+});
+
 test('changing an icon updates its URL, dependent data and the entry page', async t => {
   const fixture = path.join(await temporary(t), 'project');
   await cp(ROOT, fixture, { recursive: true, filter: file => !['dist', 'node_modules', '__pycache__'].includes(path.basename(file)) });
@@ -98,5 +130,6 @@ test('changing an icon updates its URL, dependent data and the entry page', asyn
   assert.notEqual(after.assets['data/guide-data.js'], before.assets['data/guide-data.js']);
   assert.notEqual(await read('dist/index.html', fixture), beforePage);
   assert.equal(after.assets['app.js'], before.assets['app.js']);
+  assert.equal(after.assets['data/goe-data.js'], before.assets['data/goe-data.js']);
   assert.ok(!(await listFiles(path.join(fixture, 'dist'))).includes(before.assets[icon]));
 });

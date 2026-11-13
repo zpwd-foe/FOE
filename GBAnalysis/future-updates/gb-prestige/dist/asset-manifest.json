@@ -6,6 +6,7 @@
   "assets": {
     "assets/favicon.png": "assets/favicon.5d09588ec69a.png",
     "assets/gb-icon.png": "assets/gb-icon.dc6249826920.png",
+    "assets/goe-guild.png": "assets/goe-guild.cf564778dc8b.png",
     "assets/planner-theme.css": "assets/planner-theme.d591a87fa296.css",
     "styles.css": "assets/styles.76f39b3b45b8.css",
     "core.js": "assets/core.c9872bd15af6.js",
@@ -13,6 +14,10 @@
     "app.js": "assets/app.5391349f40eb.js",
     "combat-ranking.js": "assets/combat-ranking.d44092cc58ab.js",
     "simple-view.js": "assets/simple-view.99f3aab2169f.js",
+    "goe.css": "assets/goe.b2c97ab6f3a5.css",
+    "goe-theme.js": "assets/goe-theme.335dfd4147d9.js",
+    "goe-priming.js": "assets/goe-priming.aaef4178772e.js",
+    "goe.js": "assets/goe.6a08d14ee66b.js",
     "assets/icons/bonus_age_reserves.png": "assets/icons/bonus_age_reserves.91c34a542967.png",
     "assets/icons/bonus_aid_blueprints.png": "assets/icons/bonus_aid_blueprints.006703505870.png",
     "assets/icons/bonus_aid_goods.png": "assets/icons/bonus_aid_goods.51ee4a8caf31.png",
@@ -71,6 +76,7 @@
     "assets/icons/bonus_spoils_of_war.png": "assets/icons/bonus_spoils_of_war.d4ac1383b6db.png",
     "assets/icons/bonus_spoils_of_war_enhanced.png": "assets/icons/bonus_spoils_of_war_enhanced.4006a45a3885.png",
     "assets/icons/bonus_supplies.png": "assets/icons/bonus_supplies.32f69a222b31.png",
-    "data/guide-data.js": "assets/guide-data.e4f012d8e876.js"
+    "data/guide-data.js": "assets/guide-data.e4f012d8e876.js",
+    "data/goe-data.js": "assets/goe-data.eb102e5737b4.js"
   }
 }

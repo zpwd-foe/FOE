@@ -494,9 +494,28 @@ Portal routes:
 - `/treasury/contributions/` — individual guild goods contribution rankings and member drill-downs
 - `/contributions/` — compatibility redirect to the Treasury contribution section
 - `/members/` — member join dates and guild anniversaries
+- `/tools/` — guild tools
+- `/tools/gb-prime-post/` — Great Building priming calculator and promotion messages
 - `/resources/` — guild resource library
 - `/resources/guild-expedition-lottery-rules/` — lottery rules
 - `/resources/foe-tools-copper-gold-rate-setup/` — illustrated FOE Tools setup, priming, and promotion-message guide
+
+### Great Building Prime & Post
+
+The Tools navigation and homepage card open `/tools/gb-prime-post/`. It uses the
+same tested build as `GBAnalysis/future-updates/gb-prestige`, including all GOE
+rates, treasury routing, the final-flip reserve, and the sniping warning. Names
+and light/dark choices are stored only in the visitor's browser. Its compact
+cost dataset loads independently of treasury and contribution data.
+
+To update the tool, run `npm run build` in the prestige project, then rebuild
+this portal. `portal_tools.py` imports only the tool's fingerprinted dependencies
+from that checked-in `dist/`, checks their hashes, and reuses the portal emblem.
+It does not duplicate the calculation source or load the full prestige explorer.
+Theme initialization uses a small external script before paint, preserving the
+portal's existing Content Security Policy. The calculator uses the shared portal
+header template with Tools active, including the mobile menu. Its theme toggle
+sits beside the calculator title, preserving the standard header layout.
 
 Resource metadata lives in `site/resources.json`; policy text lives in
 `site/content/`. Add a resource entry and an HTML content fragment to extend

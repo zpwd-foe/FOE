@@ -188,8 +188,12 @@ body { min-height:100vh; display:flex; flex-direction:column; }
   .policy-toc-mobile nav a:hover, .policy-toc-mobile nav a:focus-visible { color:var(--plum); background:#f2e9ef; outline:none; }
 }
 
-@media (max-width:570px) {
+@media (max-width:680px) {
+  .main-nav { display:none; }
   .mobile-nav { display:block; }
+}
+
+@media (max-width:570px) {
   .site-footer { width:calc(100vw - 28px); display:grid; gap:5px; }
   .shell--home { padding-top:36px; }
   .breadcrumbs { margin-bottom:19px; }
@@ -306,7 +310,7 @@ body {
 .status-chip { color:#71591f; background:#f2e7ca; border-color:#dbc58f; }
 .status-chip--official { color:#285c3a; background:#dfece1; border-color:#afceb6; }
 
-.shell--treasury, .shell--resources, .shell--policy, .shell--members { padding-top:36px; }
+.shell--treasury, .shell--resources, .shell--policy, .shell--members, .shell--tools { padding-top:36px; }
 .page-hero, .policy-hero { position:relative; padding:28px 30px 34px; max-width:none; background:linear-gradient(105deg,#fffdf7,#f3ebd8); border:1px solid #d2c29f; border-left:5px solid #9c7b35; border-radius:4px; box-shadow:0 10px 30px rgba(48,39,24,.06); }
 .page-hero::after, .policy-hero::after { position:absolute; right:22px; top:18px; width:54px; height:54px; border:1px solid rgba(156,123,53,.24); transform:rotate(45deg); content:""; }
 .page-hero h1, .policy-hero h1, .treasury-intro h1 { color:#23442e; }
@@ -353,7 +357,7 @@ body {
   .treasury-home-grid { grid-template-columns:1fr; }
   .home-section { width:calc(100vw - 28px); }
   .shell--home { padding-top:0; }
-  .shell--treasury, .shell--resources, .shell--policy, .shell--members { padding-top:25px; }
+  .shell--treasury, .shell--resources, .shell--policy, .shell--members, .shell--tools { padding-top:25px; }
   .page-hero, .policy-hero { padding:21px 18px 25px; }
 }
 

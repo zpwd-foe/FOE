@@ -7,10 +7,25 @@ import { fileURLToPath } from 'node:url';
 
 const PROJECT_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const STATIC_ASSETS = [
-  'assets/favicon.png', 'assets/gb-icon.png',
+  'assets/favicon.png', 'assets/gb-icon.png', 'assets/goe-guild.png',
   'assets/planner-theme.css', 'styles.css', 'core.js', 'charts.js', 'app.js',
-  'combat-ranking.js', 'simple-view.js',
+  'combat-ranking.js', 'simple-view.js', 'goe.css', 'goe-theme.js', 'goe-priming.js', 'goe.js',
 ];
+const PAGES = ['index.html', '404.html', 'goe.html'];
+
+// The GOE calculator needs costs and treasury metadata, not the explorer's
+// production tables, images, descriptions, or precomputed reward columns.
+function goeDataset(dataset) {
+  const boosts = Object.fromEntries(Object.entries(dataset.boosts)
+    .filter(([, boost]) => boost.bonus_types?.some(type => ['clan_goods', 'clan_goods_extended'].includes(type)))
+    .map(([id, boost]) => [id, { bonus_types: boost.bonus_types }]));
+  const buildings = dataset.buildings.map(({ id, name, gold, rows, levelData }) => ({
+    id, name, gold,
+    rows: rows.filter(row => boosts[row.boost]).map(({ boost, tier }) => ({ boost, tier })),
+    levelData: levelData.map(record => [record?.[0] ?? null]),
+  }));
+  return { boosts, buildings };
+}
 
 function fingerprint(file, contents) {
   const hash = createHash('sha256').update(contents).digest('hex').slice(0, 12);
@@ -25,6 +40,7 @@ function rewritePage(source, assets) {
   return source.replace(/\b(src|href)="([^"]+)"/g, (match, attribute, reference) => {
     if (reference === '/' || /^(?:#|https?:\/\/)/.test(reference)) return match;
     const relative = reference.replace(/^\//, '');
+    if (PAGES.includes(relative)) return match;
     if (!assets[relative]) throw new Error(`Page references an unpublished asset: ${reference}`);
     return `${attribute}="${reference.startsWith('/') ? '/' : ''}${assets[relative]}"`;
   });
@@ -66,8 +82,9 @@ export async function buildStatic({ projectRoot = PROJECT_ROOT, outputRoot } = {
   for (const boost of Object.values(dataset.boosts)) boost.icon = assets[boost.icon];
   const runtime = `window.GB_PRESTIGE_DATA = ${JSON.stringify(dataset).replaceAll('</', '<\\/')};\n`;
   addAsset('data/guide-data.js', Buffer.from(runtime));
+  addAsset('data/goe-data.js', Buffer.from(`window.GB_PRESTIGE_DATA = ${JSON.stringify(goeDataset(dataset)).replaceAll('</', '<\\/')};\n`));
 
-  for (const page of ['index.html', '404.html']) {
+  for (const page of PAGES) {
     output.set(page, rewritePage(await readFile(path.join(root, page), 'utf8'), assets));
   }
   output.set('_headers', await readFile(path.join(root, '_headers')));

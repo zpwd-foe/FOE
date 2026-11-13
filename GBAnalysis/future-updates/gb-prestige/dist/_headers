@@ -7,6 +7,10 @@
   Cache-Control: no-cache
 /404.html
   Cache-Control: no-cache
+/goe
+  Cache-Control: no-cache
+/goe.html
+  Cache-Control: no-cache
 /asset-manifest.json
   Cache-Control: no-cache
 

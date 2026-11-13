@@ -129,6 +129,61 @@ Source interpretation:
     Vault's attack-and-defense multiplier (pairing 63).
     Qualitative ratings are not calculated efficiency/payback rankings.
 
+GOE Prime & Post:
+  Open /goe.html on the built preview, also linked from the explorer. This guild tool uses
+  the prestige costs, with current reward calculations and GOE contribution rules.
+  It remembers the player name in browser localStorage (goe-gb-player-name),
+  lists all 49 GBs alphabetically, and calculates one TARGET level at a time.
+  Copper: five slots, 1.9x without guild goods or 2.0x with guild goods.
+  Gold: seven slots, 1.1x without guild goods or 1.2x with guild goods.
+  Gold-capable buildings switch at target 101. Copper-only buildings keep Copper
+  rates through 200. Gold data extends through 300. Active clan_goods and
+  clan_goods_extended bonuses identify guild-goods buildings from source data.
+  Base FP rewards are derived from each level's cost, not the workbook's obsolete
+  MROUND(..., 5) reward cells. Current reward pool shares by target level:
+  1–9: 25%; 10–39: 30%; 40–69: 40%; 70–100: 25%; 101–200: 15%; 201–300: 10%.
+  Exact rank weights are Copper [120,60,20,5,1] / 206 and
+  Gold [5040,2520,840,210,42,7,1] / 8660, as in the source workbook formulas.
+  First round each base reward to a whole FP, then apply the GOE rate and round
+  again (halves up). An FP-paying slot contributes at least 2 FP, as confirmed
+  by the user's CF 102 P6 example; a zero-FP reward requires 1 FP. Missing level
+  costs remain unavailable. Official pool shares and removal of rounding to 5:
+  https://support.innogames.com/kb/ForgeOfEmpires/en_DK/7011/Great-Buildings-Prestige-Contribution
+  User-confirmed regression cases: CF target 102 at 1.1 (priming 7711), Observatory
+  target 106 at 1.2 (priming 11061), SHS target 3 at 1.9 (priming 6535 - 29 = 6506).
+  Priming = target level FP cost - all contributions - the owner's final flip.
+  Reserve exactly the last position's rounded contribution for that flip:
+  P5 for Copper, P7 for Gold (including the 1 FP minimum for zero rewards).
+  This total does not subtract existing investments or test position security.
+  Copy creates: <player> <full GB name> P7(amount) ... P1(amount), starting at
+  P5 for Copper. Values have no thousands separators in the copied message.
+  Invalid levels, missing source data and overfunded totals cannot be copied.
+  Clipboard fallback selects the message for manual copying if access is denied.
+  Six numbered steps guide members: enter name, select GB, enter TARGET level,
+  prime, copy message, and post. Treasury GBs are marked beside the priming rate.
+  The destination is selected automatically:
+    Treasury (both tiers), Guild tab: ✨Treasury Bldg, 2.0 Copper /1.2 Gold
+    Other Copper, Social tab: ⚔️GoE & Friends Copper Tier 190 🟠
+    Other Gold, Social tab: ⚔️GoE & Friends Gold Tier 110 🟡
+  A bold tab badge appears above the thread name in step 6.
+  The page footer warns that this simplified method primes all positions at
+  once, increasing the chance of being sniped. Rates and the cost breakdown
+  stay in a collapsed details section to keep the main workflow simple.
+  GOE rules are isolated in goe-priming.js; general explorer charts are unchanged.
+  The build emits data/goe-data.js as a fingerprinted asset containing only
+  level costs and treasury metadata; the GOE page never loads the full explorer
+  dataset. All levels are checked against the full source in build tests.
+  The page uses local system fonts, native controls, and no external libraries.
+  Light/dark mode follows the device by default. The theme toggle remembers
+  an explicit choice in localStorage (goe-color-theme), applied before first
+  paint. Theme switching also works when storage is blocked. The header and
+  favicon reuse the guild management page's GOE.png emblem. The portal build
+  reuses its shared navigation header; the theme toggle sits beside the title.
+  The tool matches the portal's forest-and-gold palette, Inter/system body
+  font stack, and Georgia headings while preserving its larger font sizes.
+  Name input only updates the message; storage writes wait for a short pause
+  and flush on change/page exit. Cost calculations only run on GB/level changes.
+
 Build and preview:
   npm run build
   npm run serve

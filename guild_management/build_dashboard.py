@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from member_roster import read_roster
+from portal_tools import publish_prime_post
 
 
 ROOT = Path(__file__).resolve().parent
@@ -605,6 +606,7 @@ def navigation(active: str) -> str:
         ("home", "/", "Home"),
         ("treasury", "/treasury/", "Treasury"),
         ("members", "/members/", "Members"),
+        ("tools", "/tools/", "Tools"),
         ("resources", "/resources/", "Resources"),
     ]
     links = []
@@ -855,6 +857,28 @@ def publish_dashboard(
         ),
     )
 
+    write_text(
+        output_dir / "tools" / "index.html",
+        page(
+            base_template,
+            title="Tools | GoE Guild Portal",
+            description="Simple tools for Guardians of Elysium guild members.",
+            active_nav="tools",
+            main_class="shell shell--tools",
+            content=read_text(SITE_DIR / "pages" / "tools.html"),
+            styles_asset=styles_asset,
+            icon_asset=icon_asset,
+        ),
+    )
+    header_template = re.search(r'<header class="site-header">.*?</header>', base_template, re.DOTALL)
+    if header_template is None:
+        raise ValueError("The portal base template is missing its shared header")
+    portal_header = render(header_template.group(0), {
+        "icon_asset": icon_asset,
+        "navigation": navigation("tools"),
+    })
+    assets.update(publish_prime_post(output_dir, assets["icon"], portal_header=portal_header))
+
     resource_template = read_text(SITE_DIR / "pages" / "resource.html")
     for resource in resources:
         article = render(
@@ -922,7 +946,7 @@ def publish_dashboard(
 def main() -> None:
     args = parse_args()
     assets = publish_dashboard(args.output_dir)
-    print("Dashboard pages built: /, /treasury/, /treasury/contributions/, /members/, /resources/, /404.html")
+    print("Dashboard pages built: /, /treasury/, /treasury/contributions/, /members/, /tools/, /tools/gb-prime-post/, /resources/, /404.html")
     print("Published assets: " + ", ".join(path.name for path in assets.values()))
 
 
