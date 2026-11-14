@@ -44,7 +44,7 @@
   }
   function levelFunding(building, level) {
     const gold = building.gold && level >= 101;
-    const multiplier = gold ? 1 : 1.9, positions = gold ? 7 : 5;
+    const multiplier = gold ? 1.2 : 1.9, positions = gold ? 7 : 5;
     const record = Number.isInteger(level) && level > 0 ? building.levelData[level - 1] : null;
     const total = finite(record?.[0]) && record[0] >= 0 ? record[0] : null;
     // Round each donor's amount separately, including exact half-FP cases.

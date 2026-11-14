@@ -185,6 +185,9 @@ test('every supported level balances priming + contributions + final flip exactl
     for (let level = 1; level <= item.levelData.length; level++) {
       const result = calculate(item, level, data.boosts);
       assert.equal(result.status, 'ready', `${item.name} ${level}`);
+      assert.deepEqual(item.levelData[level - 1].slice(7, 14),
+        [...result.rewards, ...Array(7 - result.positions).fill(null)],
+        `${item.name} ${level}: explorer base rewards must match Prime & Post`);
       assert.ok(Number.isSafeInteger(result.priming) && result.priming >= 0);
       assert.ok(result.contributions.every(value => Number.isSafeInteger(value) && value >= 1));
       assert.equal(result.finalFP, result.contributions[result.positions - 1]);

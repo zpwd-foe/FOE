@@ -14,9 +14,36 @@
     const power = 10 ** Math.floor(Math.log10(maximum));
     return Math.ceil(maximum * 1.08 / power * 2) / 2 * power;
   }
+  function levelRange(selection, maximum) {
+    const clamp = level => window.PrestigeCore.clamp(level, 1, maximum);
+    let start = clamp(Math.min(selection.from, selection.to));
+    let end = clamp(Math.max(selection.from, selection.to));
+    if (start === end) {
+      start = Math.max(1, start - 1);
+      end = Math.min(maximum, end + 1);
+    }
+    return { start, end };
+  }
+  function levelTicks({ start, end }) {
+    const spacing = Math.max(1, (end - start) / 3);
+    const power = 10 ** Math.floor(Math.log10(spacing));
+    const step = [1, 2, 5, 10].find(n => n * power >= spacing) * power;
+    const ticks = [start];
+    for (let level = Math.ceil(start / step) * step; level < end; level += step) {
+      if (level - start >= spacing * .65 && end - level >= spacing * .65) ticks.push(level);
+    }
+    if (end !== start) ticks.push(end);
+    return ticks;
+  }
+  const sameRange = (a, b) => a && a.start === b.start && a.end === b.end;
+  const visibleSegments = (values, range) => window.PrestigeCore
+    .segments(values.slice(range.start - 1, range.end))
+    .map(segment => segment.map(([level, value]) => [level + range.start - 1, value]));
   function mount(host, series, selection, callbacks) {
-    let charts = [], current = selection;
+    const maximum = Math.max(...series.map(spec => spec.values.length));
+    let charts = [], current = selection, range;
     const draw = () => {
+      range = levelRange(current, maximum);
       charts = [];
       host.querySelectorAll('svg[data-series]').forEach(svg => {
         const spec = series[Number(svg.dataset.series)];
@@ -24,18 +51,19 @@
         if (width < 160) return;
         svg.replaceChildren(); svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
         const left = 64, right = width - 14, top = 26, bottom = height - 38;
-        const axisEnd = spec.values.length + 1;
-        const x = level => left + 3 + (level - 1) / (axisEnd - 1) * (right - left - 6);
-        const available = spec.values.filter(window.PrestigeCore.finite);
+        svg.dataset.levelStart = range.start; svg.dataset.levelEnd = range.end;
+        const x = level => left + 3 + (level - range.start) / Math.max(1, range.end - range.start) * (right - left - 6);
+        const available = spec.values.slice(range.start - 1, range.end).filter(window.PrestigeCore.finite);
         const last = window.PrestigeCore.lastKnown(spec.values);
-        const max = ceiling(available.length ? Math.max(...available) : 1);
+        const retainedValue = last && last.level < range.end ? last.value : 0;
+        const max = ceiling(Math.max(retainedValue, ...available));
         const y = value => bottom - 3 - value / max * (bottom - top - 7);
         element('title', {}, svg, spec.label);
-        element('desc', {}, svg, `${available.length} supplied values. Dashed lines retain the last known value beyond its level. Internal gaps are not interpolated. Use the current and target level fields for keyboard selection.`);
+        element('desc', {}, svg, `Levels ${range.start}–${range.end}. ${available.length} supplied values. Dashed lines retain the last known value beyond its level. Internal gaps are not interpolated. Use the current and target level fields for keyboard selection.`);
         element('rect', { x: left, y: top, width: right-left, height: bottom-top, class: 'chart-frame' }, svg);
         let gapStart = null;
-        for (let i = 0; i <= spec.values.length; i++) {
-          const missing = i < spec.values.length && !window.PrestigeCore.finite(spec.values[i]);
+        for (let i = range.start - 1; i <= range.end; i++) {
+          const missing = i < range.end && !window.PrestigeCore.finite(spec.values[i]);
           if (missing && gapStart === null) gapStart = i + 1;
           if (!missing && gapStart !== null) {
             const end = i, a = x(gapStart), b = x(end);
@@ -56,23 +84,22 @@
           element('line', { x1: left, x2: right, y1: y(value), y2: y(value), class: 'chart-grid' }, svg);
           element('text', { x: left-8, y: y(value)+4, 'text-anchor': 'end' }, svg, compact(value));
         }
-        const ticks = Array.from({length: Math.floor((axisEnd - 1) / 100) + 1}, (_, index) => 1 + index * 100);
-        for (const level of ticks) element('text', { x: x(level), y: bottom+19, 'text-anchor': level === 1 ? 'start' : level === axisEnd ? 'end' : 'middle', 'data-level-tick': level }, svg, level);
+        for (const level of levelTicks(range)) element('text', { x: x(level), y: bottom+19, 'text-anchor': level === range.start ? 'start' : level === range.end ? 'end' : 'middle', 'data-level-tick': level }, svg, level);
         element('text', { x: left, y: 15, class: 'axis-title', 'data-axis': 'y' }, svg, spec.unit);
         element('text', { x: (left+right)/2, y: height-2, 'text-anchor': 'middle', class: 'axis-title', 'data-axis': 'x' }, svg, 'Building level');
         const color = spec.tier === 'Gold' ? 'var(--gold)' : 'var(--green)';
-        for (const segment of window.PrestigeCore.segments(spec.values)) {
+        for (const segment of visibleSegments(spec.values, range)) {
           const path = segment.map(([level, value], i) => i ? `H${x(level)}V${y(value)}` : `M${x(level)},${y(value)}`).join('');
           element('path', { d: path, stroke: color, class: 'chart-curve' }, svg);
         }
-        if (last && last.level < spec.values.length) {
-          const retained = element('path', { d: `M${x(last.level)},${y(last.value)}H${x(spec.values.length)}`,
+        if (last && last.level < range.end) {
+          const retained = element('path', { d: `M${x(Math.max(range.start, last.level))},${y(last.value)}H${x(range.end)}`,
             stroke: color, class: 'chart-curve chart-retained', 'data-retained-from': last.level }, svg);
           element('title', {}, retained, `⚠ Retained from level ${last.level}; higher-level values are unconfirmed.`);
         }
         const points = element('g', { 'data-all-points': '', 'aria-hidden': 'true' }, svg);
         spec.values.forEach((value, i) => {
-          if (window.PrestigeCore.finite(value)) element('circle', { cx: x(i+1), cy: y(value), r: 1.2, fill: color }, points);
+          if (i + 1 >= range.start && i + 1 <= range.end && window.PrestigeCore.finite(value)) element('circle', { cx: x(i+1), cy: y(value), r: 1.2, fill: color }, points);
         });
         const from = element('line', { y1: top, y2: bottom, class: 'chart-current' }, svg);
         const target = element('line', { y1: top, y2: bottom, class: 'chart-target' }, svg);
@@ -80,7 +107,7 @@
         const hover = element('line', { y1: top, y2: bottom, class: 'chart-hover', visibility: 'hidden' }, svg);
         const hit = element('rect', { x: left, y: top, width: right-left, height: bottom-top, fill: 'transparent', 'data-chart-hit': '' }, svg);
         charts.push({ svg, spec, x, y, from, target, marker, hover });
-        const levelAt = event => window.PrestigeCore.clamp(1 + (event.clientX-svg.getBoundingClientRect().left-left-3)/(right-left-6)*(axisEnd-1), 1, spec.values.length);
+        const levelAt = event => window.PrestigeCore.clamp(range.start + (event.clientX-svg.getBoundingClientRect().left-left-3)/(right-left-6)*(range.end-range.start), range.start, range.end);
         hit.addEventListener('pointermove', event => {
           if (event.pointerType === 'touch') return;
           const level = levelAt(event);
@@ -99,6 +126,7 @@
     };
     function update(selection) {
       current = selection;
+      if (!sameRange(range, levelRange(current, maximum))) { draw(); return; }
       charts.forEach(c => {
         for (const [line, level] of [[c.from,Math.max(1,current.from)],[c.target,current.to]]) {
           line.setAttribute('x1',c.x(level)); line.setAttribute('x2',c.x(level));
@@ -116,18 +144,20 @@
   }
   function mountCosts(svg, points, selection, callbacks) {
     const core = window.PrestigeCore;
-    let current = selection, geometry;
+    let current = selection, geometry, range;
     const series = [
       { key: 'total', label: 'Total leveling cost', color: 'var(--gold)' },
       { key: 'priming', label: 'Priming cost', color: 'var(--green)' },
     ];
     const draw = () => {
+      range = levelRange(current, points.length);
       const width = svg.getBoundingClientRect().width, height = 210;
       if (width < 160) return;
       const left = 64, right = width - 14, top = 32, bottom = height - 38;
-      const axisEnd = points.length + 1;
-      const x = level => left + 3 + (level - 1) / (axisEnd - 1) * (right - left - 6);
-      const values = points.flatMap(point => [point.total, point.priming]).filter(core.finite);
+      svg.dataset.levelStart = range.start; svg.dataset.levelEnd = range.end;
+      const x = level => left + 3 + (level - range.start) / Math.max(1, range.end - range.start) * (right - left - 6);
+      const visible = points.slice(range.start - 1, range.end);
+      const values = visible.flatMap(point => [point.total, point.priming]).filter(core.finite);
       const positive = values.filter(value => value > 0), hasZero = values.includes(0);
       const minPower = positive.length ? Math.floor(Math.log10(Math.min(...positive))) : 0;
       const maxPower = Math.max(minPower + 1, positive.length ? Math.ceil(Math.log10(Math.max(...positive))) : 1);
@@ -138,28 +168,28 @@
       const costTicks = [...(hasZero ? [0] : []), ...Array.from({length: maxPower-minPower+1}, (_, i) => 10 ** (minPower+i))];
       svg.replaceChildren(); svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
       element('title', {}, svg, 'Total leveling cost vs priming cost per level');
-      element('desc', {}, svg, 'FP uses a base-10 logarithmic axis: each tick is ten times the previous positive tick. Zero FP, when present, uses a separate baseline below the positive scale. Priming is total FP minus all position contributions, rounded separately to whole FP, with a minimum of zero. Missing costs or rewards remain gaps. Click to select a target level, or use arrow keys, Home and End.');
+      element('desc', {}, svg, `Levels ${range.start}–${range.end}. FP uses a base-10 logarithmic axis: each tick is ten times the previous positive tick. Zero FP, when present, uses a separate baseline below the positive scale. Priming is total FP minus all position contributions, rounded separately to whole FP, with a minimum of zero. Missing costs or rewards remain gaps. Click to select a target level, or use arrow keys, Home and End.`);
       element('rect', { x: left, y: top, width: right-left, height: bottom-top, class: 'chart-frame' }, svg);
       for (const value of costTicks) {
         element('line', { x1: left, x2: right, y1: y(value), y2: y(value), class: 'chart-grid' }, svg);
         element('text', { x: left-8, y: y(value)+4, 'text-anchor': 'end', 'data-cost-tick': value }, svg, compact(value));
       }
-      const ticks = Array.from({length: Math.floor((axisEnd-1)/100)+1}, (_, i) => 1+i*100);
-      for (const level of ticks) element('text', { x: x(level), y: bottom+19, 'text-anchor': level === 1 ? 'start' : level === axisEnd ? 'end' : 'middle', 'data-level-tick': level }, svg, level);
+      for (const level of levelTicks(range)) element('text', { x: x(level), y: bottom+19, 'text-anchor': level === range.start ? 'start' : level === range.end ? 'end' : 'middle', 'data-level-tick': level }, svg, level);
       element('text', { x: left, y: 16, class: 'axis-title' }, svg, 'FP / level · log scale');
       element('text', { x: (left+right)/2, y: height-2, 'text-anchor': 'middle', class: 'axis-title' }, svg, 'Building level');
-      if (points[100]?.multiplier === 1) {
+      if (points[100] && points[100].multiplier !== points[99]?.multiplier && range.start <= 101 && range.end >= 101) {
         element('line', { x1: x(101), x2: x(101), y1: top, y2: bottom, class: 'funding-boundary', 'data-funding-boundary': '101' }, svg);
-        element('text', { x: x(101)+6, y: top+15, class: 'funding-boundary-label' }, svg, '101 · 1×');
+        const nearRight = x(101) > right - 65;
+        element('text', { x: x(101)+(nearRight?-6:6), y: top+15, 'text-anchor': nearRight?'end':'start', class: 'funding-boundary-label' }, svg, `101 · ${points[100].multiplier}×`);
       }
       const markers = [];
       for (const spec of series) {
         const group = element('g', { 'data-funding-series': spec.key }, svg);
-        for (const segment of core.segments(points.map(point => point[spec.key]))) {
+        for (const segment of visibleSegments(points.map(point => point[spec.key]), range)) {
           const path = segment.map(([level, value], i) => i ? `H${x(level)}V${y(value)}` : `M${x(level)},${y(value)}`).join('');
           element('path', { d: path, stroke: spec.color, class: `chart-curve funding-${spec.key}-curve` }, group);
         }
-        points.forEach(point => {
+        visible.forEach(point => {
           if (core.finite(point[spec.key])) element('circle', { cx: x(point.level), cy: y(point[spec.key]), r: 1, fill: spec.color, 'data-funding-point': point.level, 'aria-hidden': 'true' }, group);
         });
         markers.push({ key: spec.key, node: element('circle', { r: 4, fill: spec.color, class: 'chart-selected-point' }, svg) });
@@ -168,7 +198,7 @@
       const target = element('line', { y1: top, y2: bottom, class: 'chart-target' }, svg);
       const hover = element('line', { y1: top, y2: bottom, class: 'chart-hover', visibility: 'hidden' }, svg);
       const hit = element('rect', { x: left, y: top, width: right-left, height: bottom-top, fill: 'transparent', 'data-chart-hit': '' }, svg);
-      const levelAt = event => core.clamp(1+(event.clientX-svg.getBoundingClientRect().left-left-3)/(right-left-6)*(axisEnd-1), 1, points.length);
+      const levelAt = event => core.clamp(range.start+(event.clientX-svg.getBoundingClientRect().left-left-3)/(right-left-6)*(range.end-range.start), range.start, range.end);
       hit.addEventListener('pointermove', event => {
         if (event.pointerType === 'touch') return;
         const level = levelAt(event);
@@ -184,6 +214,7 @@
     };
     function update(selection) {
       current = selection;
+      if (!sameRange(range, levelRange(current, points.length))) { draw(); return; }
       if (!geometry) return;
       const { x, y, from, target, markers } = geometry;
       for (const [line, level] of [[from, Math.max(1,current.from)], [target,current.to]]) {
@@ -205,5 +236,5 @@
     const resize = new ResizeObserver(draw); resize.observe(svg); draw();
     return { update, destroy: () => { resize.disconnect(); svg.removeEventListener('keydown',onKey); } };
   }
-  window.PrestigeCharts = { mount, mountCosts };
+  window.PrestigeCharts = { mount, mountCosts, levelRange, levelTicks };
 })();

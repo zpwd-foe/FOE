@@ -61,7 +61,7 @@
     view.querySelectorAll('[data-simple-building]').forEach(row => { row.querySelector('.simple-breakdown').open = expanded.has(row.dataset.simpleBuilding); });
   }
 
-  $('#simple-level-select').innerHTML = Array.from({ length: 300 }, (_, index) => `<option value="${index + 1}"${index === 149 ? ' selected' : ''}>Lv ${index + 1}</option>`).join('');
+  $('#simple-level-select').innerHTML = Array.from({ length: 500 }, (_, index) => `<option value="${index + 1}"${index === 149 ? ' selected' : ''}>Lv ${index + 1}</option>`).join('');
 
   icon.addEventListener('click', () => {
     if (!view.hidden || !countClick(performance.now())) return;

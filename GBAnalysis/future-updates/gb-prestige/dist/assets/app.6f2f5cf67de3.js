@@ -15,12 +15,13 @@
   const normalize=v=>String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
   const boost=row=>data.boosts[row.boost];
   const lookup=new Map(data.buildings.map(b=>[b.id,b]));
-  const selected=new Set(), states=new Map(), mounted=new Map(), fundingMounted=new Map(), comparisonLevels=new Map();
+  const selected=new Set(), mounted=new Map(), fundingMounted=new Map();
+  const levelState=window.PrestigeLevelState.create(data.buildings);
   const funding=new Map(data.buildings.map(b=>[b.id,b.levels.map(level=>core.levelFunding(b,level))]));
   let focus='All goals';
   const rank={'Strong candidate':0,Situational:1,'Lower priority':2};
   const goals=['All goals','Multiplicative','GBG','GE','QI','Combat','FP','Contributions','Goods','Guild','Historical Allies','Aiding','Quests','City resources'];
-  const selection=b=>{if(!states.has(b.id))states.set(b.id,{from:50,to:150});return states.get(b.id);};
+  const selection=b=>levelState.get(b);
   const mobileView=matchMedia('(max-width:750px)');
   const setGuideDefault=()=>{$('#tiers').open=!mobileView.matches||location.hash==='#tiers';};
   setGuideDefault();mobileView.addEventListener('change',setGuideDefault);
@@ -83,14 +84,14 @@
     }).join('');
   }
   function fundingMarkup(b){
-    const rules=b.gold?'P1–P5 contribute 1.9× base rewards at levels 1–100. From level 101, P1–P7 contribute base rewards (1×).':'P1–P5 contribute 1.9× base rewards at every level, including levels 101–200.';
-    return `<section class="progression-panel funding-panel" aria-labelledby="funding-heading-${b.id}"><h4 id="funding-heading-${b.id}">Total leveling cost vs priming cost</h4><p class="funding-scope">FP for each individual level · log scale · levels 1–${b.levels.length}</p><div class="funding-legend"><span><i class="funding-total-key" aria-hidden="true"></i>Total leveling cost</span><span><i class="funding-priming-key" aria-hidden="true"></i>Priming cost</span></div><svg class="boost-plot funding-plot" data-funding-chart role="img" tabindex="0" aria-label="${escape(b.name)} total leveling and priming FP costs by level on a logarithmic axis. Use arrow keys to select a level."></svg><div data-funding-selected="${b.id}" class="funding-selected" aria-live="polite"></div><details class="funding-method"><summary>Contribution assumptions</summary><p>${rules}</p><p>Priming = total FP minus contributions from all positions, with a minimum of 0. Each position is rounded to whole FP before adding. Assumes every reward position is filled; this is the owner's net FP cost, not a calculation of when positions are secure. Unlocking resources are separate.</p></details></section>`;
+    const rules=b.gold?'P1–P5 contribute 1.9× base rewards at levels 1–100. From level 101, P1–P7 contribute 1.2× base rewards.':'P1–P5 contribute 1.9× base rewards at every level, including levels 101–200.';
+    return `<section class="progression-panel funding-panel" aria-labelledby="funding-heading-${b.id}"><h4 id="funding-heading-${b.id}">Total leveling cost vs priming cost</h4><p class="funding-scope">FP for each individual level · log scale</p><div class="funding-legend"><span><i class="funding-total-key" aria-hidden="true"></i>Total leveling cost</span><span><i class="funding-priming-key" aria-hidden="true"></i>Priming cost</span></div><svg class="boost-plot funding-plot" data-funding-chart role="img" tabindex="0" aria-label="${escape(b.name)} total leveling and priming FP costs by level on a logarithmic axis. Use arrow keys to select a level."></svg><div data-funding-selected="${b.id}" class="funding-selected" aria-live="polite"></div><details class="funding-method"><summary>Contribution assumptions</summary><p>${rules}</p><p>Priming = total FP minus contributions from all positions, with a minimum of 0. Each position is rounded to whole FP before adding. Assumes every reward position is filled; this is the owner's net FP cost, not a calculation of when positions are secure. Unlocking resources are separate.</p></details></section>`;
   }
   function fundingSelectedMarkup(b){
     const point=funding.get(b.id)[selection(b).to-1];
     return `<p class="funding-selected-level">Level ${point.level} · P1–P${point.positions} at ${number(point.multiplier)}×</p><dl class="funding-values"><div><dt>Total leveling cost</dt><dd>${amount(point.total)} <small>FP</small></dd></div><div><dt>Priming cost</dt><dd>${amount(point.priming)} <small>FP</small></dd></div></dl><p class="funding-contributions">Expected contributions: <strong>${amount(point.contributionTotal)} FP</strong></p>`;
   }
-  function controlsMarkup(b){const s=selection(b),max=b.levels.length;return `<div class="level-controls"><label>Current level<input type="number" min="0" max="${max-1}" value="${s.from}" data-from="${b.id}" aria-label="${escape(b.name)} current level"></label><span aria-hidden="true">→</span><label>Target level<input type="number" min="1" max="${max}" value="${s.to}" data-to="${b.id}" aria-label="${escape(b.name)} target level"></label></div><p class="graph-hint">Hover for details. Click or tap any level to set your target.<br><span class="line-key current-key"></span>Current <span class="line-key target-key"></span>Target</p>`;}
+  function controlsMarkup(b){const s=selection(b),max=b.levels.length;return `<div class="level-controls"><label>Current level<input type="number" min="0" max="${max-1}" value="${s.from}" data-from="${b.id}" aria-label="${escape(b.name)} current level"></label><span aria-hidden="true">→</span><label>Target level<input type="number" min="1" max="${max}" value="${s.to}" data-to="${b.id}" aria-label="${escape(b.name)} target level"></label></div><p class="graph-hint">Graphs zoom to Current → Target. Hover for details; click to set your target.<br><span class="line-key current-key"></span>Current <span class="line-key target-key"></span>Target</p>`;}
   function summaryMarkup(b){
     const s=selection(b),cost=core.upgrade(b,s.from,s.to);
     if(!cost.valid)return '<p class="plan-error" role="alert">Choose a target above your current level.</p>';
@@ -103,7 +104,7 @@
     return `<h4>Unlocking cost: level ${s.from} → ${s.to}</h4><dl class="resource-list">${rows.map(([name,value,field])=>`<div><dt>${name}</dt><dd>${amount(value,b.pendingUnlockCosts?.fields.includes(field)&&s.to>=b.pendingUnlockCosts.fromLevel?'TBA':'Not supplied')}</dd></div>`).join('')}</dl>`;
   }
   function rewardsMarkup(b){
-    const level=selection(b).to,values=b.levelData[level-1],places=b.gold&&level>=101?7:5;
+    const level=selection(b).to,values=b.levelData[level-1]??[],places=b.gold&&level>=101?7:5;
     return `<h4>Base contributor FP rewards at level ${level}</h4><dl class="resource-list rewards-list">${Array.from({length:places},(_,i)=>`<div><dt>Place ${i+1}</dt><dd>${amount(values[7+i])} FP</dd></div>`).join('')}</dl>`;
   }
   function detailMarkup(b){
@@ -117,7 +118,7 @@
   const hideTooltip=()=>{tooltip.hidden=true;};
   function showTooltip(event,b,series,level){
     const row=series.row,s=selection(b),value=series.charges?chargeText(row,level):valueText(row,level);
-    tooltip.innerHTML=`<strong class="tooltip-level">Level ${level}</strong>${labelMarkup(row)}<p class="tooltip-value">${escape(value)}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</p><div class="tooltip-cost"><span>FP for this level</span><b>${amount(b.levelData[level-1][0])}</b></div>${level>s.from?`<div class="tooltip-cost"><span>FP from ${s.from} → ${level}</span><b>${amount(core.rangeSum(b,0,s.from,level))}</b></div>`:''}`;
+    tooltip.innerHTML=`<strong class="tooltip-level">Level ${level}</strong>${labelMarkup(row)}<p class="tooltip-value">${escape(value)}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</p><div class="tooltip-cost"><span>FP for this level</span><b>${amount(b.levelData[level-1]?.[0])}</b></div>${level>s.from?`<div class="tooltip-cost"><span>FP from ${s.from} → ${level}</span><b>${amount(core.rangeSum(b,0,s.from,level))}</b></div>`:''}`;
     positionTooltip(event);
   }
   function showFundingTooltip(event,b,level){
@@ -132,7 +133,7 @@
     tooltip.style.top=`${Math.max(8,Math.min(innerHeight-height-8,event.clientY-height-12))}px`;
   }
   const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(!entry.isIntersecting)continue;const host=entry.target,b=lookup.get(host.dataset.charts);if(!mounted.has(b.id)){
-    const select=level=>{selection(b).to=level;updateBuilding(b);};
+    const select=level=>{levelState.set(b,'to',level);updateBuilding(b);};
     mounted.set(b.id,window.PrestigeCharts.mount(host,seriesFor(b),selection(b),{hover:(e,s,l)=>showTooltip(e,b,s,l),leave:hideTooltip,select}));
     fundingMounted.set(b.id,window.PrestigeCharts.mountCosts(host.querySelector('[data-funding-chart]'),funding.get(b.id),selection(b),{hover:(e,l)=>showFundingTooltip(e,b,l),leave:hideTooltip,select}));
   }observer.unobserve(host);}},{rootMargin:'500px'});
@@ -166,7 +167,7 @@
   function reset(){$('#search').value='';$('#tier-filter').value='all';$('#priority-filter').value='all';$('#sort').value='name';focus='All goals';renderFocus();render();}
   function syncTray(){$('#compare-tray').hidden=selected.size===0;$('#compare-count').textContent=`${selected.size} of 3 selected`;$('#open-compare').disabled=selected.size<2;}
   function renderComparison(){
-    $('#comparison-content').innerHTML=`<div class="comparison-grid" style="--columns:${selected.size}">${[...selected].map(id=>{const b=lookup.get(id),level=comparisonLevels.get(id)??selection(b).to;return `<article class="comparison-card"><span class="tier-label ${b.gold?'':'copper-label'}">${b.gold?'COPPER + GOLD':'COPPER ONLY'}</span><h3>${escape(b.name)}</h3><p class="compare-target">${armyText(b.audience)}<br>${b.footprint.tiles} tiles</p><label class="pick-level">At level <input type="number" min="1" max="${b.levels.length}" value="${level}" data-comparison-level="${id}" aria-label="Comparison level for ${escape(b.name)}"></label>${b.rows.map(row=>`<div class="compare-boost">${labelMarkup(row)}<div class="compare-value">${escape(valueText(row,level))}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</div></div>`).join('')}<p class="footnote">FP for this level: ${amount(b.levelData[level-1][0])}<br>Total FP from level 0: ${amount(b.levelData[level-1][1])}</p>${b.notes.map(note=>`<p class="footnote">${armyText(note)}</p>`).join('')}</article>`;}).join('')}</div>`;
+    $('#comparison-content').innerHTML=`<div class="comparison-grid" style="--columns:${selected.size}">${[...selected].map(id=>{const b=lookup.get(id),level=selection(b).to;return `<article class="comparison-card"><span class="tier-label ${b.gold?'':'copper-label'}">${b.gold?'COPPER + GOLD':'COPPER ONLY'}</span><h3>${escape(b.name)}</h3><p class="compare-target">${armyText(b.audience)}<br>${b.footprint.tiles} tiles</p><label class="pick-level">At level <input type="number" min="1" max="${b.levels.length}" value="${level}" data-comparison-level="${id}" aria-label="Comparison level for ${escape(b.name)}"></label>${b.rows.map(row=>`<div class="compare-boost">${labelMarkup(row)}<div class="compare-value">${escape(valueText(row,level))}${boost(row).multiplier&&core.finite(core.sample(row,level).value)?` · ${factor(core.sample(row,level).value)}`:''}</div></div>`).join('')}<p class="footnote">FP for this level: ${amount(b.levelData[level-1]?.[0])}<br>Total FP from level 0: ${amount(b.levelData[level-1]?.[1])}</p>${b.notes.map(note=>`<p class="footnote">${armyText(note)}</p>`).join('')}</article>`;}).join('')}</div>`;
   }
   $('#focus-filters').addEventListener('click',event=>{const button=event.target.closest('[data-focus]');if(button){focus=button.dataset.focus;renderFocus();render();}});
   let searchTimer;$('#search').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(render,100);});
@@ -176,18 +177,23 @@
     const info=event.target.closest('[data-boost-info]');
     if(info){const panel=document.getElementById(info.dataset.boostInfo);panel.hidden=!panel.hidden;info.setAttribute('aria-expanded',String(!panel.hidden));return;}
     const step=event.target.closest('[data-step-level]');
-    if(step){const b=lookup.get(step.closest('[data-building]').dataset.building);selection(b).to=Number(step.dataset.stepLevel);hideTooltip();updateBuilding(b);}
+    if(step){const b=lookup.get(step.closest('[data-building]').dataset.building);levelState.set(b,'to',Number(step.dataset.stepLevel));hideTooltip();updateBuilding(b);}
+  });
+  $('#building-grid').addEventListener('input',event=>{
+    const input=event.target;
+    if(input.matches('[data-from],[data-to]'))levelState.set(lookup.get(input.dataset.from||input.dataset.to),input.dataset.from?'from':'to',input.valueAsNumber);
   });
   $('#building-grid').addEventListener('change',event=>{
     const input=event.target;
     if(input.matches('[data-compare]')){const id=input.dataset.compare;if(input.checked&&selected.size>=3){input.checked=false;$('#result-count').textContent='Compare up to 3 buildings. Uncheck one to add another.';return;}input.checked?selected.add(id):selected.delete(id);input.closest('.building-card').classList.toggle('is-selected',input.checked);syncTray();}
-    else if(input.matches('[data-from],[data-to]')){const b=lookup.get(input.dataset.from||input.dataset.to),s=selection(b),key=input.dataset.from?'from':'to';if(core.finite(input.valueAsNumber))s[key]=core.clamp(input.valueAsNumber,key==='from'?0:1,b.levels.length-(key==='from'?1:0));hideTooltip();updateBuilding(b);}
+    else if(input.matches('[data-from],[data-to]')){const b=lookup.get(input.dataset.from||input.dataset.to),key=input.dataset.from?'from':'to';if(core.finite(input.valueAsNumber))levelState.set(b,key,core.clamp(input.valueAsNumber,key==='from'?0:1,b.levels.length-(key==='from'?1:0)));hideTooltip();updateBuilding(b);}
   });
   $('#clear-compare').addEventListener('click',()=>{selected.clear();syncTray();document.querySelectorAll('[data-compare]').forEach(input=>{input.checked=false;input.closest('.building-card').classList.remove('is-selected');});});
   $('#open-compare').addEventListener('click',()=>{if(selected.size>=2){renderComparison();$('#compare-dialog').showModal();hideTooltip();}});
   $('#close-compare').addEventListener('click',()=>$('#compare-dialog').close());
   $('#compare-dialog').addEventListener('click',event=>{if(event.target===$('#compare-dialog')){const r=event.target.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)event.target.close();}});
-  $('#comparison-content').addEventListener('change',event=>{const input=event.target;if(!input.matches('[data-comparison-level]'))return;const id=input.dataset.comparisonLevel,b=lookup.get(id);if(core.finite(input.valueAsNumber))comparisonLevels.set(id,core.clamp(input.valueAsNumber,1,b.levels.length));renderComparison();document.querySelector(`[data-comparison-level="${id}"]`).focus();});
+  $('#comparison-content').addEventListener('input',event=>{const input=event.target;if(input.matches('[data-comparison-level]'))levelState.set(lookup.get(input.dataset.comparisonLevel),'to',input.valueAsNumber);});
+  $('#comparison-content').addEventListener('change',event=>{const input=event.target;if(!input.matches('[data-comparison-level]'))return;const id=input.dataset.comparisonLevel,b=lookup.get(id);if(core.finite(input.valueAsNumber))levelState.set(b,'to',core.clamp(input.valueAsNumber,1,b.levels.length));updateBuilding(b);renderComparison();document.querySelector(`[data-comparison-level="${id}"]`).focus();});
   document.addEventListener('keydown',event=>{if(event.key==='Escape')hideTooltip();});
   document.addEventListener('pointerdown',event=>{if(!event.target.closest('.boost-plot'))hideTooltip();});
   document.addEventListener('scroll',hideTooltip,{capture:true,passive:true});

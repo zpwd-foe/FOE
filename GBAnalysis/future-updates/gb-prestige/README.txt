@@ -1,14 +1,28 @@
 GB Prestige Update — Ubernerd workbook edition
 
-The dashboard covers 49 buildings and 123 boost series. Interactive plots show
-every supplied level, including separate attempt-limit graphs. Click/tap a graph
+The dashboard covers 49 buildings and 123 boost series. Boosts cover levels
+1–500 for Gold buildings and 1–200 for Copper-only buildings. Interactive plots
+zoom to each GB's current → target range, including separate attempt-limit graphs.
+Every supplied level in that interval is plotted. Click/tap a graph
 or enter any current/target level to update boost gains and upgrade planning.
-Comparisons default to level 50 → 150. The shortlist supports arbitrary levels
+Each GB remembers its current and target levels in this browser. New GBs default
+to level 50 → 150. Valid typed levels save immediately; chart selections,
+multiplier-step buttons and comparison edits share the same saved target.
+The browser keeps one small localStorage record per GB, keyed by its stable ID
+(gb-prestige-levels-v1:<building ID>), replacing it on edits rather than keeping
+history. Opening, filtering and resetting filters do not write or clear levels.
+Different GBs remain independent across tabs; for the same GB, the most recently
+saved pair is restored on refresh. Invalid stored fields use the default, and
+blocked storage still allows calculations for the current visit.
+The shortlist supports arbitrary levels
 for up to three buildings. The Multiplicative goal finds buildings with multiplier
 effects; their charts list clickable step levels. Each chart title has an info
 button for its boost description and multiplier example.
 Boosts show multipliers first, then other Gold boosts, followed by Copper boosts.
-Graph ticks mark 100-level boundaries at 1, 101, 201 and 301 (201 for Copper-only).
+Graph ticks adapt to the selected range and label both endpoints. Reversed levels
+still display both endpoints; equal levels show neighboring levels. Level 0 has no
+boost or cost observation, so graphs begin at level 1. The selected range is used
+on initial load, refresh, field edits, chart clicks and multiplier-step selections.
 
 Each building also has a two-line FP chart comparing total leveling cost with
 priming cost for every supplied level: 1–200 for Copper-only and 1–300 for Gold
@@ -19,7 +33,7 @@ Hover and selected-level values remain exact FP amounts. Priming means
 the owner's net FP cost after all expected position contributions, floored at 0;
 it does not calculate when a donor position is secure. P1–P5 contribute 1.9 times
 base FP rewards at every Copper-only level and Gold-building levels below 101.
-Gold-building levels 101 and above use base rewards for P1–P7 (1x). Each position
+Gold-building levels 101 and above use 1.2x base rewards for P1–P7. Each position
 is rounded to whole FP before summing. Missing costs or required rewards remain
 gaps, never retained values. Click/tap a cost chart, use its arrow/Home/End keys,
 or change Target level to view exact totals, contributions and priming FP. Gold
@@ -36,7 +50,7 @@ Hidden feature: simple dude's view
   public navigation link or URL shortcut, and reloading requires the gesture
   again. Back to dashboard restores the explorer and its previous scroll position.
   Defaults: regular base 10,000%, GBG 20,000%, GE 20,000%, target level 150.
-  Dropdown (all levels 1–300) and slider target controls stay in sync.
+  Dropdown (all levels 1–500) and slider target controls stay in sync.
   Mode priority keeps regular weight at 1 and splits 1 between GBG and GE.
   Stat priority splits 2 between attack and defense. Army priority splits 2
   between red and blue; effects benefiting both armies use both weights.
@@ -58,12 +72,28 @@ Data refresh, from this directory:
   python3 -B build_data.py
   npm test
 
-The read-only source is ../../input/GB Update - Ubernerd.xlsx. The importer uses
-saved values from the XLSX ZIP/XML, without recalculating formulas or modifying
-the workbook. The source SHA-256 is recorded in data/guide-data.json.
+The read-only cost source is ../../input/GB Update - Ubernerd.xlsx. The importer
+uses saved values from the XLSX ZIP/XML, without recalculating formulas or
+modifying the workbook. Its SHA-256 remains recorded in data/guide-data.json.
+
+Boosts and attempt limits use the newer Google Sheets export:
+  https://docs.google.com/spreadsheets/d/1Y4nFA5R8MLuWI1ACUHK9AfpWOYAGN3M_1Q5kCdYKDmA/edit?gid=528779517#gid=528779517
+Download its XLSX export, then run:
+  python3 -B refresh_boosts.py /path/to/export.xlsx
+  GB_BOOST_WORKBOOK=/path/to/export.xlsx npm test
+The refresh validates all 49 building mappings and saves the supplied boost
+series in data/boost-snapshot.json, including the source URL, export SHA-256,
+retrieval time and cell columns. build_data.py reapplies this snapshot on every
+rebuild, so the older cost workbook cannot restore old boost gaps. Raw XLSX
+exports stay outside the published site. The optional GB_BOOST_WORKBOOK check
+independently reconciles every boost and variable attempt limit against the export.
+FP, unlock costs, base rewards and GOE priming rules are not refreshed by this
+command. Costs beyond level 300 remain unavailable, even when boost data exists.
 
 Authoring files:
   import_workbook.py: workbook reader, cost reconciliation and source coverage.
+  refresh_boosts.py: boost-only Google Sheets export import and snapshot overlay.
+  data/boost-snapshot.json: recorded boost values and attempt limits through 500.
   data/workbook_mapping.py: reviewed boost columns, units, attempt limits and
     qualitative play-style advice.
   build_data.py: established building/icon metadata plus the workbook import.
@@ -79,9 +109,15 @@ as authoring references. Their numerical checkpoints do not enter the runtime
 dataset. Screenshots are no longer included in the published dist directory.
 
 Source interpretation:
-  - Detail sheets take priority over overview ranges. Gold buildings have rows
-    through 300 and Copper-only buildings through 200. Some boosts end earlier.
-    These are source coverage limits, not new game caps.
+  - Detail sheets take priority over overview ranges. Latest boost rows extend
+    through 500 for Gold buildings and 200 for Copper-only. Blue Galaxy Copper
+    boosts and collection limits are blank above 200 in the latest source. The
+    user confirmed these stay at their level-200 values: 75% double-collection
+    chance, 15 collections, and 300,032 medals. Derived data fills levels 201–500
+    as confirmed capped values, without retention warnings; the raw snapshot
+    keeps its blanks and each Copper row records confirmedCap provenance. Cost rows
+    still end at 300 for Gold and 200 for Copper-only. These cost coverage limits
+    are not game caps.
   - Gold effects are locked below 101, including zero placeholders in the source.
     Above a series' highest known level, its last known boost or attempt limit
     is retained for display and calculations, with a warning and originating
@@ -89,7 +125,8 @@ Source interpretation:
     Not supplied. Costs and contributor rewards are never carried forward.
     Raw observations remain unchanged except explicit user confirmations:
     SHS's Copper fighting multiplier is confirmed as 4% through level 108.
-    Levels 102–108 and their provenance are recorded in confirmedRanges.
+    Levels 102–108 and their provenance are recorded in confirmedRanges. The
+    latest source agrees and supplies the next increase, 5% at level 119.
   - Percent fractions are scaled by 100. CF Gold values are already whole
     percentages. TT Aid Goods uses the displayed number from its percent-formatted
     detail column as a count, consistent with Main (New)!D83.
@@ -122,8 +159,11 @@ Source interpretation:
   - Multiplier step levels include the known starting/unlock value and increases
     confirmed by consecutive supplied levels. Missing spans are never bridged.
   - P1–P7 values are base FP rewards, not assumed donations or secure amounts.
-    The base-reward table remains unadjusted. The cost comparison separately
-    applies the user-specified 1.9x / 1x contribution assumptions above.
+    These use the same whole-FP calculation as GOE Prime & Post, replacing the
+    workbook's obsolete rounding to multiples of 5. Tests compare all 11,900
+    supported level records against Prime & Post. Personal boosts are not applied
+    to the base-reward table. The cost comparison separately
+    applies the user-specified 1.9x / 1.2x contribution assumptions above.
   - Himeji Castle's Gold scope is user-confirmed as the blue attack multiplier
     in GBG (pairing 75). Its corrected icon and wording are separate from Seed
     Vault's attack-and-defense multiplier (pairing 63).

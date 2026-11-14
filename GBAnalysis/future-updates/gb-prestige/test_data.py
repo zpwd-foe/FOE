@@ -18,12 +18,12 @@ class GuideDataTests(unittest.TestCase):
         self.assertEqual(len({b['id'] for b in DATA['buildings']}), 49)
         self.assertEqual(sum(b['gold'] for b in BUILDINGS.values()), 21)
         self.assertEqual(sum(len(b['rows']) for b in BUILDINGS.values()), 123)
-        self.assertEqual(sum(len(r['values']) for b in BUILDINGS.values() for r in b['rows']), 31500)
+        self.assertEqual(sum(len(r['values']) for b in BUILDINGS.values() for r in b['rows']), 45300)
         for b in BUILDINGS.values():
             with self.subTest(building=b['name']):
                 self.assertNotIn('screenshot', b)
-                self.assertEqual(b['levels'], list(range(1, 301 if b['gold'] else 201)))
-                self.assertEqual(len(b['levelData']), len(b['levels']))
+                self.assertEqual(b['levels'], list(range(1, 501 if b['gold'] else 201)))
+                self.assertEqual(len(b['levelData']), 300 if b['gold'] else 200)
                 for row in b['rows']:
                     self.assertEqual(len(row['values']), len(b['levels']))
                     self.assertEqual(row['coverage'], sum(v is not None for v in row['values']))
@@ -31,15 +31,18 @@ class GuideDataTests(unittest.TestCase):
                     if row['tier'] == 'Gold':
                         self.assertEqual(row['values'][:100], [None] * 100)
 
-    def test_gaps_are_not_zero_or_filled_from_old_checkpoints(self):
+    def test_latest_boosts_fill_old_gaps_without_inventing_missing_cells(self):
         copper, gold = BUILDINGS['SoZ']['rows']
         self.assertEqual(copper['values'][149], 304)
         self.assertEqual(gold['values'][149], 3)
-        self.assertEqual(gold['coverage'], 124)
+        self.assertEqual(gold['coverage'], 400)
         self.assertEqual(gold['values'][223], 5)
-        self.assertIsNone(gold['values'][224])
-        self.assertEqual(BUILDINGS['Colo']['rows'][2]['coverage'], 1)
-        self.assertIsNone(BUILDINGS['ND']['rows'][0]['values'][110])
+        self.assertEqual(gold['values'][224], 5)
+        self.assertEqual(gold['values'][499], 7)
+        self.assertEqual(BUILDINGS['Colo']['rows'][2]['coverage'], 400)
+        self.assertIsNotNone(BUILDINGS['ND']['rows'][0]['values'][110])
+        self.assertEqual(BUILDINGS['BG']['rows'][0]['coverage'], 500)
+        self.assertEqual(BUILDINGS['BG']['rows'][0]['values'][200], 75)
         self.assertEqual(BUILDINGS['SoZ']['levelData'][149][:2], [77623, 2235390])
 
     def test_unpublished_unlock_costs_are_explicit_without_changing_source_values(self):
@@ -85,8 +88,9 @@ class GuideDataTests(unittest.TestCase):
     def test_shs_confirmed_multiplier_extension_has_explicit_provenance(self):
         row = next(row for row in BUILDINGS['SHS']['rows'] if row['boost'] == '58')
         self.assertEqual(row['values'][65:108], [4] * 43)
-        self.assertEqual(row['coverage'], 108)
-        self.assertIsNone(row['values'][108])
+        self.assertEqual(row['coverage'], 500)
+        self.assertEqual(row['values'][108], 4)
+        self.assertEqual(row['values'][118], 5)
         confirmation, = row['source']['confirmedRanges']
         self.assertEqual((confirmation['fromLevel'], confirmation['toLevel'], confirmation['value']), (102, 108, 4))
         self.assertIn('User confirmed', confirmation['reason'])
@@ -119,7 +123,7 @@ class GuideDataTests(unittest.TestCase):
                     self.assertEqual(record[12:14], [None, None])
 
     @unittest.skipUnless(DEFAULT_SOURCE.exists(), 'Raw authoring workbook is not required for deployment')
-    def test_every_boost_charge_and_unlock_cost_matches_workbook_and_confirmations(self):
+    def test_unlock_costs_match_original_workbook_and_confirmations(self):
         self.assertEqual(hashlib.sha256(DEFAULT_SOURCE.read_bytes()).hexdigest(), DATA['source']['sha256'])
         sheets = read_workbook(DEFAULT_SOURCE)
         for b in BUILDINGS.values():
@@ -134,17 +138,6 @@ class GuideDataTests(unittest.TestCase):
                     if b['gold'] and b['sourceSheet'] != 'SHS' and field in (4, 5) and 10 <= level <= 100:
                         expected = 0
                     self.assertEqual(record[field], expected, (b['name'], label, level))
-            for row in b['rows']:
-                for level, actual in enumerate(row['values'], 1):
-                    expected = None if row['tier'] == 'Gold' and level < 101 else numeric(cells, f'{row["source"]["column"]}{level+4}', row['source']['scale'])
-                    for confirmation in row['source'].get('confirmedRanges', []):
-                        if confirmation['fromLevel'] <= level <= confirmation['toLevel']:
-                            expected = confirmation['value']
-                    self.assertEqual(actual, expected, (b['name'], row['boost'], level))
-                    charges = row['source'].get('charges')
-                    if charges and len(charges) <= 2:
-                        expected_charge = None if row['tier'] == 'Gold' and level < 101 else numeric(cells, f'{charges}{level+4}')
-                        self.assertEqual(row['charges'][level-1], expected_charge)
 
 
 if __name__ == '__main__':

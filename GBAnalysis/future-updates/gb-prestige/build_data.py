@@ -77,6 +77,13 @@ def parse_cell(text, pairing):
         cell['expectedTriggers'] = round(number / 100 * int(charge[1]), 4)
     return cell
 
+def format_data(data):
+    formatted = json.dumps(data, ensure_ascii=False, indent=2)
+    # Keep numeric series and each per-level record on one line for reviewable diffs.
+    return re.sub(r'\[\n\s+(?:-?\d+(?:\.\d+)?|null)(?:,\n\s+(?:-?\d+(?:\.\d+)?|null))*\n\s*\]',
+                  lambda match: re.sub(r'\s+', '', match.group()), formatted) + '\n'
+
+
 def build():
     tracker = json.loads((ROOT/'data/tracker-catalog.json').read_text())
     sources = json.loads((ROOT/'data/source-manifest.json').read_text())
@@ -123,11 +130,10 @@ def build():
     data={'schemaVersion':1,'date':'2026-10-08','title':'GB Prestige Update - Boost Preview','sourceArticle':sources['source_url'],'officialRules':OFFICIAL,'trackerSnapshot':tracker['snapshot'],'trackerCheckedAt':tracker['checked_at'],'trackerAssignmentDate':tracker['building_assignments_date'],'tiers':{'copper':{'starts':1,'growthEnds':200},'gold':{'starts':101,'mainGrowthEnds':500,'hardCap':False},'silverRemoved':True},'buildings':records,'boosts':boosts,'methodology':{'values':'Manually read and verified against all 49 original screenshots. K/M rounding and charge counts are preserved.','icons':'Screenshot artwork is matched to the frozen GB tracker client icon/text pairings. Historical GB/tier assignments are not reused.','recommendations':'Gold buildings are reviewed at 201; Copper-only buildings at 101. Guidance considers benefits for the stated play style, not cost, efficiency or payback.','costs':'No October 6 beta costs or live costs are mixed into this October 8 benefit guide.','footprints':'Footprints come from the existing GBAnalysis building metadata, not these screenshots.','gaps':'Only the shown levels are transcribed. Gold screenshots show 201, while the official Copper growth cap is 200. No intermediate values are interpolated.'}}
     from import_workbook import apply_workbook
     data = apply_workbook(data)
-    formatted = json.dumps(data, ensure_ascii=False, indent=2)
-    # Keep numeric series and each per-level record on one line for reviewable diffs.
-    formatted = re.sub(r'\[\n\s+(?:-?\d+(?:\.\d+)?|null)(?:,\n\s+(?:-?\d+(?:\.\d+)?|null))*\n\s*\]',
-                       lambda match: re.sub(r'\s+', '', match.group()), formatted)
-    out=ROOT/'data/guide-data.json';out.write_text(formatted+'\n')
+    from refresh_boosts import SNAPSHOT, apply_snapshot
+    if SNAPSHOT.exists():
+        data = apply_snapshot(data, json.loads(SNAPSHOT.read_text()))
+    out=ROOT/'data/guide-data.json';out.write_text(format_data(data))
     (ROOT/'data/guide-data.js').write_text('window.GB_PRESTIGE_DATA = '+json.dumps(data,ensure_ascii=False,separators=(',',':')).replace('</',r'<\/')+';\n')
     print(f'Built {len(records)} buildings, {sum(len(b["rows"]) for b in records)} boost rows, {sum(len(r["values"]) for b in records for r in b["rows"])} cells and {len(boosts)} icon meanings.')
 

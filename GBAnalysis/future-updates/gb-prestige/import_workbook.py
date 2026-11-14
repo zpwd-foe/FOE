@@ -70,6 +70,16 @@ def numeric(cells, address, scale=1):
     return int(number) if number == number.to_integral_value() else float(number)
 
 
+def base_rewards(total, level, gold):
+    """Match GOEPriming.baseRewards: round each position to whole FP, halves up."""
+    pool_percent = (25 if level < 10 else 30 if level < 40 else 40 if level < 70
+                    else 25 if level <= 100 else 15 if level <= 200 else 10)
+    weights = [5040, 2520, 840, 210, 42, 7, 1] if gold else [120, 60, 20, 5, 1]
+    denominator = 100 * sum(weights)
+    return [(total * pool_percent * weight + denominator // 2) // denominator
+            for weight in weights]
+
+
 def apply_workbook(data, source=DEFAULT_SOURCE):
     source = Path(source)
     sheets = read_workbook(source)
@@ -113,7 +123,6 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
                 row['source']['charges'] = attempt if isinstance(attempt, str) else f"Main (New)!{FIXED_ATTEMPT_SOURCES[sheet_name]}"
             rows.append(row)
         headers = {value: re.sub(r'\d+', '', address) for address, value in cells.items() if re.fullmatch(r'[A-Z]+4', address)}
-        places = {int(value[1:]): re.sub(r'\d+', '', address) for address, value in cells.items() if re.fullmatch(r'[A-Z]+3', address) and re.fullmatch(r'P[1-7]', value)}
         cost_base = cost_columns[cells['A1']]
         level_data, running_total = [], 0
         for level in levels:
@@ -124,7 +133,8 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
             assert running_total == numeric(costs, f'{column_name(cost_base+3)}{row_number}'), (sheet_name, level, 'Cumulative FP disagreement')
             resources = [numeric(cells, f'{headers[label]}{row_number}') if label in headers else None
                          for label in ['Copper Sets', 'Gold Sets', 'Coins / Supplies', 'Medals', 'Goods (each)']]
-            rewards = [numeric(cells, f'{places[p]}{row_number}') if p in places and (p <= 5 or level >= 101) else None for p in range(1,8)]
+            rewards = base_rewards(fp, level, building['gold'] and level >= 101)
+            rewards += [None] * (7 - len(rewards))
             level_data.append([fp, running_total, *resources, *rewards,
                                numeric(costs, f'{column_name(cost_base)}{row_number}'),
                                numeric(costs, f'{column_name(cost_base+1)}{row_number}')])
@@ -157,11 +167,11 @@ def apply_workbook(data, source=DEFAULT_SOURCE):
             building.pop(key, None)
     data.update({'schemaVersion': 2, 'date': '2026-10-28', 'levelFields': LEVEL_FIELDS,
         'source': {'name': source.name, 'author': 'Ubernerd', 'sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
-                   'method': 'Saved workbook values with explicitly recorded user confirmations; formulas are not recalculated.', 'sheetCount': len(sheets)},
+                   'method': 'Saved workbook costs and boosts with explicitly recorded user confirmations. Base contributor rewards are derived from level costs using the GOE Prime & Post rules, rounded to whole FP.', 'sheetCount': len(sheets)},
         'methodology': {
             'values': 'All supplied level-by-level values from the Ubernerd workbook, with explicitly recorded user confirmations. Detail sheets take priority over summary ranges. Percent fractions are converted to displayed percentages. Raw missing values remain null; display-time retention is marked with a warning.',
             'costs': 'Per-level FP is reconciled against the post-update Costs sheet. Upgrade totals sum levels after the current level through the target, before contributor funding. The combined Coins / Supplies column is the amount of each resource. User-confirmed rule dated 2026-10-28: Gold-tier buildings except Shattered Horizon Siphon have zero coin, supply and medal unlock costs at levels 10–100; workbook costs at 101 and above are retained. Each affected building records this override in costSource.confirmedUnlockRanges.',
-            'rewards': 'Contributor FP rewards are the workbook’s saved P1–P7 values, before personal contribution boosts. No contribution boost or funding assumption is applied.',
+            'rewards': 'Base contributor FP rewards use the same calculation as GOE Prime & Post, replacing obsolete workbook rounding to multiples of 5. Reward pools by target level: 1–9 25%, 10–39 30%, 40–69 40%, 70–100 25%, 101–200 15%, 201–300 10%. Copper rank weights are [120,60,20,5,1]/206; Gold weights are [5040,2520,840,210,42,7,1]/8660. Each position rounds to whole FP, halves up, before personal contribution boosts. Gold-capable buildings use seven positions from level 101; all other levels use five.',
             'icons': 'Dashboard boost names, icons and army terminology follow the tracker pairings, with reviewed building-specific scope corrections. Himeji Castle Gold uses the user-confirmed blue attack multiplier in GBG.',
             'recommendations': 'Play-style guidance is editorial; ratings are not calculated cost, efficiency or payback rankings.',
             'gaps': 'Gold is locked below 101. Beyond the last supplied boost or attempt-limit level, retain its last known value with a warning and the originating level. Internal gaps stay Not supplied. Costs and rewards are never carried forward. Detail rows end at 300 for Gold buildings and 200 for Copper-only buildings; these are source limits, not new game caps.'}})

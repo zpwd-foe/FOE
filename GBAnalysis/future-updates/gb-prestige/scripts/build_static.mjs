@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const PROJECT_ROOT = fileURLToPath(new URL('../', import.meta.url));
 const STATIC_ASSETS = [
   'assets/favicon.png', 'assets/gb-icon.png', 'assets/goe-guild.png',
-  'assets/planner-theme.css', 'styles.css', 'core.js', 'charts.js', 'app.js',
+  'assets/planner-theme.css', 'styles.css', 'core.js', 'charts.js', 'level-state.js', 'app.js',
   'combat-ranking.js', 'simple-view.js', 'goe.css', 'goe-theme.js', 'goe-priming.js', 'goe.js',
 ];
 const PAGES = ['index.html', '404.html', 'goe.html'];

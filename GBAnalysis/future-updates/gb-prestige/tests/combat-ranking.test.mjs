@@ -57,14 +57,17 @@ test('QI-only buildings and non-stat fighting effects are excluded', () => {
 });
 
 test('retained boosts are ranked with source levels; locked Gold and genuine zero are valid', () => {
-  const shs = result('SHS');
+  const buildings = structuredClone(data.buildings);
+  buildings.find(b=>b.sourceSheet==='SHS').rows[0].values.fill(null,108);
+  const shs = combat.rank(buildings,data.boosts,150,bases).find(row=>row.building.sourceSheet==='SHS');
   assert.equal(shs.complete, true);
   assert.equal(shs.retained, true);
   assert.equal(shs.perTile, 100);
   assert.equal(shs.modes.regular, 1600);
   assert.equal(shs.parts[0].sourceLevel, 108);
   assert.equal(result('SHS',108).retained, false);
-  assert.equal(result('SHS',109).retained, true);
+  assert.equal(result('SHS',109).retained, false);
+  assert.equal(result('SHS',150).modes.regular,2000);
   assert.equal(result('SV', 100).total, 0);
   assert.ok(result('SV', 100).complete);
   assert.equal(result('SV', 150, { regular: 0, gbg: 0, ge: 0 }).perTile, 0);
@@ -84,18 +87,19 @@ test('internal combat gaps remain unranked after all complete or retained scores
   assert.ok(ranks.slice(1, firstMissing).every((row, i) => row.perTile <= ranks[i].perTile));
 });
 
-test('global targets retain Copper-only cap and warn on retained Gold values', () => {
+test('global targets retain Copper-only cap and use Gold data through 500', () => {
   assert.equal(result('SBC', 300).level, 200);
   assert.equal(result('SBC', 300).perTile, result('SBC', 200).perTile);
   assert.equal(result('SoZ', 300).level, 300);
-  assert.equal(result('SoZ', 300).perTile, (320+1000)/6);
-  assert.equal(result('SoZ', 300).retained,true);
-  assert.equal(result('SoZ', 300).parts.find(part=>part.retained).sourceLevel,224);
+  assert.equal(result('SoZ', 300).perTile, (320+1200)/6);
+  assert.equal(result('SoZ', 300).retained,false);
+  assert.equal(result('SoZ', 500).perTile, (320+1400)/6);
+  assert.equal(result('SBC', 500).level,200);
   assert.ok(result('SoZ', 300).modes.regular > 0);
 });
 
 test('invalid target or base does not silently produce a zero-base ranking', () => {
-  for (const level of [0, 301, 150.5, NaN]) assert.equal(ranking(level), null);
+  for (const level of [0, 501, 150.5, NaN]) assert.ok(ranking(level)===null);
   for (const value of [-1, NaN, Infinity]) assert.equal(ranking(150, { ...bases, ge: value }), null);
   for (const value of [-0.1, 1.1, NaN, Infinity]) {
     assert.equal(ranking(150,bases,{ge:value,attack:0.5}),null);
@@ -126,16 +130,18 @@ test('attack/defense weights distinguish single stats and both armies',()=>{
   for(const attack of [0,0.2,0.5,1]){
     const shs=result('SHS',150,bases,{ge:0.5,attack});
     assert.equal(shs.weights.attack+shs.weights.defense,2);
-    assert.equal(shs.total,1600,'Both red/blue attack and defense remain balanced in total');
+    assert.equal(shs.total,2000,'Both red/blue attack and defense remain balanced in total');
   }
 });
 
 test('zero-weight missing or retained bonuses cannot invalidate a score or warning',()=>{
-  const lotus=result('LT',150,bases,{ge:0,attack:0.5});
+  const buildings=structuredClone(data.buildings);
+  buildings.find(b=>b.sourceSheet==='LT').rows.find(row=>data.boosts[row.boost].multiplier).values.fill(null,101);
+  const lotusAt=ge=>combat.rank(buildings,data.boosts,150,bases,{ge,attack:0.5}).find(row=>row.building.sourceSheet==='LT');
+  const lotus=lotusAt(0);
   assert.equal(lotus.total,0);
   assert.equal(lotus.retained,false);
-  assert.equal(result('LT',150,bases,{ge:1,attack:0.5}).retained,true);
-  const buildings=structuredClone(data.buildings);
+  assert.equal(lotusAt(1).retained,true);
   buildings.find(b=>b.sourceSheet==='SoZ').rows[0].values[149]=null;
   const find=attack=>combat.rank(buildings,data.boosts,150,bases,{ge:0.5,attack}).find(row=>row.building.sourceSheet==='SoZ');
   assert.equal(find(0).complete,true);
@@ -153,11 +159,11 @@ test('army priority distinguishes red, blue and boosts affecting both armies',()
   for(const red of [0,0.25,0.5,0.75,1]){
     const shs=result('SHS',150,bases,{red});
     assert.equal(shs.weights.red+shs.weights.blue,2);
-    assert.equal(shs.total,1600);
+    assert.equal(shs.total,2000);
     assert.equal(result('TA',150,bases,{red}).total,4256);
   }
   assert.equal(result('LT',150,bases,{red:1}).retained,false);
-  assert.equal(result('LT',150,bases,{red:0}).retained,true);
+  assert.equal(result('LT',150,bases,{red:0}).retained,false);
 });
 
 test('all 125 five-stop priority combinations preserve weight totals and sorted finite scores',()=>{

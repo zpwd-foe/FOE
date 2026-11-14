@@ -72,6 +72,11 @@ CONFIRMED_BOOST_RANGES = {
                     'reason': 'User confirmed the Copper fighting multiplier stays at 4% through level 108.'}],
 }
 
+CONFIRMED_COPPER_CAPS = {
+    'BG': {'level': 200,
+           'reason': 'User confirmed that Blue Galaxy Copper boosts and collection limits stay at their level-200 values above level 200.'},
+}
+
 DECISION_NOTES = {
     1: 'The Gold multiplier helps red attack in GBG. Compare its next increase with the FP and unlock resources needed to reach it.',
     2: 'Gold improves red attack and defense in GE. Its benefit depends on your existing GE bonuses; Copper adds attack percentage points.',

@@ -16,7 +16,7 @@
   </script>
   <link rel="stylesheet" href="assets/planner-theme.d591a87fa296.css">
   <link rel="stylesheet" href="assets/styles.76f39b3b45b8.css">
-  <script defer src="assets/guide-data.e4f012d8e876.js"></script><script defer src="assets/core.c9872bd15af6.js"></script><script defer src="assets/charts.c4cce1f6dede.js"></script><script defer src="assets/app.5391349f40eb.js"></script><script defer src="assets/combat-ranking.d44092cc58ab.js"></script><script defer src="assets/simple-view.99f3aab2169f.js"></script>
+  <script defer src="assets/guide-data.df6596384aaa.js"></script><script defer src="assets/core.f14b21954a7a.js"></script><script defer src="assets/charts.9f4476023109.js"></script><script defer src="assets/level-state.b6632390693b.js"></script><script defer src="assets/app.6f2f5cf67de3.js"></script><script defer src="assets/combat-ranking.c0fa67ffbe16.js"></script><script defer src="assets/simple-view.f4fde91fc628.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#explorer">Skip to building comparison</a>
@@ -42,7 +42,7 @@
           <div class="bonus-example"><strong>Flat boost or multiplier</strong><p>With a 5,000% starting boost:</p><div class="example-pair"><span>+10% boost <b>5,010%</b></span><span>10% multiplier <b>5,500%</b></span></div></div>
           <div class="chance-example"><strong>25% ×82</strong><span>A 25% chance on each of 82 eligible attempts.</span></div>
           <p class="guide-fine">K = thousand · M = million. Red = attacking army; blue = defending army. Attempt limits are shown separately from chances.</p>
-          <p class="guide-fine">Detailed level data ends at 200 or 300; some boosts stop earlier. ⚠ marks a last known value retained at a higher level; dashed lines show these values. “Not supplied” means a gap in the data. Ratings describe play-style fit, not cost efficiency.</p>
+          <p class="guide-fine">Boosts cover levels 1–200 for Copper-only buildings and 1–500 for Gold buildings. Cost data ends at 200 or 300. ⚠ marks a last known value retained at a higher level; dashed lines show these values. “Not supplied” means a gap in the data. Ratings describe play-style fit, not cost efficiency.</p>
         </section>
       </div>
     </details>
@@ -62,7 +62,7 @@
         <label>GBG<span class="simple-input"><input data-simple-base="gbg" type="number" min="0" step="any" value="20000" inputmode="decimal" required aria-label="GBG base fighting boost percent"><span>%</span></span></label>
         <label>GE<span class="simple-input"><input data-simple-base="ge" type="number" min="0" step="any" value="20000" inputmode="decimal" required aria-label="GE base fighting boost percent"><span>%</span></span></label>
       </div></div>
-      <div class="simple-target"><label for="simple-level-select">Target level</label><select id="simple-level-select" aria-label="Select target level"><option value="150">Lv 150</option></select><input id="simple-level-range" type="range" min="1" max="300" step="1" value="150" aria-label="Adjust target level"><div class="simple-range-labels"><span>1</span><span>300</span></div><p>Copper-only buildings stay at level 200 when you choose a higher target.</p></div>
+      <div class="simple-target"><label for="simple-level-select">Target level</label><select id="simple-level-select" aria-label="Select target level"><option value="150">Lv 150</option></select><input id="simple-level-range" type="range" min="1" max="500" step="1" value="150" aria-label="Adjust target level"><div class="simple-range-labels"><span>1</span><span>500</span></div><p>Copper-only buildings stay at level 200 when you choose a higher target.</p></div>
       <div class="simple-priorities">
         <datalist id="simple-priority-ticks"><option value="0"></option><option value="25"></option><option value="50"></option><option value="75"></option><option value="100"></option></datalist>
         <div class="simple-weight"><label for="simple-mode-weight">GBG or GE?</label><span class="simple-weight-note">Regular ×1 · GBG + GE = 1</span><input id="simple-mode-weight" type="range" min="0" max="100" step="25" value="25" list="simple-priority-ticks" aria-describedby="simple-mode-help"><div class="simple-weight-values"><output id="simple-gbg-weight" for="simple-mode-weight">GBG ×0.75</output><output id="simple-ge-weight" for="simple-mode-weight">GE ×0.25</output></div><p id="simple-mode-help">Slide toward the mode you value more.</p></div>

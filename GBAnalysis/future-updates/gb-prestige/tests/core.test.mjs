@@ -24,40 +24,41 @@ test('per-level funding rounds each position at 1.9x before subtracting contribu
   assert.equal(funding.total,1410);
   assert.equal(funding.multiplier,1.9);
   assert.equal(funding.positions,5);
-  assert.deepEqual(Array.from(funding.contributions),[627,314,105,29,10]);
-  assert.equal(funding.contributionTotal,1085);
-  assert.equal(funding.priming,325);
+  assert.deepEqual(Array.from(funding.contributions),[625,312,105,27,6]);
+  assert.equal(funding.contributionTotal,1075);
+  assert.equal(funding.priming,335);
 });
 
-test('Gold funding switches at 101 while Copper-only funding remains 1.9x through 200',()=>{
+test('Gold funding switches to 1.2x at 101 while Copper-only funding remains 1.9x through 200',()=>{
   const gold=building('SoZ'),copper=building('ToB');
-  assert.equal(core.levelFunding(gold,100).priming,2403);
+  assert.equal(core.levelFunding(gold,100).priming,2405);
   const firstGold=core.levelFunding(gold,101);
-  assert.equal(firstGold.multiplier,1);
+  assert.equal(firstGold.multiplier,1.2);
   assert.equal(firstGold.positions,7);
-  assert.equal(firstGold.contributionTotal,720);
-  assert.equal(firstGold.priming,4089);
+  assert.deepEqual(Array.from(firstGold.contributions),[504,252,84,20,4,1,0]);
+  assert.equal(firstGold.contributionTotal,865);
+  assert.equal(firstGold.priming,3944);
   assert.equal(core.levelFunding(copper,101).multiplier,1.9);
   assert.equal(core.levelFunding(copper,101).positions,5);
-  assert.equal(core.levelFunding(copper,101).priming,3440);
-  assert.equal(core.levelFunding(copper,200).priming,70710);
+  assert.equal(core.levelFunding(copper,101).priming,3437);
+  assert.equal(core.levelFunding(copper,200).priming,70684);
   assert.equal(core.levelFunding(building('SHS'),100).multiplier,1.9);
-  assert.equal(core.levelFunding(building('SHS'),101).multiplier,1);
+  assert.equal(core.levelFunding(building('SHS'),101).multiplier,1.2);
 });
 
 test('per-level funding includes all seven Gold positions and preserves missing data',()=>{
   const gold=structuredClone(building('SoZ'));
   gold.levelData[100]=[1000,1000,0,0,0,0,0,100,50,20,10,5,3,2];
-  assert.equal(core.levelFunding(gold,101).contributionTotal,190);
-  assert.equal(core.levelFunding(gold,101).priming,810);
+  assert.equal(core.levelFunding(gold,101).contributionTotal,228);
+  assert.equal(core.levelFunding(gold,101).priming,772);
   gold.levelData[100][13]=null;
   assert.equal(core.levelFunding(gold,101).total,1000);
   assert.equal(core.levelFunding(gold,101).priming,null);
   gold.levelData[100][13]=0;
-  assert.equal(core.levelFunding(gold,101).priming,812);
+  assert.equal(core.levelFunding(gold,101).priming,774);
   gold.levelData[100][0]=null;
   assert.equal(core.levelFunding(gold,101).priming,null);
-  assert.equal(core.levelFunding(gold,101).contributionTotal,188);
+  assert.equal(core.levelFunding(gold,101).contributionTotal,226);
   gold.levelData[100][0]=100;
   assert.equal(core.levelFunding(gold,101).priming,0);
   for(const level of [0,-1,1.5,301])assert.equal(core.levelFunding(gold,level).priming,null);
@@ -66,18 +67,28 @@ test('per-level funding includes all seven Gold positions and preserves missing 
 test('funding covers every supplied level with the correct building-specific tier rule',()=>{
   let count=0;
   for(const b of data.buildings){
-    for(const level of b.levels){
+    for(let level=1;level<=b.levelData.length;level++){
       const result=core.levelFunding(b,level);
       const gold=b.gold&&level>=101;
       assert.equal(result.total,b.levelData[level-1][0],`${b.name}, ${level}`);
       assert.equal(result.positions,gold?7:5);
-      assert.equal(result.multiplier,gold?1:1.9);
+      assert.equal(result.multiplier,gold?1.2:1.9);
       assert.ok(Number.isInteger(result.priming)&&result.priming>=0&&result.priming<=result.total);
       assert.equal(result.total-result.priming,result.contributionTotal);
       count++;
     }
   }
   assert.equal(count,11900);
+});
+
+test('boosts above the cost coverage remain usable without fabricating funding',()=>{
+  const arc=building('Arc'),gold=arc.rows.find(row=>row.tier==='Gold');
+  assert.equal(core.sample(gold,500).value,40);
+  assert.equal(core.sample(gold,500).kind,'available');
+  assert.equal(core.upgrade(arc,300,500).fp,null);
+  assert.equal(core.levelFunding(arc,500).total,null);
+  assert.equal(core.levelFunding(arc,500).priming,null);
+  assert.equal(core.levelFunding(arc,300).total,arc.levelData[299][0]);
 });
 
 test('required missing resources block only their total; valid zero stays zero',()=>{
@@ -186,27 +197,44 @@ test('every supplied unlocking cost is counted at its level across all 49 buildi
 test('locked, missing, flat increases and multiplier inputs stay distinct',()=>{
   const [copper,gold]=building('SoZ').rows;
   assert.equal(core.status(gold,100),'locked');
-  assert.equal(core.status(gold,225),'retained');
+  assert.equal(core.status(gold,225),'available');
   assert.equal(core.difference(gold,100,150).kind,'unlock');
   assert.equal(core.difference(copper,100,150).delta,41);
   assert.equal(core.difference(gold,137,150).start,2);
   assert.equal(core.difference(gold,137,150).value,3);
   assert.equal(core.difference(gold,224,250).delta,0);
-  assert.deepEqual(Array.from(core.difference(gold,224,250).retainedLevels),[224]);
+  assert.deepEqual(Array.from(core.difference(gold,224,250).retainedLevels),[]);
   assert.equal(core.status({tier:'Copper',values:[0]},1),'available');
 });
 
 test('gaps break lines rather than interpolating or carrying values',()=>{
   const result=JSON.parse(JSON.stringify(core.segments([null,1,1,null,0,2,null])));
   assert.deepEqual(result,[[[2,1],[3,1]],[[5,0],[6,2]]]);
-  assert.equal(core.segments(building('SoZ').rows[1].values)[0].length,124);
+  assert.equal(core.segments(building('SoZ').rows[1].values)[0].length,400);
 });
 
 test('attempt-weighted chance is separate from collection bonuses',()=>{
   const bg=building('BG').rows[0],aic=building('AIC').rows[0];
   assert.ok(Math.abs(core.expected(bg,101,data.boosts[bg.boost])-8.45)<1e-10);
   assert.equal(core.expected(aic,101,data.boosts[aic.boost]),null);
-  assert.equal(core.expected(building('BG').rows[2],250,data.boosts['16']),1.98);
+  assert.equal(core.expected(building('BG').rows[2],250,data.boosts['16']),3.01);
+});
+
+test('Blue Galaxy Copper boosts are confirmed flat above 200 without retention warnings',()=>{
+  const bg=building('BG');
+  for(const row of bg.rows.filter(row=>row.tier==='Copper')){
+    for(const level of [200,201,300,500]){
+      assert.equal(core.sample(row,level).kind,'available');
+      assert.equal(core.sample(row,level).value,row.values[199]);
+      assert.deepEqual(Array.from(core.difference(row,200,level===200?201:level).retainedLevels),[]);
+      if(row.charges){
+        assert.equal(core.sample(row,level,'charges').kind,'available');
+        assert.equal(core.sample(row,level,'charges').value,15);
+      }
+    }
+  }
+  assert.equal(core.expected(bg.rows[0],500,data.boosts['12']),11.25);
+  assert.equal(core.sample(bg.rows[2],500).value,60);
 });
 
 test('only trailing boost gaps retain the last observation, including genuine zero',()=>{
@@ -222,19 +250,19 @@ test('only trailing boost gaps retain the last observation, including genuine ze
   assert.equal(JSON.stringify(row),snapshot,'Raw observations must stay untouched');
 });
 
-test('SHS is confirmed through 108 and retains 4% with provenance above 108',()=>{
+test('SHS uses newly supplied values beyond the user-confirmed range',()=>{
   const row=building('SHS').rows.find(row=>row.boost==='58');
   assert.equal(core.sample(row,108).kind,'available');
   assert.equal(core.sample(row,108).value,4);
-  for(const level of [109,150,300]){
+  for(const [level,value] of [[109,4],[118,4],[119,5],[150,5],[300,5],[500,5]]){
     const observation=core.sample(row,level);
-    assert.equal(observation.kind,'retained');
-    assert.equal(observation.value,4);
-    assert.equal(observation.sourceLevel,108);
+    assert.equal(observation.kind,'available');
+    assert.equal(observation.value,value);
+    assert.equal(observation.sourceLevel,level);
   }
-  assert.deepEqual(Array.from(core.difference(row,100,150).retainedLevels),[108]);
-  assert.equal(core.difference(row,100,150).delta,0);
-  assert.equal(core.multiplierSteps(row).at(-1).level,66);
+  assert.deepEqual(Array.from(core.difference(row,100,150).retainedLevels),[]);
+  assert.equal(core.difference(row,100,150).delta,1);
+  assert.equal(core.multiplierSteps(row).at(-1).level,119);
 });
 
 test('boost and attempt-limit retention have independent source levels',()=>{
@@ -258,9 +286,9 @@ test('multiplicative goal includes Copper multipliers and excludes additive boos
 
 test('multiplier step levels preserve exact workbook thresholds',()=>{
   const pairs=row=>Array.from(core.multiplierSteps(row),step=>[step.level,step.value]);
-  assert.deepEqual(pairs(building('SoZ').rows[1]),[[101,1],[118,2],[149,3],[181,4],[221,5]]);
+  assert.deepEqual(pairs(building('SoZ').rows[1]),[[101,1],[118,2],[149,3],[181,4],[221,5],[275,6],[371,7]]);
   const siphon=data.buildings.find(b=>b.name==='Shattered Horizon Siphon');
-  assert.deepEqual(pairs(siphon.rows[0]),[[1,1],[13,2],[37,3],[66,4]]);
+  assert.deepEqual(pairs(siphon.rows[0]),[[1,1],[13,2],[37,3],[66,4],[119,5]]);
 });
 
 test('multiplier milestones do not infer a step across missing levels or count a decrease',()=>{

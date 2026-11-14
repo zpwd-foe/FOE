@@ -17,7 +17,7 @@
 
   function rank(buildings, boosts, target, bases, priorities = {}) {
     const { ge = 0.25, attack = 0.75, red = 0.5 } = priorities;
-    if (!Number.isInteger(target) || target < 1 || target > 300
+    if (!Number.isInteger(target) || target < 1 || target > 500
       || ['regular', 'gbg', 'ge'].some(mode => !Number.isFinite(bases[mode]) || bases[mode] < 0)
       || [ge, attack, red].some(value => !Number.isFinite(value) || value < 0 || value > 1)) {
       return null;

@@ -9,11 +9,12 @@
     "assets/goe-guild.png": "assets/goe-guild.cf564778dc8b.png",
     "assets/planner-theme.css": "assets/planner-theme.d591a87fa296.css",
     "styles.css": "assets/styles.76f39b3b45b8.css",
-    "core.js": "assets/core.c9872bd15af6.js",
-    "charts.js": "assets/charts.c4cce1f6dede.js",
-    "app.js": "assets/app.5391349f40eb.js",
-    "combat-ranking.js": "assets/combat-ranking.d44092cc58ab.js",
-    "simple-view.js": "assets/simple-view.99f3aab2169f.js",
+    "core.js": "assets/core.f14b21954a7a.js",
+    "charts.js": "assets/charts.9f4476023109.js",
+    "level-state.js": "assets/level-state.b6632390693b.js",
+    "app.js": "assets/app.6f2f5cf67de3.js",
+    "combat-ranking.js": "assets/combat-ranking.c0fa67ffbe16.js",
+    "simple-view.js": "assets/simple-view.f4fde91fc628.js",
     "goe.css": "assets/goe.d07c4d615f2f.css",
     "goe-theme.js": "assets/goe-theme.335dfd4147d9.js",
     "goe-priming.js": "assets/goe-priming.aaef4178772e.js",
@@ -76,7 +77,7 @@
     "assets/icons/bonus_spoils_of_war.png": "assets/icons/bonus_spoils_of_war.d4ac1383b6db.png",
     "assets/icons/bonus_spoils_of_war_enhanced.png": "assets/icons/bonus_spoils_of_war_enhanced.4006a45a3885.png",
     "assets/icons/bonus_supplies.png": "assets/icons/bonus_supplies.32f69a222b31.png",
-    "data/guide-data.js": "assets/guide-data.e4f012d8e876.js",
+    "data/guide-data.js": "assets/guide-data.df6596384aaa.js",
     "data/goe-data.js": "assets/goe-data.eb102e5737b4.js"
   }
 }
