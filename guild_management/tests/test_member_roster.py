@@ -4,7 +4,24 @@ import copy
 import datetime as dt
 import unittest
 
-from member_roster import validate_roster
+from member_roster import foestats_membership_date, validate_roster
+
+
+class FoestatsMembershipDateTests(unittest.TestCase):
+    def test_calendar_dates_do_not_shift_across_timezones_or_years(self):
+        for day in ("2026-11-17", "2026-07-24", "2026-01-01", "2024-02-29"):
+            with self.subTest(day=day):
+                self.assertEqual(foestats_membership_date(day + "T00:00:00.000Z"), day)
+                self.assertEqual(foestats_membership_date(day + "T00:00:00+00:00"), day)
+
+    def test_unknown_dates_remain_unknown(self):
+        self.assertIsNone(foestats_membership_date(None))
+
+    def test_unexpected_timestamps_require_review(self):
+        for value in ("2026-11-17", "2026-11-17T00:00:00", "2026-11-17T12:00:00Z",
+                      "2026-11-17T00:00:00-05:00", "2026-02-30T00:00:00Z", 123):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                foestats_membership_date(value)
 
 
 class MemberRosterTests(unittest.TestCase):

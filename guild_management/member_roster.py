@@ -8,6 +8,26 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 
+def foestats_membership_date(value: str | None) -> str | None:
+    """Read Foestats join/leave calendar dates without shifting their timezone.
+
+    The API encodes membership dates as midnight UTC, rather than an event
+    instant. Snapshot/capture timestamps still require timezone conversion.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, str) or not re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T.+", value
+    ):
+        raise ValueError("Expected a Foestats membership timestamp.")
+    timestamp = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if timestamp.tzinfo is None or timestamp.utcoffset() != dt.timedelta(0):
+        raise ValueError("Foestats membership timestamps must use UTC.")
+    if timestamp.time() != dt.time():
+        raise ValueError("Expected a midnight UTC membership date.")
+    return timestamp.date().isoformat()
+
+
 def validate_roster(payload: object, today: dt.date | None = None) -> dict:
     if not isinstance(payload, dict) or type(payload.get("schemaVersion")) is not int or payload.get("schemaVersion") != 1:
         raise ValueError("Expected a version 1 member roster.")

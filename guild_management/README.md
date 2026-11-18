@@ -606,14 +606,17 @@ Theoutdoorsman71 retains the recorded join date of 2019-06-22 with
 `joinedOnMayBeEarlier: true`. The date links to the footnote “Actual join
 date may be earlier than recorded.” Preserve this flag in future imports.
 
-Per the guild's chosen convention, imported join and departure dates match
-Foestats' displayed dates in `America/New_York`. Its API provides midnight UTC
-timestamps; convert those to Eastern calendar dates before storing date-only
-`joinedOn` or `departedOn` values.
-For example, zpwd's source timestamp `2024-07-24T00:00:00.000Z` displays as
-July 23, 2024, so the roster records `2024-07-23`. Do not apply another timezone
-conversion when rendering the stored date. Game player IDs from the source
-identify members independently of names.
+Foestats membership fields (`join_date` and `left_date`) encode calendar dates
+as midnight UTC. Preserve their UTC calendar date when importing; converting
+these values to Eastern Time incorrectly subtracts one day. On 2026-11-17,
+leadership confirmed Rolf Joergensen joined that day, so his anniversary anchor
+was corrected from 2026-11-16 to 2026-11-17. New imports use
+`member_roster.foestats_membership_date`; actual snapshot/capture timestamps
+still use timezone conversion. The anniversary UI continues to use Eastern Time.
+Previously stored dates and leadership overrides remain stable unless explicitly
+corrected; do not shift every existing date automatically. Earlier refresh notes
+above describe the old import convention. Game player IDs identify members
+independently of names.
 
 Do not infer join dates from the first contribution or the first observed
 record. Leave unknown dates blank. The recorded date is the anniversary anchor;
