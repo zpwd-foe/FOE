@@ -33,6 +33,7 @@ from automation.errors import AutomationError
 from capture_evidence import evidence_inputs
 
 OUTPUTS = ("dashboard", "site/data/treasury-data.js", "site/data/contribution-data.js")
+PRIME_POST_BUILD = Path("../GBAnalysis/future-updates/gb-prestige/dist")
 
 
 def digest(path: Path) -> str | None:
@@ -91,7 +92,17 @@ def input_manifest(project: Path) -> dict[str, str | None]:
 def code_manifest(project: Path) -> dict[str, str | None]:
     paths = [*project.glob("*.py"), *project.glob("automation/*.py")]
     paths += [path for path in (project / "site").rglob("*") if path.is_file() and path.relative_to(project).as_posix() not in OUTPUTS[1:]]
-    return {path.relative_to(project).as_posix(): digest(path) for path in sorted(paths)}
+    manifest = {path.relative_to(project).as_posix(): digest(path) for path in sorted(paths)}
+    # portal_tools resolves this sibling build relative to the staged project.
+    # Copy and hash its public runtime files too, keeping recovery self-contained.
+    source = project / PRIME_POST_BUILD
+    if not all((source / name).is_file() for name in ("asset-manifest.json", "goe.html")):
+        raise AutomationError("Prime & Post build is missing; rebuild its dist before refreshing.")
+    for path in sorted(source.rglob("*")):
+        if path.is_file():
+            name = (PRIME_POST_BUILD / path.relative_to(source)).as_posix()
+            manifest[name] = digest(path)
+    return manifest
 
 
 def safe_error(error: BaseException) -> str:

@@ -228,8 +228,13 @@ historical snapshot. Logs and the process lock are local and ignored by Git.
 
 #### Checkpoints and safe recovery
 
-Download, paired build, validation, and publishing are separate stages. Failures
-report the stage, reason, and last recorded successful run. A failure before
+Download, paired build, validation, and publishing are separate stages.
+The paired build copies and fingerprints the sibling Prime & Post runtime under
+`../GBAnalysis/future-updates/gb-prestige/dist/` along with the portal source.
+Its manifest and assets remain available in the private recovery workspace;
+changes to that build invalidate saved validation before publication.
+
+Failures report the stage, reason, and last recorded successful run. A failure before
 joint validation leaves the existing dashboard untouched. Promotion uses
 recoverable backups; interrupted file moves are rolled back on recovery. This
 is not an atomic multi-file filesystem swap, so a local file server could see a

@@ -8,7 +8,7 @@ import unittest
 from unittest import mock
 
 from automation.build_pair import (
-    AutomationError, build_pair, input_manifest, load_state,
+    AutomationError, PRIME_POST_BUILD, build_pair, code_manifest, input_manifest, load_state,
     output_hashes, restore_pair, save_state,
 )
 
@@ -17,7 +17,7 @@ class PairedBuildTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.project = Path(self.temporary.name)
+        self.project = Path(self.temporary.name) / "guild_management"
         for name, text in {
             "input/stats-2026-09-19.csv": "saved treasury",
             "input/guild-goods-contribution/GuildTreasury-2026-09-19.csv": "saved logs",
@@ -27,6 +27,9 @@ class PairedBuildTests(unittest.TestCase):
             "dashboard/index.html": "old complete dashboard",
             "generate_treasury_dashboard.py": "# test generator",
             "generate_contribution_dashboard.py": "# test generator",
+            f"{PRIME_POST_BUILD}/asset-manifest.json": '{"assets":{}}',
+            f"{PRIME_POST_BUILD}/goe.html": "Prime & Post page",
+            f"{PRIME_POST_BUILD}/assets/goe.test.js": "calculator runtime",
         }.items():
             path = self.project / name
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,6 +49,9 @@ class PairedBuildTests(unittest.TestCase):
 
     def generate(self, command, snapshot, log) -> None:
         self.assertEqual((snapshot / "site/data/resources.json").read_text(), "required config")
+        for name in ("asset-manifest.json", "goe.html", "assets/goe.test.js"):
+            self.assertEqual((snapshot / PRIME_POST_BUILD / name).read_bytes(),
+                             (self.project / PRIME_POST_BUILD / name).read_bytes())
         self.assertEqual(output_hashes(self.project), self.old)
         name = "contribution-data.js" if "contribution" in command[2] else "treasury-data.js"
         (snapshot / "site/data" / name).write_text("new " + name)
@@ -121,6 +127,32 @@ class PairedBuildTests(unittest.TestCase):
         def mutate(command, snapshot, log):
             self.generate(command, snapshot, log)
             self.treasury.write_text("changed while generating")
+        self.run_mock.side_effect = mutate
+        with self.assertRaisesRegex(AutomationError, "Inputs or code changed"):
+            build_pair(self.project, self.treasury)
+        self.assertEqual(output_hashes(self.project), self.old)
+
+    def test_missing_prime_post_build_stops_before_generating(self) -> None:
+        (self.project / PRIME_POST_BUILD / "asset-manifest.json").unlink()
+        with self.assertRaisesRegex(AutomationError, "Prime & Post build is missing"):
+            build_pair(self.project, self.treasury)
+        self.run_mock.assert_not_called()
+        self.assertEqual(output_hashes(self.project), self.old)
+
+    def test_changed_prime_post_build_invalidates_saved_checkpoint(self) -> None:
+        previous = build_pair(self.project, self.treasury, promote=False)
+        (self.project / PRIME_POST_BUILD / "assets/goe.test.js").write_text("updated calculator")
+        self.assertNotEqual(code_manifest(self.project), previous["code"])
+        self.run_mock.reset_mock()
+        current = build_pair(self.project, self.treasury)
+        self.assertNotEqual(current["runId"], previous["runId"])
+        self.assertEqual(self.run_mock.call_count, 2)
+
+    def test_prime_post_build_changed_during_generation_is_not_promoted(self) -> None:
+        def mutate(command, snapshot, log):
+            self.generate(command, snapshot, log)
+            if "treasury" in command[2]:
+                (self.project / PRIME_POST_BUILD / "assets/goe.test.js").write_text("unexpected change")
         self.run_mock.side_effect = mutate
         with self.assertRaisesRegex(AutomationError, "Inputs or code changed"):
             build_pair(self.project, self.treasury)
