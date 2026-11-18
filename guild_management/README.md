@@ -586,9 +586,20 @@ leadership-confirmed record gives 45 current members and three former members,
 all with known join dates. Existing join dates, IDs, taglines, and earlier-date
 flags were preserved.
 
-SirWalter929 and Theoutdoorsman71 retain their recorded join date of 2019-06-22,
-with `joinedOnMayBeEarlier: true`. Their dates link to the footnote “Actual join
-date may be earlier than recorded.” Preserve these flags in future imports.
+On 2026-11-17, the roster was refreshed against Foestats data dated 2026-11-17.
+Rolf Joergensen (`857297839`) was added with a join date of 2026-11-16, and
+Tawatinaw was marked as a former member with a departure date of 2026-11-10
+(Eastern Time). The source lists all 45 current members, including GinnyR.
+The shared roster has 45 current members and four former members, all with known
+join dates. Existing confirmed dates, IDs, and taglines were preserved.
+
+On 2026-11-17, guild leadership confirmed SirWalter929 (`15857412`) joined on
+2018-07-01. This date supersedes the Foestats value and removes his earlier-date
+uncertainty flag; preserve this confirmed date in future imports.
+
+Theoutdoorsman71 retains the recorded join date of 2019-06-22 with
+`joinedOnMayBeEarlier: true`. The date links to the footnote “Actual join
+date may be earlier than recorded.” Preserve this flag in future imports.
 
 Per the guild's chosen convention, imported join and departure dates match
 Foestats' displayed dates in `America/New_York`. Its API provides midnight UTC
