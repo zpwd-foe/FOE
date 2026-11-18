@@ -646,14 +646,16 @@ class CompanionExtensionSafetyTests(unittest.TestCase):
         "Node.js is required for the companion smoke test",
     )
     def test_companion_offline_flow_triggers_exactly_once(self) -> None:
-        result = subprocess.run(
-            ["node", str(Path(__file__).with_name("forge_hammer_companion_smoke.js"))],
-            capture_output=True,
-            check=False,
-            text=True,
-            timeout=5,
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for mode in ("companion", "scheduled"):
+            with self.subTest(mode=mode):
+                result = subprocess.run(
+                    ["node", str(Path(__file__).with_name("forge_hammer_companion_smoke.js")), mode],
+                    capture_output=True,
+                    check=False,
+                    text=True,
+                    timeout=5,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     @unittest.skipUnless(
         shutil.which("node"),

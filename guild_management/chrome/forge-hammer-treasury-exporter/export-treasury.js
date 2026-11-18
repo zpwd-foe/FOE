@@ -1,12 +1,25 @@
 (() => {
   'use strict';
 
+  const scheduledExport = typeof goeScheduledExport === 'undefined' ? null : goeScheduledExport;
   const triggerKey = 'forge-hammer-treasury-export';
-  const triggerStorageKey = '__goeForgeHammerDataExportTrigger';
-  const triggerWindowPrefix = '__goe_forge_hammer_trigger__:';
+  const triggerStorageKey = scheduledExport ? '__goeForgeHammerScheduleTrigger' : '__goeForgeHammerDataExportTrigger';
+  const triggerWindowPrefix = scheduledExport ? '__goe_forge_hammer_schedule__:' : '__goe_forge_hammer_trigger__:';
   const expectedTreasuryGoods = 115;
-  const directTriggerText = window.location.hash.replace(/^#/, '');
+  const isGameClientPage = /^\/game\/index(?:\/|$)/.test(window.location.pathname);
+  const directTriggerText = scheduledExport?.params ?? window.location.hash.replace(/^#/, '');
   const directTriggerParams = new URLSearchParams(directTriggerText);
+  if (scheduledExport && isGameClientPage) {
+    const attemptKey = '__goeForgeHammerScheduleAttempt';
+    const attempt = directTriggerParams.get(triggerKey);
+    try {
+      if (!attempt || window.sessionStorage.getItem(attemptKey) === attempt) return;
+      window.sessionStorage.setItem(attemptKey, attempt);
+    } catch (_error) {
+      scheduledExport.report('error', 'Chrome could not record the one-shot export attempt.');
+      return;
+    }
+  }
   const liveDebugMode = directTriggerParams.get('foe_live_debug');
   const liveDebug = liveDebugMode === '1' || liveDebugMode === 'play_once';
 
@@ -252,7 +265,6 @@
       console.warn('Page evidence could not be saved; CSV reconciliation is still required.');
     }
   };
-  const isGameClientPage = /^\/game\/index(?:\/|$)/.test(window.location.pathname);
   const diagnosticTrace = triggerEnvelope.diagnostics ||= [];
   const trace = (event, data = {}) => {
     if (!liveExportDebug) return;
@@ -366,8 +378,11 @@
     }));
   };
 
-  const setStatus = (message, state = 'working') => {
-    trace('status', { message, state });
+  const renderStatus = (message, state) => {
+    if (!document.documentElement) {
+      document.addEventListener('DOMContentLoaded', () => renderStatus(message, state), { once: true });
+      return;
+    }
     let element = document.getElementById(statusId);
     if (!element) {
       element = document.createElement('div');
@@ -388,6 +403,12 @@
     }
     element.style.background = state === 'error' ? '#9f2525' : state === 'done' ? '#216e39' : '#2f506f';
     element.textContent = message;
+  };
+
+  const setStatus = (message, state = 'working') => {
+    trace('status', { message, state });
+    if (state === 'error') scheduledExport?.report(state, message);
+    renderStatus(message, state);
   };
 
   const waitUntil = async (predicate, message) => {

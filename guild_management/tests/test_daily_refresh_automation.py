@@ -287,7 +287,8 @@ class LockTests(unittest.TestCase):
 
 
 class LaunchAgentTests(unittest.TestCase):
-    def test_daily_runner_closes_the_stale_automation_profile(self) -> None:
+    def test_daily_runner_drives_built_in_exports_in_the_automation_profile(self) -> None:
+        self.assertIn("--built-in-controls", DAILY_EXPORTER_ARGUMENTS)
         self.assertIn("--close-running-profile", DAILY_EXPORTER_ARGUMENTS)
 
     def test_installs_one_daily_non_retrying_job(self) -> None:

@@ -46,11 +46,11 @@ This uses defaults:
 ### Forge Hammer treasury and contribution export (recommended)
 
 `export_forge_hammer_treasury.py` reuses Forge Hammer's real Chrome storage and
-CSV exporters. It never constructs a game request or chooses a request ID. The
-command starts Chrome once with `Profile 3` and the installed companion
-extension from `chrome/forge-hammer-treasury-exporter/`.
+CSV exporters. The scheduled job and `--built-in-controls` start a dedicated
+Chrome profile and drive Forge Hammer's built-in exporters over an inherited
+DevTools pipe. The browser workflow uses the game's own requests and IDs.
 
-For treasury balances, the companion dispatches the game's own **open Guild
+For treasury balances, the browser workflow dispatches the game's own **open Guild
 Treasury** action exactly once. Immediately beforehand it dispatches the game's
 close-all-windows action once, which clears the visible window stack and queued
 popups, then waits for window disposal to settle. It correlates Forge Hammer's
@@ -59,14 +59,14 @@ for the matching hourly and daily records, and exports `input/stats-YYYY-MM-DD.c
 new Chrome profile begins with no Forge Hammer history, the launcher merges the
 download into the longest compatible prior treasury CSV before rebuilding. A
 current-day snapshot can therefore extend, but never replace, saved history.
-If the browser session opens a pre-game page, the companion clicks the official
+If the browser session opens a pre-game page, the workflow clicks the official
 **Play** action once and selects the configured world display name (`Yorkton`
 for `us24`) once before continuing. Both navigation steps are guarded against
 repetition and persist only across that launched tab's redirects.
 
 For contribution logs, the launcher reads the newest record timestamp from the
 latest prior `input/guild-goods-contribution/GuildTreasury-*.csv` and subtracts
-one hour. The companion opens the game's Message Center once so its contribution
+one hour. The workflow opens the game's Message Center once so its contribution
 module is initialized, opens the official Guild Contribution window, resets
 Forge Hammer's in-memory export log, and advances through 10-row pages in
 order. Each page is requested once with the game client's own request ID. It
@@ -75,19 +75,19 @@ or when the server reports that no page remains, then invokes Forge Hammer's
 Guild Treasury Export Log feature. The launcher validates and imports the file
 as `input/guild-goods-contribution/GuildTreasury-YYYY-MM-DD.csv`.
 
-Official Google Chrome builds ignore the `--load-extension` command-line flag.
-Install the companion once by opening `chrome://extensions`, enabling Developer
-mode, choosing **Load unpacked**, and selecting
-`chrome/forge-hammer-treasury-exporter/`. Keep that extension and Forge Hammer
-enabled in Profile 3.
-
-Before every run, close Google Chrome completely so the correct profile can be
-started. The profile must already be signed in to the configured `FOE_WORLD`.
-Then run:
+Set up the dedicated Chrome profile as described under Daily automatic refresh
+and deployment. With Forge Hammer enabled and the profile signed in to the
+configured world, run:
 
 ```bash
-../CityAnalysis/.venv/bin/python -B export_forge_hammer_treasury.py
+../CityAnalysis/.venv/bin/python -B export_forge_hammer_treasury.py \
+  --built-in-controls --close-running-profile
 ```
+
+The manual diagnostic mode uses the unpacked extension in
+`chrome/forge-hammer-treasury-exporter/`. In the chosen profile, open
+`chrome://extensions`, enable Developer mode, and select the folder with
+**Load unpacked**. Use `--live-debug` with this mode.
 
 The command is intentionally fail-closed:
 
@@ -131,7 +131,7 @@ the standard project input directories.
 The contribution CSVs do not provide transaction IDs, and observed timestamps
 are minute-granular. A visible row signature is **not** a unique transaction
 identifier. Identical-looking production rows can be legitimate and must not be
-globally deduplicated. The companion now records passive page evidence: page
+globally deduplicated. The browser workflow records passive page evidence: page
 offsets, response counts, page request IDs, observed source timestamps, and row
 order. Page request IDs identify requests, not transactions; local capture times
 do not add precision to transaction times. This evidence makes no additional game
@@ -142,7 +142,6 @@ with mode 600. It contains player IDs but excludes names, cookies, headers, and
 URLs; it is never included in the dashboard or published. The original JSON also
 remains in the configured Downloads folder. If evidence cannot be saved, the
 exporter records that fact and still requires exact CSV/treasury reconciliation.
-Reload the unpacked companion extension after updating its source to enable this.
 
 Contribution generation reconciles signed log changes against treasury changes
 for every good before publishing. A legacy export can repeat a same-amount
@@ -298,17 +297,16 @@ clean repository, refuses local commits or divergence, and restarts the runner
 with the updated code before validation or game access. Development checkouts
 and saved-checkpoint recovery retain the strict branch-equality check.
 
-Reload the companion extension from the new clone in the dedicated Chrome
-profile, validate the clone with `--validate-only`, then explicitly reinstall the
-same LaunchAgent label with `--project-dir` pointing to its `guild_management`
+Validate the clone with `--validate-only`, then explicitly reinstall the same
+LaunchAgent label with `--project-dir` pointing to its `guild_management`
 folder and an existing Python environment. Preserve your actual current schedule
 when setting `--hour`/`--minute`; the example below is not a migration default.
 Keep only one scheduled job. The clone deliberately does not auto-merge code:
 after future code pushes, update its clean `main` with `git pull --ff-only` before
 the next run. Divergence stops the job rather than discarding local work.
 
-For reliable unattended runs, use a Chrome data directory dedicated to this
-workflow. Add these local-only settings to `.env.foe`:
+The scheduled exporter uses a dedicated Chrome data directory. Add these
+local-only settings to `.env.foe`:
 
 ```dotenv
 FOE_CHROME_USER_DATA_DIR=~/.foe-automation-chrome
@@ -324,12 +322,11 @@ open -na "Google Chrome" --args \
   --profile-directory=Default
 ```
 
-Install Forge Hammer and the unpacked companion extension in that profile,
-sign in to the configured world, then quit that Chrome instance. A dedicated
-data directory allows ordinary Chrome windows to remain open; the preflight
-check blocks only another process using the automation directory. If the normal
-Chrome data directory remains configured, all Chrome windows must be closed at
-the scheduled time.
+Install Forge Hammer in that profile, enable its **Guild Treasury Export Log**
+setting, sign in to the configured world, then quit that Chrome instance. If Chrome
+prompts for automatic downloads when exporting, allow them for the configured
+world so its CSVs and capture evidence can be saved. The scheduled launcher
+uses the dedicated profile and leaves other Chrome instances open.
 
 Validate the complete scheduled path without making a game request:
 

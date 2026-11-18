@@ -23,6 +23,7 @@ from automation.errors import AutomationError
 
 DAILY_EXPORTER_ARGUMENTS = (
     "export_forge_hammer_treasury.py",
+    "--built-in-controls",
     "--close-running-profile",
     "--no-refresh",
 )
@@ -300,6 +301,7 @@ def run_offline_validation(project_dir: Path, *, require_current_sources: bool =
         "site/assets/home.js",
         "site/data/treasury-data.js",
         "site/data/contribution-data.js",
+        "chrome/launch-forge-hammer.cjs",
     ):
         run([node, "--check", script], cwd=project_dir)
     run([node, "--test", "tests/test_anniversaries.js"], cwd=project_dir)
@@ -493,7 +495,7 @@ def main() -> int:
                     [
                         sys.executable,
                         "-B",
-                        "export_forge_hammer_treasury.py",
+                        *DAILY_EXPORTER_ARGUMENTS,
                         "--dry-run",
                     ],
                     cwd=project_dir,

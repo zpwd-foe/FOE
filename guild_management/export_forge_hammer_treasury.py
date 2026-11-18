@@ -2,11 +2,10 @@
 """Export Forge Hammer treasury balances and contribution logs through Chrome.
 
 This command does not construct game API requests or choose request IDs. It
-launches the configured Chrome profile once with the companion extension in
-``chrome/forge-hammer-treasury-exporter``. The companion invokes the game's own
-Guild Treasury action exactly once when needed, opens the official contribution
-log when needed, and advances each log page exactly once until the configured
-overlap is reached. Forge Hammer observes those game-owned requests and exports
+launches the configured Chrome profile once. The scheduled browser driver
+invokes the game's own Guild Treasury action, opens the official contribution
+log, and advances each log page once until the configured overlap is reached.
+Forge Hammer observes those game-owned requests and uses its built-in exporters for
 both CSV formats. This process watches Downloads, validates each new CSV, and
 atomically copies it into the corresponding ``input/`` directory. After both
 validated exports are available, it refreshes the treasury dashboard from the
@@ -54,7 +53,9 @@ DEFAULT_DOWNLOAD_DIR = Path.home() / "Downloads"
 DEFAULT_INPUT_DIR = PROJECT_DIR / "input"
 DEFAULT_CONTRIBUTION_INPUT_DIR = DEFAULT_INPUT_DIR / "guild-goods-contribution"
 DEFAULT_STATE_FILE = PROJECT_DIR / ".foe-forge-hammer-state.json"
-COMPANION_EXTENSION_DIR = PROJECT_DIR / "chrome/forge-hammer-treasury-exporter"
+BROWSER_SOURCE_DIR = Path(__file__).resolve().parent / "chrome"
+COMPANION_EXTENSION_DIR = BROWSER_SOURCE_DIR / "forge-hammer-treasury-exporter"
+BUILT_IN_EXPORT_DRIVER = BROWSER_SOURCE_DIR / "launch-forge-hammer.cjs"
 FORGE_HAMMER_EXTENSION_ID = "kmicglnhmpaebfcoiojigbnepklclboa"
 TRIGGER_PREFIX = "forge-hammer-treasury-export="
 LEGACY_GOODS = 110
@@ -166,7 +167,15 @@ def parse_args() -> argparse.Namespace:
             "inspection after completion or failure."
         ),
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--built-in-controls",
+        action="store_true",
+        help="Drive Forge Hammer's own exports in a dedicated Chrome data directory.",
+    )
+    args = parser.parse_args()
+    if args.built_in_controls and args.live_debug:
+        parser.error("--live-debug requires the manually installed companion extension.")
+    return args
 
 
 def _setting(values: dict[str, str], name: str, default: str) -> str:
@@ -789,7 +798,9 @@ def close_running_chrome_profile(config: BrowserConfig) -> bool:
     return True
 
 
-def preflight(config: BrowserConfig, *, require_stopped_chrome: bool = True) -> Path:
+def preflight(
+    config: BrowserConfig, *, require_stopped_chrome: bool = True, built_in_controls: bool = False
+) -> Path:
     if sys.platform != "darwin":
         raise BrowserExportError("The Forge Hammer Chrome launcher currently supports macOS only.")
     if not config.chrome_binary.is_file():
@@ -798,7 +809,14 @@ def preflight(config: BrowserConfig, *, require_stopped_chrome: bool = True) -> 
     if not profile_path.is_dir():
         raise BrowserExportError(f"Chrome profile was not found: {profile_path}.")
     manifest = find_forge_hammer_manifest(config)
-    if not (COMPANION_EXTENSION_DIR / "manifest.json").is_file():
+    if built_in_controls:
+        if config.user_data_dir.resolve() == DEFAULT_CHROME_USER_DATA_DIR.resolve():
+            raise BrowserExportError("Built-in exports require a dedicated Chrome data directory.")
+        if not shutil.which("node"):
+            raise BrowserExportError("Node.js is required to drive the built-in Forge Hammer exporters.")
+        if not BUILT_IN_EXPORT_DRIVER.is_file() or not (COMPANION_EXTENSION_DIR / "export-treasury.js").is_file():
+            raise BrowserExportError("The built-in Forge Hammer export driver is missing.")
+    elif not (COMPANION_EXTENSION_DIR / "manifest.json").is_file():
         raise BrowserExportError("The Forge Hammer companion extension is missing.")
     if not config.download_dir.is_dir():
         raise BrowserExportError(f"Download directory was not found: {config.download_dir}.")
@@ -812,8 +830,8 @@ def preflight(config: BrowserConfig, *, require_stopped_chrome: bool = True) -> 
     ):
         raise BrowserExportError(
             "The configured Chrome automation data directory is already in use. Close that "
-            f"Chrome instance so the script can start {config.profile_directory!r} with the "
-            "installed companion extension; no browser was opened."
+            f"Chrome instance so the script can start {config.profile_directory!r}; "
+            "no browser was opened."
         )
     return manifest
 
@@ -842,12 +860,17 @@ def wait_for_download(
     filename_prefix: str = "stats-",
     filename_re: re.Pattern[str] = DOWNLOAD_RE,
     export_label: str = "treasury",
+    browser_driver: subprocess.Popen[bytes] | None = None,
 ) -> Path:
     deadline = time.monotonic() + timeout_seconds
     date_text = sync_date.isoformat()
     previous: tuple[Path, int, int] | None = None
     stable_polls = 0
     while time.monotonic() < deadline:
+        if browser_driver is not None and browser_driver.poll() is not None:
+            output = browser_driver.stderr.read(1024).decode(errors="replace").strip()
+            detail = output or "The Chrome export driver stopped before the downloads were complete."
+            raise BrowserExportError(detail)
         candidates: list[tuple[int, Path, int]] = []
         for path in download_dir.glob(f"{filename_prefix}{date_text}*.csv"):
             if not filename_re.fullmatch(path.name):
@@ -882,6 +905,7 @@ def launch_chrome(
     export_contributions: bool,
     contribution_cutoff: dt.datetime | None,
     live_debug: bool = False,
+    built_in_controls: bool = False,
 ) -> subprocess.Popen[bytes]:
     trigger_params = {
         TRIGGER_PREFIX.removesuffix("="): nonce,
@@ -897,6 +921,17 @@ def launch_chrome(
     game_url = (
         f"https://{config.world}.forgeofempires.com/game/index?#{urlencode(trigger_params)}"
     )
+    if built_in_controls:
+        return subprocess.Popen(
+            [
+                "node", str(BUILT_IN_EXPORT_DRIVER), str(config.chrome_binary),
+                str(config.user_data_dir.resolve()), config.profile_directory, game_url,
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
     command = [
         str(config.chrome_binary),
         f"--user-data-dir={config.user_data_dir}",
@@ -910,6 +945,17 @@ def launch_chrome(
         stderr=subprocess.DEVNULL,
         start_new_session=True,
     )
+
+
+def stop_browser_driver(driver: subprocess.Popen[bytes]) -> None:
+    driver.stdin.close()
+    try:
+        driver.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        driver.kill()
+        driver.wait()
+    finally:
+        driver.stderr.close()
 
 
 def import_export(source: Path, destination: Path) -> None:
@@ -934,7 +980,7 @@ def import_page_evidence(config: BrowserConfig, tag: str) -> dict[str, object]:
     source = config.download_dir / f"foe-contribution-pages-{tag}.json"
     try:
         if not source.is_file():
-            return {"status": "unavailable", "reason": "Companion evidence was not downloaded; CSV reconciliation is still required."}
+            return {"status": "unavailable", "reason": "Browser evidence was not downloaded; CSV reconciliation is still required."}
         if source.is_symlink() or source.stat().st_size > 8_000_000:
             return {"status": "unavailable", "reason": "Invalid evidence file size or path."}
         payload = json.loads(source.read_text(encoding="utf-8"))
@@ -1044,6 +1090,8 @@ def main() -> int:
         if not export_treasury and not export_contributions:
             print("Both validated exports are present. No browser opened.")
             if args.dry_run:
+                if args.built_in_controls:
+                    preflight(config, require_stopped_chrome=False, built_in_controls=True)
                 print(
                     "Dry run only; would refresh both dashboards from the validated "
                     "treasury file and all contribution CSVs."
@@ -1055,7 +1103,9 @@ def main() -> int:
 
         if not args.dry_run and args.close_running_profile:
             close_running_chrome_profile(config)
-        manifest = preflight(config, require_stopped_chrome=not args.dry_run)
+        manifest = preflight(
+            config, require_stopped_chrome=not args.dry_run, built_in_controls=args.built_in_controls
+        )
         previous_state = _read_state(config.state_file)
         ensure_attempt_allowed(
             config.state_file,
@@ -1118,35 +1168,40 @@ def main() -> int:
             state["same_day_retry_authorized"] = True
             state["previous_attempt"] = previous_state
         _write_state(config.state_file, state)
-        launch_chrome(
-            config,
-            nonce,
-            export_treasury=export_treasury,
-            export_contributions=export_contributions,
-            contribution_cutoff=contribution_cutoff if export_contributions else None,
-            live_debug=args.live_debug,
-        )
-        requested_description = " and ".join(
-            label
-            for label, enabled in (
-                ("treasury", export_treasury),
-                ("contribution logs", export_contributions),
-            )
-            if enabled
-        )
-        print(
-            f"Chrome started with {config.profile_directory}; the game will request "
-            f"{requested_description} through its official UI, with no request retries."
-        )
-        if args.live_debug:
-            print(
-                "Live diagnostic tracing is enabled; Chrome will remain open for manual "
-                "inspection after the run."
-            )
 
+        browser_driver: subprocess.Popen[bytes] | None = None
         treasury_downloaded: Path | None = None
         contribution_downloaded: Path | None = None
         try:
+            process = launch_chrome(
+                config,
+                nonce,
+                export_treasury=export_treasury,
+                export_contributions=export_contributions,
+                contribution_cutoff=contribution_cutoff if export_contributions else None,
+                live_debug=args.live_debug,
+                built_in_controls=args.built_in_controls,
+            )
+            if args.built_in_controls:
+                browser_driver = process
+            requested_description = " and ".join(
+                label
+                for label, enabled in (
+                    ("treasury", export_treasury),
+                    ("contribution logs", export_contributions),
+                )
+                if enabled
+            )
+            print(
+                f"Launching Chrome with {config.profile_directory} to request "
+                f"{requested_description} through the game UI.",
+                flush=True,
+            )
+            if args.live_debug:
+                print(
+                    "Live diagnostic tracing is enabled; Chrome will remain open for manual "
+                    "inspection after the run."
+                )
             if export_treasury:
                 treasury_downloaded = wait_for_download(
                     config.download_dir,
@@ -1154,6 +1209,7 @@ def main() -> int:
                     baseline=treasury_baseline,
                     started_ns=started_ns,
                     timeout_seconds=config.timeout_seconds,
+                    browser_driver=browser_driver,
                 )
                 (
                     treasury_summary,
@@ -1181,6 +1237,7 @@ def main() -> int:
                     filename_prefix="GuildTreasury-",
                     filename_re=CONTRIBUTION_DOWNLOAD_RE,
                     export_label="contribution",
+                    browser_driver=browser_driver,
                 )
                 downloaded_contribution_summary = validate_contribution_csv(
                     contribution_downloaded,
@@ -1219,6 +1276,9 @@ def main() -> int:
             )
             _write_state(config.state_file, state)
             raise
+        finally:
+            if browser_driver is not None:
+                stop_browser_driver(browser_driver)
 
         state.update(
             status="success",
@@ -1268,7 +1328,7 @@ def main() -> int:
         if args.refresh:
             print("Treasury and contribution dashboards rebuilt.")
         return 0
-    except (BrowserExportError, SyncError) as error:
+    except (OSError, SyncError) as error:
         print(f"Forge Hammer export failed: {error}", file=sys.stderr)
         return 1
     except subprocess.CalledProcessError as error:

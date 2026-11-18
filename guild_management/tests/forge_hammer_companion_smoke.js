@@ -11,13 +11,26 @@ let storedHourly = null;
 let storedDaily = null;
 let exported = false;
 let requestCount = 0;
+const scheduled = process.argv[2] === 'scheduled';
 
 global.window = global;
 window.location = {
-  hash: '#forge-hammer-treasury-export=offline-smoke-test',
+  hash: scheduled ? '' : '#forge-hammer-treasury-export=offline-smoke-test',
   pathname: '/game/index',
   search: '',
 };
+if (scheduled) {
+  const storage = new Map();
+  window.sessionStorage = {
+    getItem: key => storage.get(key),
+    setItem: (key, value) => storage.set(key, value),
+    removeItem: key => storage.delete(key),
+  };
+  global.goeScheduledExport = {
+    params: 'forge-hammer-treasury-export=offline-smoke-test',
+    report(_state, message) { throw new Error(message); },
+  };
+}
 window.history = { replaceState() {} };
 window.addEventListener = () => {};
 global.document = {
@@ -109,7 +122,8 @@ global.Stats = {
   },
 };
 
-require(path.resolve(__dirname, '../chrome/forge-hammer-treasury-exporter/export-treasury.js'));
+const workflow = path.resolve(__dirname, '../chrome/forge-hammer-treasury-exporter/export-treasury.js');
+require(workflow);
 
 function BaseDispatcher() {}
 BaseDispatcher.prototype.addEventListener = function () {};
@@ -167,6 +181,11 @@ setTimeout(() => {
   if (requestCount !== 1) {
     console.error(`Companion triggered ${requestCount} requests; expected exactly one.`);
     process.exit(1);
+  }
+  if (scheduled) {
+    // A later document in the scheduled tab must not start the same attempt again.
+    delete require.cache[require.resolve(workflow)];
+    require(workflow);
   }
   console.log('Forge Hammer companion offline smoke test passed with one request.');
 }, 1_000);
