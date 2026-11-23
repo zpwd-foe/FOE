@@ -75,6 +75,39 @@ class ChromePipe extends EventEmitter {
   }
 }
 
+async function openWorldSelector(pipe, sessionId, selector, hosts) {
+  let timer;
+  let onFrame;
+  let lastPage = 'about:blank';
+  const loaded = new Promise((resolve, reject) => {
+    onFrame = message => {
+      if (message.sessionId !== sessionId || message.method !== 'Page.frameNavigated') return;
+      const { frame } = message.params;
+      if (frame.parentId) return;
+      const page = new URL(frame.url || 'about:blank');
+      lastPage = page.href === 'about:blank' ? 'about:blank' : (page.hostname || page.protocol);
+      if (page.protocol === 'https:' && hosts.includes(page.hostname) && !frame.unreachableUrl) resolve();
+    };
+    pipe.on('message', onFrame);
+    timer = setTimeout(() => reject(new Error(
+      `The world selector at ${selector.hostname} did not load a supported page within `
+      + `${navigationTimeoutMs / 1000} seconds. Last page was ${lastPage}.`,
+    )), navigationTimeoutMs);
+    timer.unref();
+  });
+  try {
+    const navigation = pipe.send('Page.navigate', { url: selector.href }, sessionId, navigationTimeoutMs)
+      .then(result => {
+        if (result.errorText) throw new Error(`Chrome could not open the world selector (${result.errorText}).`);
+        if (result.isDownload) throw new Error('Chrome received a download when opening the world selector.');
+      });
+    await Promise.all([navigation, loaded]);
+  } finally {
+    clearTimeout(timer);
+    pipe.off('message', onFrame);
+  }
+}
+
 async function run() {
   const [binary, dataDirectory, profile, triggerUrl] = process.argv.slice(2);
   const url = new URL(triggerUrl);
@@ -82,10 +115,9 @@ async function run() {
   if (url.protocol !== 'https:' || !world || !url.hash) {
     throw new Error('Expected a Forge of Empires world and export parameters.');
   }
-  const hosts = [url.hostname, `${world[1]}0.forgeofempires.com`, 'www.forgeofempires.com'];
+  const selector = new URL(`https://${world[1]}0.forgeofempires.com/page/`);
+  const hosts = [url.hostname, selector.hostname, 'www.forgeofempires.com'];
   const params = url.hash.slice(1);
-  url.hash = '';
-  url.search = '';
   const workflow = readFileSync(join(__dirname, 'forge-hammer-treasury-exporter', 'export-treasury.js'), 'utf8');
   const source = `{
     if (window === window.top && location.protocol === 'https:' &&
@@ -123,8 +155,7 @@ async function run() {
     await pipe.send('Runtime.enable', {}, sessionId);
     await pipe.send('Runtime.addBinding', { name: statusBinding }, sessionId);
     await pipe.send('Page.addScriptToEvaluateOnNewDocument', { source }, sessionId);
-    const result = await pipe.send('Page.navigate', { url: url.href }, sessionId, navigationTimeoutMs);
-    if (result.errorText) throw new Error(`Chrome could not open the game: ${result.errorText}`);
+    await openWorldSelector(pipe, sessionId, selector, hosts);
   };
 
   try {

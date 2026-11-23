@@ -59,7 +59,9 @@ for the matching hourly and daily records, and exports `input/stats-YYYY-MM-DD.c
 new Chrome profile begins with no Forge Hammer history, the launcher merges the
 download into the longest compatible prior treasury CSV before rebuilding. A
 current-day snapshot can therefore extend, but never replace, saved history.
-If the browser session opens a pre-game page, the workflow clicks the official
+The scheduled browser opens the market's official world selector directly
+(`https://us0.forgeofempires.com/page/` for Yorkton). It waits up to two minutes
+for a supported page to load. On the selection page it clicks the official
 **Play** action once and selects the configured world display name (`Yorkton`
 for `us24`) once before continuing. Both navigation steps are guarded against
 repetition and persist only across that launched tab's redirects.

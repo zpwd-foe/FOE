@@ -628,6 +628,16 @@ class CompanionExtensionSafetyTests(unittest.TestCase):
         self.assertIn("no retry was made", self.source)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required for the landing smoke test")
+    def test_scheduled_navigation_avoids_stalled_redirect_and_detects_blank_tab(self) -> None:
+        result = subprocess.run(
+            ["node", str(Path(__file__).with_name("forge_hammer_scheduled_navigation_smoke.cjs"))],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    @unittest.skipUnless(shutil.which("node"), "Node.js is required for the landing smoke test")
     def test_landing_flow_clicks_play_and_yorkton_once(self) -> None:
         result = subprocess.run(
             [
