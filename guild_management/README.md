@@ -602,6 +602,11 @@ On 2026-11-17, guild leadership confirmed SirWalter929 (`15857412`) joined on
 2018-07-01. This date supersedes the Foestats value and removes his earlier-date
 uncertainty flag; preserve this confirmed date in future imports.
 
+The 2026-11-24 refresh added Robear of Alaska (`9973727`) from the 2026-11-23
+Foestats snapshot. Guild leadership added Mealla (`17468393`) and cleared
+Robear’s tagline. Both members joined on 2026-11-23. The roster has 47 current
+members and four former members.
+
 Theoutdoorsman71 retains the recorded join date of 2019-06-22 with
 `joinedOnMayBeEarlier: true`. The date links to the footnote “Actual join
 date may be earlier than recorded.” Preserve this flag in future imports.
