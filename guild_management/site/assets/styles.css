@@ -1311,7 +1311,7 @@ tbody tr:nth-child(even) { background:#e7f0ea; }
 .shell--guide .policy-toc-mobile summary { font-size:16px; }
 .shell--guide .policy-article { padding:30px; }
 .shell--guide .policy-meta { grid-template-columns:repeat(6,minmax(0,1fr)); }
-.guide-rates h2 { margin:0 0 14px; color:#1d472f; font-size:clamp(1.5rem,2.3vw,1.85rem); line-height:1.2; scroll-margin-top:105px; }
+.guide-rates h2, .road-section > h2 { margin:0 0 14px; color:#1d472f; font-size:clamp(1.5rem,2.3vw,1.85rem); line-height:1.2; scroll-margin-top:105px; }
 .guide-rate-pair { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:24px 0 16px; }
 .guide-rate-pair > div { padding:20px; border:1px solid #dbc7b8; border-top:3px solid #9b5939; border-radius:5px; background:#fbf6f2; }
 .guide-rate-pair > .guide-rate-gold { border-color:#ddce9c; border-top-color:#a47c22; background:#fffbef; }
@@ -1337,6 +1337,16 @@ tbody tr:nth-child(even) { background:#e7f0ea; }
 .guide-message { margin:0 0 18px; padding:18px 20px; color:#174e31; background:#edf5ef; border:1px solid #ccdfd1; border-radius:5px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; }
 .guide-checklist li { padding-bottom:8px; border-bottom:1px solid #e5ece7; }
 .policy-article .guide-source { margin:28px 0 0; padding-top:20px; border-top:1px solid #d0dcd3; color:#617166; font-size:13px; }
+
+.road-section + .road-section { margin-top:clamp(32px,4vw,48px); }
+.policy-article .road-formula { max-width:none; padding:14px 18px; color:#244a32; background:#eef5ef; border-left:3px solid #678d70; }
+.road-example { margin-top:30px; padding-top:24px; border-top:1px solid #d5e0d7; }
+.road-example h3 { margin:0 0 12px; color:#244b32; font:500 clamp(1.3rem,2vw,1.55rem)/1.25 Georgia,serif; scroll-margin-top:105px; }
+.road-map { margin:18px 0; }
+/* The outline follows the Roads row in the supplied city map at every image size. */
+.road-map--flat > a { position:relative; }
+.road-map--flat > a::after { content:""; position:absolute; inset:24.9% 1.2% 70% 72.8%; border:clamp(1px,.16vw,3px) solid #f4cd68; border-radius:4px; pointer-events:none; }
+.road-map figcaption { align-items:center; font-size:.875rem; }
 @media (max-width:980px) {
   .shell--guide .policy-layout { grid-template-columns:160px minmax(0,1fr); gap:20px; }
   .shell--guide .policy-meta { grid-template-columns:repeat(3,minmax(0,1fr)); }

@@ -896,7 +896,10 @@ def publish_dashboard(
                     "title": html.escape(str(resource["title"])),
                     "description": html.escape(str(resource["description"])),
                     "category": html.escape(str(resource["category"])),
-                    "resource_type": "Setup guide" if layout == "guide" else "Guild policy",
+                    "resource_type": (
+                        html.escape(str(resource.get("guideType", "Guild guide")))
+                        if layout == "guide" else "Guild policy"
+                    ),
                     "status": html.escape(str(resource["status"])),
                     "status_class": " status-chip--official" if str(resource["status"]).strip().lower() == "official" else "",
                     "owner": html.escape(str(resource["owner"])),

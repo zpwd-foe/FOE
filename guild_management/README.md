@@ -501,6 +501,7 @@ Portal routes:
 - `/tools/` — guild tools
 - `/tools/gb-prime-post/` — Great Building priming calculator and promotion messages
 - `/resources/` — guild resource library
+- `/resources/road-efficiency/` — illustrated guide to road efficiency and space-saving city layouts
 - `/resources/guild-expedition-lottery-rules/` — lottery rules
 - `/resources/foe-tools-copper-gold-rate-setup/` — illustrated FOE Tools setup, priming, and promotion-message guide
 

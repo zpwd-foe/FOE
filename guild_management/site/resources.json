@@ -1,6 +1,21 @@
 {
   "resources": [
     {
+      "slug": "road-efficiency",
+      "title": "Road Efficiency",
+      "shortTitle": "Road Efficiency",
+      "description": "Make room for your next building by sharing streets and trimming spare road tiles.",
+      "category": "City Planning",
+      "status": "Guide",
+      "owner": "GoE Guild Portal",
+      "effectiveDate": "November 23, 2026",
+      "lastReviewed": "November 23, 2026",
+      "version": "1.0",
+      "audience": "All GoE guild members",
+      "contentFile": "road-efficiency.html",
+      "layout": "guide"
+    },
+    {
       "slug": "foe-tools-copper-gold-rate-setup",
       "title": "FOE Tools Setup for GoE & Friends 1.9 Copper and 1.1 Gold Threads",
       "shortTitle": "GoE & Friends 1.9 Copper and 1.1 Gold Setup",
@@ -13,6 +28,7 @@
       "version": "1.0",
       "audience": "All GoE guild members",
       "contentFile": "foe-tools-copper-gold-rate-setup.html",
+      "guideType": "Setup guide",
       "layout": "guide"
     },
     {
