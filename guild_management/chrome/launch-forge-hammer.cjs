@@ -8,6 +8,8 @@ const { join } = require('node:path');
 const statusBinding = '__goeForgeHammerScheduleStatus';
 const commandTimeoutMs = 20_000;
 const navigationTimeoutMs = 120_000;
+const networkChangeRetryDelayMs = 5_000;
+const maxNetworkChangeRetries = 5;
 
 class ChromePipe extends EventEmitter {
   constructor(chrome) {
@@ -76,9 +78,12 @@ class ChromePipe extends EventEmitter {
 }
 
 async function openWorldSelector(pipe, sessionId, selector, hosts) {
+  const deadline = performance.now() + navigationTimeoutMs;
   let timer;
+  let retryTimer;
   let onFrame;
   let lastPage = 'about:blank';
+  let pageLoaded = false;
   const loaded = new Promise((resolve, reject) => {
     onFrame = message => {
       if (message.sessionId !== sessionId || message.method !== 'Page.frameNavigated') return;
@@ -86,7 +91,10 @@ async function openWorldSelector(pipe, sessionId, selector, hosts) {
       if (frame.parentId) return;
       const page = new URL(frame.url || 'about:blank');
       lastPage = page.href === 'about:blank' ? 'about:blank' : (page.hostname || page.protocol);
-      if (page.protocol === 'https:' && hosts.includes(page.hostname) && !frame.unreachableUrl) resolve();
+      if (page.protocol === 'https:' && hosts.includes(page.hostname) && !frame.unreachableUrl) {
+        pageLoaded = true;
+        resolve();
+      }
     };
     pipe.on('message', onFrame);
     timer = setTimeout(() => reject(new Error(
@@ -95,14 +103,33 @@ async function openWorldSelector(pipe, sessionId, selector, hosts) {
     )), navigationTimeoutMs);
     timer.unref();
   });
+  async function loadSelector() {
+    for (let retries = 0; !pageLoaded; retries++) {
+      const remainingMs = Math.ceil(deadline - performance.now());
+      if (remainingMs <= 0) return;
+      const { errorText, isDownload } = await pipe.send(
+        'Page.navigate', { url: selector.href }, sessionId, remainingMs,
+      );
+      if (isDownload) throw new Error('Chrome received a download when opening the world selector.');
+      if (!errorText) return;
+      const networkChanged = errorText === 'net::ERR_NETWORK_CHANGED';
+      if (networkChanged && pageLoaded) return;
+      if (!networkChanged || retries === maxNetworkChangeRetries) {
+        throw new Error(`Chrome could not open the world selector on attempt ${retries + 1} (${errorText}).`);
+      }
+      await Promise.race([
+        loaded,
+        new Promise(resolve => {
+          retryTimer = setTimeout(resolve, networkChangeRetryDelayMs);
+          retryTimer.unref();
+        }),
+      ]);
+    }
+  }
   try {
-    const navigation = pipe.send('Page.navigate', { url: selector.href }, sessionId, navigationTimeoutMs)
-      .then(result => {
-        if (result.errorText) throw new Error(`Chrome could not open the world selector (${result.errorText}).`);
-        if (result.isDownload) throw new Error('Chrome received a download when opening the world selector.');
-      });
-    await Promise.all([navigation, loaded]);
+    await Promise.all([loadSelector(), loaded]);
   } finally {
+    clearTimeout(retryTimer);
     clearTimeout(timer);
     pipe.off('message', onFrame);
   }

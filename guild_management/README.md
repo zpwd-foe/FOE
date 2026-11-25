@@ -61,7 +61,11 @@ download into the longest compatible prior treasury CSV before rebuilding. A
 current-day snapshot can therefore extend, but never replace, saved history.
 The scheduled browser opens the market's official world selector directly
 (`https://us0.forgeofempires.com/page/` for Yorkton). It waits up to two minutes
-for a supported page to load. On the selection page it clicks the official
+for a supported page to load. If Chrome reports `ERR_NETWORK_CHANGED` while
+opening the selector, the launcher waits five seconds and retries in the same
+tab, up to five times after the initial attempt. All six attempts share the
+two-minute limit. If a supported page loads during a wait, the export continues
+immediately. On the selection page it clicks the official
 **Play** action once and selects the configured world display name (`Yorkton`
 for `us24`) once before continuing. Both navigation steps are guarded against
 repetition and persist only across that launched tab's redirects.
@@ -96,9 +100,9 @@ The command is intentionally fail-closed:
 - If both of today's validated CSVs already exist, it skips Chrome and refreshes
   both dashboards from those local inputs. If only one exists, it requests only
   the missing export.
-- It launches the browser once, triggers each required game action once, and
-  never retries a failed login, page load, treasury refresh, contribution page,
-  or export.
+- It launches the browser once and triggers each required game action once.
+  The startup retries apply only to loading the initial world selector.
+  A failed login, treasury refresh, contribution page, or export ends the run.
 - It exports only after Forge Hammer observes the matching response and stores
   its resource map in both the current-hour and current-day records.
 - Contribution offsets must be `0, 10, 20, ...` with exactly one matching
@@ -217,9 +221,9 @@ datasets, and permits changes only under `dashboard/` plus the two source data
 payloads. When publishing is enabled, it creates a generated-data-only `FOE-30`
 commit and pushes it so Cloudflare Pages can deploy the refreshed dashboard.
 
-The runner never retries. Before an export, it gracefully closes a stale Chrome
-process only when that process was launched with the configured automation data
-directory and profile. It refuses to close Chrome processes that do not match
+Before an export, the runner gracefully closes a stale Chrome process only
+when that process was launched with the configured automation data directory
+and profile. It refuses to close Chrome processes that do not match
 both settings. A failed login, unresolved Chrome profile conflict, export,
 validation, commit, or push ends that day's scheduled run and produces a local
 notification. `KeepAlive` and `RunAtLoad` are deliberately disabled in the
